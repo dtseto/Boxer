@@ -653,7 +653,9 @@ static BOOL _hasStartedEmulator = NO;
 {
 	switch (joytype)
 	{
-		case JOY_NONE:
+		case JOY_DISABLED:
+		case JOY_NONE_FOUND:
+		case JOY_ONLY_FOR_MAPPING:
 			return BXNoJoystickSupport;
 			break;
 		case JOY_2AXIS:
@@ -1008,8 +1010,8 @@ static BOOL _hasStartedEmulator = NO;
             //Create a new configuration instance and feed it an empty set of parameters.
             char const *argv[0];
             commandLine = new CommandLine(0, argv);
-            configuration = new Config(commandLine);
-            control = configuration;
+            control.reset(new Config(commandLine));
+            configuration = control.get();
             
             //Sets up the vast swathes of DOSBox configuration file parameters,
             //and registers the shell to start up when we finish initializing.
@@ -1055,10 +1057,9 @@ static BOOL _hasStartedEmulator = NO;
 	//Any other exception is a genuine fuckup and needs to be thrown all the way up.
 	
 	//Clean up after DOSBox finishes.
-	SDL_Quit();
+    SDL_Quit();
 	[self.videoHandler shutdown];
-    control = NULL;
-    delete configuration;
+    control.reset();
     configuration = NULL;
     delete commandLine;
     commandLine = NULL;

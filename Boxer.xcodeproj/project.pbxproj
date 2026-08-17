@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 60;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -897,6 +897,13 @@
 			remoteGlobalIDString = 05EEE341227CC35D007D011B;
 			remoteInfo = OpenEmuShadersTests;
 		};
+		0FFCA18430329C6C0076F2F5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D1107260486CEB800E47090;
+			remoteInfo = Boxer;
+		};
 		55BBA4F1235EE142007AE319 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 55E6A09D1C00C80A00285593 /* DDHidLib.xcodeproj */;
@@ -1079,6 +1086,7 @@
 		0FFCA169303266110076F2F5 /* LICENSE.WTFPLv2 */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.WTFPLv2; sourceTree = "<group>"; };
 		0FFCA16C303266110076F2F5 /* whereami.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = whereami.h; sourceTree = "<group>"; };
 		0FFCA16D303266110076F2F5 /* whereami.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = whereami.c; sourceTree = "<group>"; };
+		0FFCA18030329C6C0076F2F5 /* Boxer Integration Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Boxer Integration Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -2025,7 +2033,18 @@
 		F192BC8228C7FE0A00B8D48D /* fr */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Shell.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Boxer Integration Tests"; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		0FFCA17D30329C6C0076F2F5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072E0486CEB800E47090 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -2246,6 +2265,7 @@
 				8D1107320486CEB800E47090 /* Boxer.app */,
 				9F2D317215B8233800FAE848 /* Boxer Standalone.app */,
 				9FB4538C16442CDD00BCF63B /* Boxer Bundler.app */,
+				0FFCA18030329C6C0076F2F5 /* Boxer Integration Tests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2259,6 +2279,7 @@
 				9FBC3A7A0F56CEA2001811F2 /* DOSBox */,
 				9FFF978412327D58009B5EE5 /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
+				0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 			);
@@ -3820,6 +3841,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		0FFCA17F30329C6C0076F2F5 /* Boxer Integration Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0FFCA19030329C6C0076F2F5 /* Build configuration list for PBXNativeTarget "Boxer Integration Tests" */;
+			buildPhases = (
+				0FFCA17C30329C6C0076F2F5 /* Sources */,
+				0FFCA17D30329C6C0076F2F5 /* Frameworks */,
+				0FFCA17E30329C6C0076F2F5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0FFCA18530329C6C0076F2F5 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */,
+			);
+			name = "Boxer Integration Tests";
+			packageProductDependencies = (
+			);
+			productName = "Boxer Integration Tests";
+			productReference = 0FFCA18030329C6C0076F2F5 /* Boxer Integration Tests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		8D1107260486CEB800E47090 /* Boxer */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C01FCF4A08A954540054247B /* Build configuration list for PBXNativeTarget "Boxer" */;
@@ -3899,10 +3943,14 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0710;
+				LastSwiftUpdateCheck = 2660;
 				LastUpgradeCheck = 1330;
 				ORGANIZATIONNAME = "Alun Bestor and contributors";
 				TargetAttributes = {
+					0FFCA17F30329C6C0076F2F5 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = 8D1107260486CEB800E47090;
+					};
 					8D1107260486CEB800E47090 = {
 						LastSwiftMigration = 1110;
 					};
@@ -3950,6 +3998,7 @@
 				8D1107260486CEB800E47090 /* Boxer */,
 				9F2D2F9715B8233800FAE848 /* Boxer Standalone */,
 				9FB4538B16442CDD00BCF63B /* Boxer Bundler */,
+				0FFCA17F30329C6C0076F2F5 /* Boxer Integration Tests */,
 			);
 		};
 /* End PBXProject section */
@@ -4021,6 +4070,13 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		0FFCA17E30329C6C0076F2F5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D1107290486CEB800E47090 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -4138,6 +4194,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0FFCA17C30329C6C0076F2F5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		8D11072C0486CEB800E47090 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -4888,6 +4951,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		0FFCA18530329C6C0076F2F5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D1107260486CEB800E47090 /* Boxer */;
+			targetProxy = 0FFCA18430329C6C0076F2F5 /* PBXContainerItemProxy */;
+		};
 		55D431F625044D50008515E1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = OpenEmuShaders;
@@ -5226,6 +5294,107 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		0FFCA18630329C6C0076F2F5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = "";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GENERATE_INFOPLIST_FILE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dtseto.Boxer-Integration-Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Boxer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Boxer";
+			};
+			name = Debug;
+		};
+		0FFCA18730329C6C0076F2F5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=macosx*]" = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GENERATE_INFOPLIST_FILE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dtseto.Boxer-Integration-Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Boxer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Boxer";
+			};
+			name = Release;
+		};
 		9F2D317015B8233800FAE848 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -5633,6 +5802,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0FFCA19030329C6C0076F2F5 /* Build configuration list for PBXNativeTarget "Boxer Integration Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FFCA18630329C6C0076F2F5 /* Debug */,
+				0FFCA18730329C6C0076F2F5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		9F2D316F15B8233800FAE848 /* Build configuration list for PBXNativeTarget "Boxer Standalone" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

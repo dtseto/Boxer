@@ -206,7 +206,41 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testRuntimeMixerVolumeBridgeBehavior() throws {
         // Protects BOXER marker: mixer-volume-bridge
-        throw XCTSkip("Runtime mixer test requires a test target linked to DOSBox mixer.cpp with fake boxer_masterVolume hooks. Required behavior: active channel volume follows Boxer L/R master volume, recomputes existing channels, mutes/unmutes, and leaves no duplicate state after shutdown/reinitialize.")
+        let tempDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BoxerMixerRuntimeHarness-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let harnessSource = tempDirectory.appendingPathComponent("mixer_harness.cpp")
+        let harnessBinary = tempDirectory.appendingPathComponent("mixer_harness")
+        try mixerHarnessSource().write(to: harnessSource, atomically: true, encoding: .utf8)
+
+        let compileResult = try runProcess(
+            executable: "/usr/bin/xcrun",
+            arguments: [
+                "clang++",
+                "-std=c++17",
+                "-ffunction-sections",
+                "-fdata-sections",
+                "-I", dosboxRoot.path,
+                "-I", dosboxRoot.appendingPathComponent("include").path,
+                "-I", dosboxRoot.appendingPathComponent("src").path,
+                "-I", dosboxRoot.appendingPathComponent("src/hardware").path,
+                "-I", projectRoot.appendingPathComponent("Boxer").path,
+                "-I", projectRoot.appendingPathComponent("Frameworks/SDL2.framework/Headers").path,
+                "-I", dosboxRoot.appendingPathComponent("submodules/loguru").path,
+                "-I", dosboxRoot.appendingPathComponent("src/libs/ghc").path,
+                harnessSource.path,
+                "-Wl,-dead_strip",
+                "-Wl,-undefined,dynamic_lookup",
+                "-o", harnessBinary.path
+            ]
+        )
+        XCTAssertEqual(compileResult.status, 0, compileResult.output)
+
+        let runResult = try runProcess(executable: harnessBinary.path, arguments: [])
+        XCTAssertEqual(runResult.status, 0, runResult.output)
+        XCTAssertTrue(runResult.output.contains("mixer runtime harness passed"), runResult.output)
     }
 
     func testRuntimeJoystickOwnershipBehavior() throws {
@@ -363,6 +397,194 @@ final class BoxerIntegrationContractTests: XCTestCase {
             }
 
             std::cout << "midi runtime harness passed\\n";
+            return 0;
+        }
+        """
+    }
+
+    private func mixerHarnessSource() -> String {
+        """
+        #include <array>
+        #include <cmath>
+        #include <cstdint>
+        #include <cstring>
+        #include <iostream>
+        #include <string>
+        #include <vector>
+
+        #include "SDL.h"
+        #include "types.h"
+        #include "BXCoalfaceAudio.h"
+
+        static float boxer_left_volume = 1.0f;
+        static float boxer_right_volume = 1.0f;
+
+        float boxer_masterVolume(BXAudioChannel channel)
+        {
+            return channel == BXLeftChannel ? boxer_left_volume : boxer_right_volume;
+        }
+
+        extern "C" void SDL_LockAudioDevice(SDL_AudioDeviceID) {}
+        extern "C" void SDL_UnlockAudioDevice(SDL_AudioDeviceID) {}
+        extern "C" SDL_AudioDeviceID SDL_OpenAudioDevice(const char *, int, const SDL_AudioSpec *, SDL_AudioSpec *, int) { return 1; }
+        extern "C" void SDL_PauseAudioDevice(SDL_AudioDeviceID, int) {}
+        extern "C" void SDL_CloseAudioDevice(SDL_AudioDeviceID) {}
+        extern "C" const char *SDL_GetError(void) { return "test SDL"; }
+
+        class Program;
+        class Section_prop;
+
+        void LOG_MSG(const char *, ...) {}
+        Bitu CaptureState = 0;
+        bool ticksLocked = false;
+        Bit32s CPU_Cycles = 0;
+        Bit32s CPU_CycleLeft = 0;
+        Bit32s CPU_CycleMax = 1000;
+
+        void CAPTURE_AddWave(Bit32u, Bit32u, Bit16s *) {}
+        void MIXER_AddConfigSection(Section_prop *) {}
+        void MIDI_AddConfigSection(Section_prop *) {}
+        void MIDI_ListAll(Program *) {}
+        void PROGRAMS_MakeFile(char const *, void (*)(Program *)) {}
+        void PIC_AddEvent(void (*)(Bitu), float, Bitu) {}
+        void PIC_RemoveEvents(void (*)(Bitu)) {}
+        void MAPPER_AddHandler(void (*)(bool), int, int, char const *, char const *) {}
+
+        #include "\(dosboxRoot.appendingPathComponent("src/hardware/envelope.cpp").path)"
+        #include "\(dosboxRoot.appendingPathComponent("src/hardware/mixer.cpp").path)"
+
+        Program::Program() {}
+        void Program::WriteOut(const char *, const char *) {}
+        void Program::WriteOut(const char *, ...) {}
+        void Program::WriteOut_NoParsing(const char *) {}
+        bool Program::SuppressWriteOut(const char *) { return false; }
+        void Program::InjectMissingNewline() {}
+        void Program::ChangeToLongCmd() {}
+        void Program::ResetLastWrittenChar(char) {}
+
+        static mixer_channel_t test_channel;
+        static int handler_calls = 0;
+        static constexpr int16_t source_left = 12000;
+        static constexpr int16_t source_right = -8000;
+
+        static void TestHandler(uint16_t frames)
+        {
+            ++handler_calls;
+            std::vector<int16_t> data(frames * 2);
+            for (uint16_t i = 0; i < frames; ++i) {
+                data[i * 2] = source_left;
+                data[i * 2 + 1] = source_right;
+            }
+            test_channel->AddSamples_s16(frames, data.data());
+        }
+
+        static void ResetMixer()
+        {
+            mixer.work = {};
+            mixer.mastervol = {1.0f, 1.0f};
+            mixer.channels.clear();
+            mixer.pos = 0;
+            mixer.done = 0;
+            mixer.tick_add = 0;
+            mixer.tick_counter = 0;
+            mixer.nosound = false;
+            mixer.freq = 1000;
+            mixer.blocksize = 16;
+            mixer.sdldevice = 1;
+            mixer.needed = 0;
+            mixer.min_needed = 0;
+            mixer.max_needed = MIXER_BUFSIZE;
+            handler_calls = 0;
+        }
+
+        static void CreateActiveChannel()
+        {
+            test_channel = std::make_shared<MixerChannel>(TestHandler, "boxer-test");
+            test_channel->SetFreq(1000);
+            test_channel->SetScale(1.0);
+            test_channel->SetVolume(1.0f, 1.0f);
+            test_channel->MapChannels(0, 1);
+            test_channel->Enable(false);
+            mixer.channels["boxer-test"] = test_channel;
+            test_channel->Enable(true);
+        }
+
+        static std::array<int16_t, 2> RenderOnce()
+        {
+            std::array<int16_t, 32> output = {};
+            std::memset(mixer.work.data(), 0, sizeof(mixer.work));
+            mixer.pos = 0;
+            mixer.done = 0;
+            mixer.needed = 0;
+            mixer.min_needed = 0;
+            mixer.max_needed = MIXER_BUFSIZE;
+
+            MIXER_MixData(8);
+            MIXER_CallBack(nullptr, reinterpret_cast<Uint8 *>(output.data()), 8 * 2 * static_cast<int>(sizeof(int16_t)));
+
+            // The first couple of frames include normal mixer startup/envelope bootstrap.
+            return {output[14], output[15]};
+        }
+
+        static bool CloseEnough(int16_t actual, int16_t expected, int tolerance = 3)
+        {
+            return std::abs(static_cast<int>(actual) - static_cast<int>(expected)) <= tolerance;
+        }
+
+        static bool ExpectFrame(const char *label, std::array<int16_t, 2> actual, int16_t expected_left, int16_t expected_right)
+        {
+            if (!CloseEnough(actual[0], expected_left) || !CloseEnough(actual[1], expected_right)) {
+                std::cerr << label << " expected " << expected_left << "," << expected_right
+                          << " got " << actual[0] << "," << actual[1] << "\\n";
+                return false;
+            }
+            return true;
+        }
+
+        int main()
+        {
+            ResetMixer();
+            boxer_left_volume = 1.0f;
+            boxer_right_volume = 1.0f;
+            CreateActiveChannel();
+
+            if (!ExpectFrame("master 1.0", RenderOnce(), source_left, source_right)) return 1;
+
+            boxer_left_volume = 0.5f;
+            boxer_right_volume = 0.5f;
+            boxer_updateVolumes();
+            if (!ExpectFrame("master 0.5", RenderOnce(), source_left / 2, source_right / 2)) return 2;
+
+            boxer_left_volume = 0.25f;
+            boxer_right_volume = 0.75f;
+            boxer_updateVolumes();
+            if (!ExpectFrame("independent L/R", RenderOnce(), source_left / 4, static_cast<int16_t>(source_right * 3 / 4))) return 3;
+
+            boxer_left_volume = 0.0f;
+            boxer_right_volume = 0.0f;
+            boxer_updateVolumes();
+            if (!ExpectFrame("mute", RenderOnce(), 0, 0)) return 4;
+
+            boxer_left_volume = 1.0f;
+            boxer_right_volume = 1.0f;
+            boxer_updateVolumes();
+            if (!ExpectFrame("restore", RenderOnce(), source_left, source_right)) return 5;
+
+            for (int i = 0; i < 5; ++i)
+                boxer_updateVolumes();
+            if (!ExpectFrame("repeated update", RenderOnce(), source_left, source_right)) return 6;
+            if (MIXER_FindChannel("boxer-test") != test_channel) {
+                std::cerr << "channel registration changed after volume updates\\n";
+                return 7;
+            }
+
+            MIXER_DelChannel("boxer-test");
+            if (MIXER_FindChannel("boxer-test") != nullptr) {
+                std::cerr << "channel cleanup failed\\n";
+                return 8;
+            }
+
+            std::cout << "mixer runtime harness passed\\n";
             return 0;
         }
         """

@@ -58,7 +58,7 @@
                                          @"Label shown on accept button in mount-a-new-drive panel.");
 	
     openPanel.accessoryView = self.view;
-    openPanel.allowedFileTypes = [BXFileTypes mountableTypes].allObjects;
+    openPanel.allowedFileTypes = [BXFileTypes filePanelTypesForTypes: [BXFileTypes mountableTypes]];
     openPanel.directoryURL = theSession.gamebox.resourceURL;
 	
 	[self populateDrivesFromSession: theSession];

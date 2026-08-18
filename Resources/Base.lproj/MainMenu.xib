@@ -9,6 +9,7 @@
         <customObject id="-2" userLabel="File's Owner" customClass="NSApplication">
             <connections>
                 <outlet property="delegate" destination="401" id="402"/>
+                <outlet property="mainMenu" destination="29" id="BX-mainMenu-connection"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
@@ -930,9 +931,6 @@
                             <outlet property="delegate" destination="1141" id="1142"/>
                         </connections>
                     </menu>
-                    <connections>
-                        <binding destination="401" name="value" keyPath="currentSession.emulator.gameportTimingMode" id="2146"/>
-                    </connections>
                 </menuItem>
             </items>
             <point key="canvasLocation" x="30" y="-50"/>

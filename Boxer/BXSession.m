@@ -1811,6 +1811,9 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 
 - (void) _startEmulator
 {	
+    [(BXBaseAppController *)[NSApp delegate] writeDiagnosticSnapshotWithTitle: @"Session starting emulator"
+                                                                         body: @"Automatic diagnostic snapshot at BXSession _startEmulator."];
+    
 	//Set the emulator's current working directory relative to whatever we're opening
 	if (self.fileURL)
 	{
@@ -1892,6 +1895,8 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
     NSError *userError = [NSError errorWithDomain: BXEmulatorErrorDomain
                                              code: BXEmulatorUnrecoverableError
                                          userInfo: userInfo];
+    
+    [(BXBaseAppController *)[NSApp delegate] reportIssueForError: userError inSession: self];
     
     [self presentError: userError
         modalForWindow: self.windowForSheet

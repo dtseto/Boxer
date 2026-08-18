@@ -45,6 +45,9 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 - (void) _launchProcessWithUntitledDocumentAndExtraArguments: (NSArray *)extraArgs;
 - (void) _launchProcessWithImportPanelAndExtraArguments: (NSArray *)extraArgs;
 - (void) _launchProcessWithExtraArguments: (NSArray *)extraArgs;
+- (void) _launchApplicationWithArguments: (NSArray *)arguments;
+- (NSURL *) _writeDiagnosticLogForReportAction: (NSString *)actionName;
+- (void) _appendMenu: (NSMenu *)menu toDiagnosticLog: (NSMutableString *)log indent: (NSUInteger)indent;
 
 //Whether it's safe to open a new session
 - (BOOL) _canOpenDocumentOfClass: (Class)documentClass;
@@ -93,7 +96,7 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-	if (self.documents == 0) {
+	if (self.documents.count == 0) {
 		return NSTerminateNow;
 	}
 	//Tell any remaining documents to close on exit so they can clean up properly and save their state.
@@ -126,6 +129,12 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 
 - (void) applicationDidFinishLaunching: (NSNotification *)notification
 {
+	[self writeDiagnosticSnapshotWithTitle: @"Application launch diagnostics"
+									  body: @"Automatic diagnostic snapshot from applicationDidFinishLaunching."];
+	[self performSelector: @selector(_writePostLaunchDiagnosticSnapshot)
+			   withObject: nil
+			   afterDelay: 2.0];
+	
     //Determine if we were passed any startup parameters we need to act upon
 	NSArray *arguments = [NSProcessInfo processInfo].arguments;
 	
@@ -149,6 +158,27 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 			[self openImportSessionWithContentsOfURL: [NSURL fileURLWithPath: importPath] display: YES error: nil];
 		}
 	}
+}
+
+- (void) _writePostLaunchDiagnosticSnapshot
+{
+	[self writeDiagnosticSnapshotWithTitle: @"Post-launch diagnostics"
+									  body: @"Automatic diagnostic snapshot two seconds after applicationDidFinishLaunching."];
+}
+
+- (BOOL) applicationSupportsSecureRestorableState: (NSApplication *)app
+{
+	return YES;
+}
+
+- (BOOL) applicationShouldSaveApplicationState: (NSApplication *)sender
+{
+	return NO;
+}
+
+- (BOOL) applicationShouldRestoreApplicationState: (NSApplication *)sender
+{
+	return NO;
 }
 
 //If no other window was opened during startup, show our startup window.
@@ -465,38 +495,49 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 
 - (void) _launchProcessWithDocumentAtURL: (NSURL *)URL extraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
-	NSArray *params				= @[ URL.path, BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	NSArray *params = @[ URL.path, BXActivateOnLaunchParam ];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
 }
 
 - (void) _launchProcessWithUntitledDocumentAndExtraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
-	NSArray *params				= @[ BXNewSessionParam, BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	NSArray *params = @[ BXNewSessionParam, BXActivateOnLaunchParam ];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
 }
 
 - (void) _launchProcessWithImportPanelAndExtraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
-	NSArray *params				= @[ BXShowImportPanelParam, BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	NSArray *params = @[ BXShowImportPanelParam, BXActivateOnLaunchParam ];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
 }
 
 - (void) _launchProcessWithImportSessionAtURL: (NSURL *)URL extraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
 	NSString *URLParam			= [BXImportURLParam stringByAppendingString: URL.path];
 	NSArray *params				= @[ URLParam, BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
 }
 
 - (void) _launchProcessWithExtraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
-	NSArray *params				= @[ BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	NSArray *params = @[ BXActivateOnLaunchParam ];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
+}
+
+- (void) _launchApplicationWithArguments: (NSArray *)arguments
+{
+	NSURL *bundleURL = [NSBundle mainBundle].bundleURL;
+	NSDictionary *configuration = @{NSWorkspaceLaunchConfigurationArguments: arguments ?: @[]};
+	NSWorkspaceLaunchOptions options = NSWorkspaceLaunchAsync | NSWorkspaceLaunchNewInstance;
+	NSError *launchError = nil;
+	
+	if (![[NSWorkspace sharedWorkspace] launchApplicationAtURL: bundleURL
+													   options: options
+												 configuration: configuration
+														 error: &launchError])
+	{
+		NSLog(@"Could not launch another Boxer instance: %@", launchError);
+	}
 }
 
 - (NSError *) _cancelOpening
@@ -599,15 +640,138 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 
 - (IBAction) showWebsite:			(id)sender	{ [self openURLFromKey: @"WebsiteURL"]; }
 - (IBAction) showDonationPage:		(id)sender	{ [self openURLFromKey: @"DonationURL"]; }
-- (IBAction) showBugReportPage:		(id)sender	{ [self openURLFromKey: @"BugReportURL"]; }
+- (IBAction) showBugReportPage: (id)sender
+{
+	NSURL *diagnosticLogURL = [self _writeDiagnosticLogForReportAction: @"Report a Bug"];
+	if (diagnosticLogURL)
+	{
+		[self revealURLsInFinder: @[diagnosticLogURL]];
+	}
+}
 
 - (IBAction) sendEmail: (id)sender
 {
-	NSString *subject		= @"Boxer feedback";
-	NSString *versionName	= [self.class localizedVersion];
-	NSString *buildNumber	= [self.class buildNumber];
-	NSString *fullSubject	= [NSString stringWithFormat: @"%@ (v%@ %@)", subject, versionName, buildNumber];
-	[self sendEmailFromKey: @"ContactEmail" withSubject: fullSubject];
+	NSURL *diagnosticLogURL = [self _writeDiagnosticLogForReportAction: @"Send Feedback"];
+	if (diagnosticLogURL)
+	{
+		[self revealURLsInFinder: @[diagnosticLogURL]];
+	}
+}
+
+- (NSURL *) _writeDiagnosticLogForReportAction: (NSString *)actionName
+{
+	NSError *error = nil;
+	NSURL *supportURL = [self supportURLCreatingIfMissing: YES error: &error];
+	if (!supportURL)
+	{
+		NSLog(@"Could not create Boxer support folder for diagnostic log: %@", error);
+		return nil;
+	}
+	
+	NSURL *diagnosticsURL = [supportURL URLByAppendingPathComponent: @"Diagnostics"];
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	if (![fileManager createDirectoryAtURL: diagnosticsURL
+			   withIntermediateDirectories: YES
+								attributes: nil
+									 error: &error])
+	{
+		NSLog(@"Could not create Boxer diagnostics folder: %@", error);
+		return nil;
+	}
+	
+	NSURL *logURL = [diagnosticsURL URLByAppendingPathComponent: @"Boxer-Diagnostics.log"];
+	NSMutableString *log = [NSMutableString string];
+	NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+	NSBundle *bundle = [NSBundle mainBundle];
+	NSMenu *mainMenu = NSApp.mainMenu;
+	BXSession *session = self.currentSession;
+	
+	[log appendString: @"\n\n==== Boxer Diagnostic Report ====\n"];
+	[log appendFormat: @"Created: %@\n", [NSDate date]];
+	[log appendFormat: @"Action: %@\n", actionName];
+	[log appendFormat: @"Process ID: %d\n", processInfo.processIdentifier];
+	[log appendFormat: @"App: %@ %@ (%@)\n",
+	 [bundle objectForInfoDictionaryKey: (NSString *)kCFBundleNameKey],
+	 [self.class localizedVersion],
+	 [self.class buildNumber]];
+	[log appendFormat: @"Bundle: %@\n", bundle.bundlePath];
+	[log appendFormat: @"macOS: %@\n", processInfo.operatingSystemVersionString];
+	[log appendFormat: @"Arguments: %@\n", processInfo.arguments];
+	[log appendFormat: @"Documents: %lu\n", (unsigned long)self.documents.count];
+	[log appendFormat: @"Sessions: %lu\n", (unsigned long)self.sessions.count];
+	[log appendFormat: @"Current session: %@\n", session ?: @"(none)"];
+	if (session)
+	{
+		[log appendFormat: @"Session display name: %@\n", session.displayName];
+		[log appendFormat: @"Session file URL: %@\n", session.fileURL];
+		[log appendFormat: @"Session current URL: %@\n", session.currentURL];
+		[log appendFormat: @"Session has gamebox: %@\n", session.hasGamebox ? @"YES" : @"NO"];
+		[log appendFormat: @"Session is emulating: %@\n", session.isEmulating ? @"YES" : @"NO"];
+	}
+	
+	[log appendString: @"\n-- Main Menu --\n"];
+	[log appendFormat: @"NSApp.mainMenu: %@\n", mainMenu];
+	[log appendFormat: @"Main menu item count: %ld\n", (long)mainMenu.numberOfItems];
+	[self _appendMenu: mainMenu toDiagnosticLog: log indent: 0];
+	
+	NSData *data = [log dataUsingEncoding: NSUTF8StringEncoding];
+	if (![fileManager fileExistsAtPath: logURL.path])
+	{
+		[data writeToURL: logURL options: NSDataWritingAtomic error: &error];
+	}
+	else
+	{
+		NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingToURL: logURL error: &error];
+		if (fileHandle)
+		{
+			[fileHandle seekToEndOfFile];
+			[fileHandle writeData: data];
+			[fileHandle closeFile];
+		}
+	}
+	
+	if (error)
+	{
+		NSLog(@"Could not write Boxer diagnostic log: %@", error);
+		return nil;
+	}
+	
+	NSLog(@"Wrote Boxer diagnostic log to %@", logURL.path);
+	return logURL;
+}
+
+- (void) _appendMenu: (NSMenu *)menu toDiagnosticLog: (NSMutableString *)log indent: (NSUInteger)indent
+{
+	if (!menu)
+	{
+		[log appendString: @"(no menu)\n"];
+		return;
+	}
+	
+	NSString *indentString = [@"" stringByPaddingToLength: indent * 2 withString: @" " startingAtIndex: 0];
+	[log appendFormat: @"%@Menu: %@ (%p), supermenu: %@ (%p), items: %ld\n",
+	 indentString,
+	 menu.title,
+	 menu,
+	 menu.supermenu.title,
+	 menu.supermenu,
+	 (long)menu.numberOfItems];
+	
+	for (NSMenuItem *item in menu.itemArray)
+	{
+		[log appendFormat: @"%@  Item: %@ (%p), submenu: %@ (%p), target: %@, action: %@\n",
+		 indentString,
+		 item.title,
+		 item,
+		 item.submenu.title,
+		 item.submenu,
+		 item.target,
+		 NSStringFromSelector(item.action)];
+		if (item.submenu)
+		{
+			[self _appendMenu: item.submenu toDiagnosticLog: log indent: indent + 2];
+		}
+	}
 }
 
 - (BOOL) validateUserInterfaceItem: (id <NSValidatedUserInterfaceItem>)theItem

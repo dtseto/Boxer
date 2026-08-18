@@ -12,6 +12,7 @@
 #import "BXImportSession.h"
 #import "BXBlueprintPanel.h"
 #import "BXAppController.h"
+#import "BXFileTypes.h"
 
 
 @implementation BXImportDropzonePanelController
@@ -49,7 +50,7 @@
     openPanel.prompt = NSLocalizedString(@"Import",
                                          @"Label shown on accept button in choose-a-folder-to-import panel.");
 	
-    openPanel.allowedFileTypes = [BXImportSession acceptedSourceTypes].allObjects;
+    openPanel.allowedFileTypes = [BXFileTypes filePanelTypesForTypes: [BXImportSession acceptedSourceTypes]];
     
     [openPanel beginSheetModalForWindow: self.view.window
                       completionHandler: ^(NSInteger result) {

@@ -139,6 +139,57 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("src/hardware/joystick.cpp", contains: "WriteHandler.Install(0x201, write_p201_switchable")
     }
 
+    func testJoystickGameportHandlersAreInstalledOnce() throws {
+        // Protects against App/DOS startup crashes from duplicate port 0x201 handler installation.
+        let joystick = try String(contentsOf: dosboxRoot.appendingPathComponent("src/hardware/joystick.cpp"), encoding: .utf8)
+        XCTAssertEqual(occurrences(of: "ReadHandler.Install(0x201", in: joystick), 1)
+        XCTAssertEqual(occurrences(of: "WriteHandler.Install(0x201", in: joystick), 1)
+    }
+
+    func testMainMenuNibDoesNotBindTopLevelMenusToSessionState() throws {
+        // Protects against AppKit "Internal inconsistency in menus" diagnostics caused by stale top-level menu bindings.
+        let mainMenuURL = projectRoot.appendingPathComponent("Resources/Base.lproj/MainMenu.xib")
+        let mainMenu = try String(contentsOf: mainMenuURL, encoding: .utf8)
+
+        XCTAssertTrue(
+            mainMenu.contains(#"<customObject id="-2" userLabel="File's Owner" customClass="NSApplication">"#),
+            "MainMenu.xib should use NSApplication as File's Owner"
+        )
+        XCTAssertTrue(
+            mainMenu.contains(#"<outlet property="mainMenu" destination="29" id="BX-mainMenu-connection"/>"#),
+            "MainMenu.xib should explicitly connect NSApplication.mainMenu to the main menu object through File's Owner"
+        )
+        XCTAssertFalse(
+            mainMenu.contains("""
+<customObject id="-3" userLabel="Application" customClass="NSObject">
+            <connections>
+                <outlet property="dockMenu" destination="2132" id="2136"/>
+                <outlet property="mainMenu"
+"""),
+            "MainMenu.xib must not connect mainMenu on the generic Application placeholder"
+        )
+        XCTAssertFalse(
+            mainMenu.contains(#"name="value" keyPath="currentSession.emulator.gameportTimingMode""#),
+            "Top-level menu items must not be value-bound to emulator session state"
+        )
+        XCTAssertFalse(
+            mainMenu.contains("<menuItem title=\"Help\" id=\"103\">\n                    <connections>"),
+            "The top-level Help menu item must not have bindings or outlets of its own"
+        )
+    }
+
+    func testOpenPanelsDoNotReceiveInvalidLegacyUTIs() throws {
+        // Protects against AppKit warnings when legacy UTIs no longer bridge to UTType.
+        let fileTypes = try String(contentsOf: projectRoot.appendingPathComponent("Boxer/BXFileTypes.m"), encoding: .utf8)
+        let importDropzone = try String(contentsOf: projectRoot.appendingPathComponent("Boxer/BXImportDropzonePanelController.m"), encoding: .utf8)
+        let mountPanel = try String(contentsOf: projectRoot.appendingPathComponent("Boxer/BXMountPanelController.m"), encoding: .utf8)
+
+        XCTAssertTrue(fileTypes.contains(#"if ([type isEqualToString: BXNDIFImageType])"#))
+        XCTAssertTrue(fileTypes.contains(#"[filePanelTypes addObject: @"img"]"#))
+        XCTAssertTrue(importDropzone.contains("[BXFileTypes filePanelTypesForTypes: [BXImportSession acceptedSourceTypes]]"))
+        XCTAssertTrue(mountPanel.contains("[BXFileTypes filePanelTypesForTypes: [BXFileTypes mountableTypes]]"))
+    }
+
     func testGameboxDriveAndMediaContracts() throws {
         // Protects BOXER markers: drive-system-path, initialize-drive-system-path, retrieve-drive-system-path, fat-drive-system-path, iso-drive-system-path, local-drive-system-path, drive-cache-filter-bridge, hide-host-metadata, file-create-write-policy, file-open-write-policy, file-open-write-policy-end, file-delete-write-policy, local-dir-create-policy, local-file-created, local-file-removed, local-open-file-removed, imgmount-drive-mounted, mount-drive-mounted, drive-unmounted, invalid-fat-image-fails-construction, invalid-fat-bootsector-fails-construction, suppress-cdrom-image-error-text, file-unavailable-notification, local-file-unavailable-notification, local-file-unavailable, unavailable-file-read, unavailable-file-write, unavailable-file-seek, unavailable-file-timestamp
         try expectBlock("include/dos_system.h", marker: "drive-system-path", contains: "systempath")
@@ -654,5 +705,9 @@ final class BoxerIntegrationContractTests: XCTestCase {
         }
         let block = contents[begin.lowerBound..<end.upperBound]
         XCTAssertTrue(block.contains(needle), "\(url.path) marker \(marker) missing: \(needle)", file: file, line: line)
+    }
+
+    private func occurrences(of needle: String, in haystack: String) -> Int {
+        haystack.components(separatedBy: needle).count - 1
     }
 }

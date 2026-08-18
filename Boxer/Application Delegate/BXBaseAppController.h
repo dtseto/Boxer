@@ -171,6 +171,14 @@
 - (void) reportIssueWithTitle: (NSString *)title
                          body: (NSString *)body;
 
+/// Writes a local issue report log and returns its URL.
+- (NSURL *) writeIssueReportLogWithTitle: (NSString *)title
+                                    body: (NSString *)body;
+
+/// Appends a diagnostic snapshot to the local diagnostics log without revealing Finder.
+- (void) writeDiagnosticSnapshotWithTitle: (NSString *)title
+                                     body: (NSString *)body;
+
 /// Opens an issue tracker page prefilled with the details of the specified error.
 /// @param error    The error whose details should be prefilled into the issue form.
 /// @param session  The session that triggered the error. Details of the session will be included in the issue text.

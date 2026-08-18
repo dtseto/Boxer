@@ -696,18 +696,123 @@
 
 @implementation BXBaseAppController (BXErrorReporting)
 
+- (void) writeDiagnosticSnapshotWithTitle: (NSString *)title body: (NSString *)body
+{
+    [self writeIssueReportLogWithTitle: title body: body];
+}
+
 - (void) reportIssueWithTitle: (NSString *)title body: (NSString *)body
 {
-    NSString *issueURLString = [[NSBundle mainBundle] objectForInfoDictionaryKey: @"BugReportURL"];
-    NSAssert(issueURLString.length, @"No issue URL found in Info.plist for key %@", @"BugReportURL");
-    
-    if (issueURLString.length)
+    NSURL *logURL = [self writeIssueReportLogWithTitle: title body: body];
+    if (logURL)
+        [self revealURLsInFinder: @[logURL]];
+}
+
+- (NSURL *) writeIssueReportLogWithTitle: (NSString *)title body: (NSString *)body
+{
+    NSError *error = nil;
+    NSURL *supportURL = [self supportURLCreatingIfMissing: YES error: &error];
+    if (!supportURL)
     {
-        NSString *encodedTitle  = (title) ? [title stringByAddingPercentEncodingWithAllowedCharacters: NSCharacterSet.URLQueryAllowedCharacterSet] : @"";
-        NSString *encodedBody   = (body) ? [body stringByAddingPercentEncodingWithAllowedCharacters: NSCharacterSet.URLQueryAllowedCharacterSet] : @"";
+        NSLog(@"Could not create Boxer support folder for issue report log: %@", error);
+        return nil;
+    }
+    
+    NSURL *diagnosticsURL = [supportURL URLByAppendingPathComponent: @"Diagnostics"];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    if (![fileManager createDirectoryAtURL: diagnosticsURL
+               withIntermediateDirectories: YES
+                                attributes: nil
+                                     error: &error])
+    {
+        NSLog(@"Could not create Boxer diagnostics folder: %@", error);
+        return nil;
+    }
+    
+    NSURL *logURL = [diagnosticsURL URLByAppendingPathComponent: @"Boxer-Diagnostics.log"];
+    NSMutableString *log = [NSMutableString string];
+    NSProcessInfo *processInfo = [NSProcessInfo processInfo];
+    NSBundle *bundle = [NSBundle mainBundle];
+    
+    [log appendString: @"\n\n==== Boxer Issue Report ====\n"];
+    [log appendFormat: @"Created: %@\n", [NSDate date]];
+    [log appendFormat: @"App: %@ %@ (%@)\n",
+     [bundle objectForInfoDictionaryKey: (NSString *)kCFBundleNameKey],
+     [self.class localizedVersion],
+     [self.class buildNumber]];
+    [log appendFormat: @"Bundle: %@\n", bundle.bundlePath];
+    [log appendFormat: @"Process ID: %d\n", processInfo.processIdentifier];
+    [log appendFormat: @"macOS: %@\n", processInfo.operatingSystemVersionString];
+    [log appendFormat: @"Arguments: %@\n", processInfo.arguments];
+    [log appendFormat: @"Documents: %lu\n", (unsigned long)self.documents.count];
+    [log appendFormat: @"Sessions: %lu\n", (unsigned long)self.sessions.count];
+    [log appendFormat: @"Main menu: %@\n", NSApp.mainMenu];
+    [log appendFormat: @"Main menu item count: %ld\n", (long)NSApp.mainMenu.numberOfItems];
+    [self _appendMenu: NSApp.mainMenu toIssueReportLog: log indent: 0];
+    
+    [log appendString: @"\n-- Report Title --\n"];
+    [log appendFormat: @"%@\n", title ?: @"(none)"];
+    [log appendString: @"\n-- Report Body --\n"];
+    [log appendFormat: @"%@\n", body ?: @"(none)"];
+    
+    NSData *data = [log dataUsingEncoding: NSUTF8StringEncoding];
+    if (![fileManager fileExistsAtPath: logURL.path])
+    {
+        if (![data writeToURL: logURL options: NSDataWritingAtomic error: &error])
+        {
+            NSLog(@"Could not write Boxer issue report log: %@", error);
+            return nil;
+        }
+    }
+    else
+    {
+        NSFileHandle *fileHandle = [NSFileHandle fileHandleForWritingToURL: logURL error: &error];
+        if (!fileHandle)
+        {
+            NSLog(@"Could not open Boxer issue report log for writing: %@", error);
+            return nil;
+        }
         
-        NSString *completeURLString = [NSString stringWithFormat: @"%@?title=%@&body=%@", issueURLString, encodedTitle, encodedBody];
-		[[NSWorkspace sharedWorkspace] openURL: [NSURL URLWithString: completeURLString]];
+        [fileHandle seekToEndOfFile];
+        [fileHandle writeData: data];
+        [fileHandle closeFile];
+    }
+    
+    NSLog(@"Wrote Boxer issue report log to %@", logURL.path);
+    return logURL;
+}
+
+- (void) _appendMenu: (NSMenu *)menu toIssueReportLog: (NSMutableString *)log indent: (NSUInteger)indent
+{
+    if (!menu)
+    {
+        [log appendString: @"(no menu)\n"];
+        return;
+    }
+    
+    NSString *indentString = [@"" stringByPaddingToLength: indent * 2 withString: @" " startingAtIndex: 0];
+    [log appendFormat: @"%@Menu: %@ (%p), supermenu: %@ (%p), items: %ld\n",
+     indentString,
+     menu.title,
+     menu,
+     menu.supermenu.title,
+     menu.supermenu,
+     (long)menu.numberOfItems];
+    
+    for (NSMenuItem *item in menu.itemArray)
+    {
+        [log appendFormat: @"%@  Item: %@ (%p), submenu: %@ (%p), target: %@, action: %@\n",
+         indentString,
+         item.title,
+         item,
+         item.submenu.title,
+         item.submenu,
+         item.target,
+         NSStringFromSelector(item.action)];
+        if (item.submenu)
+        {
+            [self _appendMenu: item.submenu toIssueReportLog: log indent: indent + 2];
+        }
     }
 }
 

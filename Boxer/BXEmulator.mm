@@ -1037,7 +1037,16 @@ static BOOL _hasStartedEmulator = NO;
 	catch (char *errMessage)
 	{
         self.executing = NO;
-        
+
+        // ObjC exceptions don't trigger C++ stack unwinding, so we must
+        // clean up DOSBox state explicitly before raising.
+        SDL_Quit();
+        [self.videoHandler shutdown];
+        control.reset();
+        configuration = NULL;
+        delete commandLine;
+        commandLine = NULL;
+
         NSString *reason = [NSString stringWithCString: errMessage encoding: BXDirectStringEncoding];
         [NSException raise: BXEmulatorUnrecoverableException
                     format: @"DOSBox aborted with the following error: %@", reason];
@@ -1045,9 +1054,18 @@ static BOOL _hasStartedEmulator = NO;
     catch (boxer_emulatorException &e)
     {
         self.executing = NO;
+
+        // ObjC exceptions don't trigger C++ stack unwinding, so we must
+        // clean up DOSBox state explicitly before raising.
+        SDL_Quit();
+        [self.videoHandler shutdown];
+        control.reset();
+        configuration = NULL;
+        delete commandLine;
+        commandLine = NULL;
+
         NSException *exception = [BXEmulatorException exceptionWithName: BXEmulatorUnrecoverableException
                                                       originalException: &e];
-        
         [exception raise];
     }
 	catch (int)

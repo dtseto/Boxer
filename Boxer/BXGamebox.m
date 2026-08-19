@@ -80,10 +80,6 @@ NSString * const BXGameboxErrorDomain = @"BXGameboxErrorDomain";
 /// Save the game info back to the gamebox.
 - (void) _persistGameInfo;
 
-/// Returns a plain top-level folder to use as the C drive for legacy gameboxes
-/// that predate explicit C.harddisk drive folders.
-- (NSURL *) _legacyRootDriveURL;
-
 @end
 
 
@@ -118,6 +114,16 @@ NSString * const BXGameboxErrorDomain = @"BXGameboxErrorDomain";
 - (void) dealloc
 {
     [self.undoDelegate removeAllUndoActionsForClient: self];
+}
+
+- (NSURL *) resourceURL
+{
+    return super.resourceURL ?: self.bundleURL;
+}
+
+- (NSString *) resourcePath
+{
+    return super.resourcePath ?: self.bundlePath;
 }
 
 #pragma mark - Launchers
@@ -579,12 +585,11 @@ NSString * const BXGameboxErrorDomain = @"BXGameboxErrorDomain";
     //In this case, use the base folder of the gamebox itself as drive C.
     if (!hasProperDriveC)
     {
-        NSURL *rootDriveURL = self._legacyRootDriveURL ?: self.resourceURL;
-        NSLog(@"[BXGamebox] No explicit C drive found, using %@ as C:", rootDriveURL.lastPathComponent);
-        BXDrive *drive = [BXDrive driveWithContentsOfURL: rootDriveURL
+        NSLog(@"[BXGamebox] No explicit C drive found, using gamebox root as C:");
+        BXDrive *drive = [BXDrive driveWithContentsOfURL: self.resourceURL
                                                   letter: @"C"
                                                     type: BXDriveHardDisk];
-        NSLog(@"[BXGamebox] → Created fallback C drive from %@", rootDriveURL.lastPathComponent);
+        NSLog(@"[BXGamebox] → Created fallback C drive from %@", self.resourceURL.lastPathComponent);
         [drives addObject: drive];
     }
     else
@@ -598,47 +603,6 @@ NSString * const BXGameboxErrorDomain = @"BXGameboxErrorDomain";
     [drives sortUsingDescriptors: descriptors];
     
     return [drives copy];
-}
-
-- (NSURL *) _legacyRootDriveURL
-{
-    NSURL *targetURL = self.legacyTargetURL;
-    if (targetURL && [targetURL isBasedInURL: self.resourceURL])
-    {
-        NSString *relativePath = [targetURL pathRelativeToURL: self.resourceURL];
-        NSString *topLevelName = relativePath.pathComponents.firstObject;
-        if (topLevelName.length && ![topLevelName isEqualToString: @"."])
-        {
-            NSURL *topLevelURL = [self.resourceURL URLByAppendingPathComponent: topLevelName];
-            if (topLevelURL.isDirectory)
-                return topLevelURL;
-        }
-    }
-
-    NSMutableArray *candidateURLs = [NSMutableArray arrayWithCapacity: 1];
-    NSDirectoryEnumerator *enumerator = [[NSFileManager defaultManager] enumeratorAtURL: self.resourceURL
-                                                             includingPropertiesForKeys: @[NSURLIsDirectoryKey]
-                                                                                options: NSDirectoryEnumerationSkipsSubdirectoryDescendants | NSDirectoryEnumerationSkipsHiddenFiles
-                                                                           errorHandler: NULL];
-
-    NSSet *supportFilenames = [NSSet setWithObjects:
-                               [BXConfigurationFileName stringByAppendingPathExtension: BXConfigurationFileExtension],
-                               [BXGameInfoFileName stringByAppendingPathExtension: BXGameInfoFileExtension],
-                               BXDocumentationFolderName,
-                               BXTargetSymlinkName,
-                               @"Icon\r",
-                               nil];
-
-    for (NSURL *URL in enumerator)
-    {
-        if ([supportFilenames containsObject: URL.lastPathComponent])
-            continue;
-
-        if (URL.isDirectory)
-            [candidateURLs addObject: URL];
-    }
-
-    return (candidateURLs.count == 1) ? candidateURLs.firstObject : nil;
 }
 
 - (NSURL *) configurationFileURL

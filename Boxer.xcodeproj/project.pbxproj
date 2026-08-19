@@ -5472,7 +5472,7 @@
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
 				CODE_SIGN_ENTITLEMENTS = Boxer/Boxer.entitlements;
 				CODE_SIGN_IDENTITY = "Developer ID Application: David Seto (GHTQCRGWTR)";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application: David Seto (GHTQCRGWTR)";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
@@ -5505,7 +5505,7 @@
 				"LD_NO_PIE[arch=arm64]" = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = "2.0.0-alpha";
+				MARKETING_VERSION = "2.0.2-alpha";
 				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				OTHER_CFLAGS = "-mstackrealign";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dtseto.boxer;
@@ -5529,7 +5529,7 @@
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
 				CODE_SIGN_ENTITLEMENTS = Boxer/Boxer.entitlements;
 				CODE_SIGN_IDENTITY = "Developer ID Application: David Seto (GHTQCRGWTR)";
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Developer ID Application: David Seto (GHTQCRGWTR)";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
@@ -5562,14 +5562,14 @@
 				"LD_NO_PIE[arch=arm64]" = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MARKETING_VERSION = "2.0.0-alpha";
+				MARKETING_VERSION = "2.0.2-alpha";
 				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				OTHER_CFLAGS = "-mstackrealign";
 				PRODUCT_BUNDLE_IDENTIFIER = com.dtseto.boxer;
 				PRODUCT_NAME = Boxer;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				"PROVISIONING_PROFILE_SPECIFIER[sdk=macosx*]" = "";
-				SKIP_INSTALL = YES;
+				SKIP_INSTALL = NO;
 				STRINGS_FILE_OUTPUT_ENCODING = binary;
 				SWIFT_OBJC_BRIDGING_HEADER = "Boxer/Boxer-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;

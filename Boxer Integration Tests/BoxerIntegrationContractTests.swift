@@ -139,6 +139,90 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("src/hardware/joystick.cpp", contains: "WriteHandler.Install(0x201, write_p201_switchable")
     }
 
+    func testJoystickGameportHandlersAreInstalledOnce() throws {
+        // Protects against startup crashes caused by registering DOS gameport I/O twice.
+        let joystick = try source(at: dosboxRoot.appendingPathComponent("src/hardware/joystick.cpp"))
+        XCTAssertEqual(occurrences(of: "ReadHandler.Install(0x201", in: joystick), 1)
+        XCTAssertEqual(occurrences(of: "WriteHandler.Install(0x201", in: joystick), 1)
+    }
+
+    func testEmulatorFailurePathsCleanUpRestartableDOSBoxState() throws {
+        // ObjC exceptions bypass C++ unwinding, so both translated error paths must
+        // release the global DOSBox configuration before raising an NSException.
+        let emulator = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator.mm"))
+        let charErrorHandler = try sourceRegion(
+            in: emulator,
+            beginningWith: "catch (char *errMessage)",
+            endingBefore: "catch (boxer_emulatorException &e)"
+        )
+        let boxerErrorHandler = try sourceRegion(
+            in: emulator,
+            beginningWith: "catch (boxer_emulatorException &e)",
+            endingBefore: "catch (int)"
+        )
+
+        for handler in [charErrorHandler, boxerErrorHandler] {
+            XCTAssertTrue(handler.contains("self.executing = NO;"))
+            XCTAssertTrue(handler.contains("SDL_Quit();"))
+            XCTAssertTrue(handler.contains("[self.videoHandler shutdown];"))
+            XCTAssertTrue(handler.contains("control.reset();"))
+            XCTAssertTrue(handler.contains("configuration = NULL;"))
+            XCTAssertTrue(handler.contains("delete commandLine;"))
+            XCTAssertTrue(handler.contains("commandLine = NULL;"))
+        }
+    }
+
+    func testBackgroundEmulatorExceptionsReturnToMainThread() throws {
+        let session = try source(at: projectRoot.appendingPathComponent("Boxer/BXSession.m"))
+        let startMethod = try sourceRegion(
+            in: session,
+            beginningWith: "- (void) _startEmulator\n",
+            endingBefore: "- (void) _startEmulatorInBackground"
+        )
+        let backgroundMethod = try sourceRegion(
+            in: session,
+            beginningWith: "- (void) _startEmulatorInBackground",
+            endingBefore: "- (void) _reportEmulatorException:"
+        )
+
+        XCTAssertTrue(startMethod.contains("performSelectorInBackground: @selector(_startEmulatorInBackground)"))
+        XCTAssertTrue(backgroundMethod.contains("@autoreleasepool"))
+        XCTAssertTrue(backgroundMethod.contains("[exception.name isEqualToString: BXEmulatorUnrecoverableException]"))
+        XCTAssertTrue(backgroundMethod.contains("performSelectorOnMainThread: @selector(_reportEmulatorException:)"))
+        XCTAssertTrue(backgroundMethod.contains("waitUntilDone: NO"))
+        XCTAssertTrue(backgroundMethod.contains("@throw exception;"))
+    }
+
+    func testCrashReportsRemainLocalAndContainDiagnosticContext() throws {
+        let application = try source(at: projectRoot.appendingPathComponent("Boxer/Application Delegate/BXApplication.m"))
+        let controller = try source(at: projectRoot.appendingPathComponent("Boxer/Application Delegate/BXBaseAppController.m"))
+        let session = try source(at: projectRoot.appendingPathComponent("Boxer/BXSession.m"))
+
+        XCTAssertTrue(application.contains("BXApplicationCrashDumpSafeFilenameComponent"))
+        XCTAssertTrue(application.contains("BXApplicationIsReportingEmulatorExceptionFromSession"))
+        XCTAssertTrue(application.contains("BXApplicationWriteLocalReportFromLegacyBugReportURL"))
+        XCTAssertTrue(application.contains("[URL.path isEqualToString: @\"/report-an-issue\"]"))
+        XCTAssertTrue(application.contains("return [self bx_openURL: URL];"))
+
+        XCTAssertTrue(controller.contains("reportTitle.length ? title : @\"Boxer Error Report\""))
+        XCTAssertTrue(controller.contains("exception.reason ?: error.localizedDescription ?: @\"Unknown error\""))
+        XCTAssertTrue(controller.contains("the error did not include an exception object"))
+        XCTAssertTrue(controller.contains("revealInFinder: (BOOL)revealInFinder"))
+
+        for diagnostic in ["Running DOS processes", "Mounted DOS drives", "Session file URL:",
+                           "Current DOS directory:", "Exception call stack symbols"] {
+            XCTAssertTrue(session.contains(diagnostic), "Crash dump is missing \(diagnostic)")
+        }
+        XCTAssertTrue(session.contains("writeIssueForError: userError"))
+        XCTAssertTrue(session.contains("revealInFinder: NO"))
+    }
+
+    func testSignedBuildRetainsDynamicCoreEntitlements() throws {
+        let entitlements = try source(at: projectRoot.appendingPathComponent("Boxer/Boxer.entitlements"))
+        XCTAssertTrue(entitlements.contains("com.apple.security.cs.allow-jit"))
+        XCTAssertTrue(entitlements.contains("com.apple.security.cs.allow-unsigned-executable-memory"))
+    }
+
     func testGameboxDriveAndMediaContracts() throws {
         // Protects BOXER markers: drive-system-path, initialize-drive-system-path, retrieve-drive-system-path, fat-drive-system-path, iso-drive-system-path, local-drive-system-path, drive-cache-filter-bridge, hide-host-metadata, file-create-write-policy, file-open-write-policy, file-open-write-policy-end, file-delete-write-policy, local-dir-create-policy, local-file-created, local-file-removed, local-open-file-removed, imgmount-drive-mounted, mount-drive-mounted, drive-unmounted, invalid-fat-image-fails-construction, invalid-fat-bootsector-fails-construction, suppress-cdrom-image-error-text, file-unavailable-notification, local-file-unavailable-notification, local-file-unavailable, unavailable-file-read, unavailable-file-write, unavailable-file-seek, unavailable-file-timestamp
         try expectBlock("include/dos_system.h", marker: "drive-system-path", contains: "systempath")
@@ -154,6 +238,22 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("src/dos/program_mount_common.cpp", contains: "boxer_driveDidUnmount")
         try expect("src/dos/drive_fat.cpp", contains: "created_successfully = false;")
         try expectBlock("src/dos/drive_local.cpp", marker: "local-file-unavailable", contains: "void localFile::willBecomeUnavailable()")
+    }
+
+    func testLegacyGameboxesReceiveExactlyOneFallbackCDrive() throws {
+        let gamebox = try source(at: projectRoot.appendingPathComponent("Boxer/BXGamebox.m"))
+        let bundledDrives = try sourceRegion(
+            in: gamebox,
+            beginningWith: "- (NSArray *) bundledDrives",
+            endingBefore: "- (NSURL *) configurationFileURL"
+        )
+
+        XCTAssertTrue(bundledDrives.contains("if ([drive.letter isEqualToString: @\"C\"])"))
+        XCTAssertTrue(bundledDrives.contains("if (!hasProperDriveC)"))
+        XCTAssertTrue(bundledDrives.contains("driveWithContentsOfURL: self.resourceURL"))
+        XCTAssertTrue(bundledDrives.contains("letter: @\"C\""))
+        XCTAssertTrue(bundledDrives.contains("type: BXDriveHardDisk"))
+        XCTAssertEqual(occurrences(of: "letter: @\"C\"", in: String(bundledDrives)), 1)
     }
 
     func testShellLifecycleContracts() throws {
@@ -637,8 +737,22 @@ final class BoxerIntegrationContractTests: XCTestCase {
     }
 
     private func expect(_ url: URL, contains needle: String, file: StaticString = #filePath, line: UInt = #line) throws {
-        let contents = try String(contentsOf: url, encoding: .utf8)
+        let contents = try source(at: url)
         XCTAssertTrue(contents.contains(needle), "\(url.path) missing: \(needle)", file: file, line: line)
+    }
+
+    private func source(at url: URL) throws -> String {
+        try String(contentsOf: url, encoding: .utf8)
+    }
+
+    private func sourceRegion(in source: String, beginningWith beginning: String, endingBefore ending: String) throws -> Substring {
+        let start = try XCTUnwrap(source.range(of: beginning), "Missing region start: \(beginning)")
+        let end = try XCTUnwrap(source.range(of: ending, range: start.upperBound..<source.endIndex), "Missing region end: \(ending)")
+        return source[start.lowerBound..<end.lowerBound]
+    }
+
+    private func occurrences(of needle: String, in haystack: String) -> Int {
+        haystack.components(separatedBy: needle).count - 1
     }
 
     private func expectBlock(_ relativePath: String, marker: String, contains needle: String, file: StaticString = #filePath, line: UInt = #line) throws {

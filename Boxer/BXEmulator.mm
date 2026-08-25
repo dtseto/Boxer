@@ -11,6 +11,7 @@
 #import <SDL2/SDL.h>
 #import "cpu.h"
 #import "control.h"
+#import "cross.h"
 #import "shell.h"
 #import "mapper.h"
 #import "joystick.h"
@@ -420,7 +421,7 @@ static BOOL _hasStartedEmulator = NO;
 		//Turn off automatic speed scaling
         self.autoSpeed = NO;
         
-		CPU_OldCycleMax = CPU_CycleMax = (Bit32s)newSpeed;
+		CPU_OldCycleMax = CPU_CycleMax = (int32_t)newSpeed;
 		
 		//Stop DOSBox from resetting the cycles after a program exits
 		CPU_AutoDetermineMode &= ~CPU_AUTODETERMINE_CYCLES;
@@ -1013,6 +1014,10 @@ static BOOL _hasStartedEmulator = NO;
             control.reset(new Config(commandLine));
             configuration = control.get();
             
+            //DOSBox Staging 0.79 caches its platform configuration directory
+            //before DOS and the virtual Z: drive are initialized.
+            CROSS_DetermineConfigPaths();
+
             //Sets up the vast swathes of DOSBox configuration file parameters,
             //and registers the shell to start up when we finish initializing.
             DOSBOX_Init();

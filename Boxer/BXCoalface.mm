@@ -94,7 +94,7 @@ bool boxer_runLoopShouldContinue()
 }
 
 /// Notifies Boxer of changes to title and speed settings
-void boxer_handleDOSBoxTitleChange(Bit32s newCycles, int newFrameskip, bool newPaused)
+void boxer_handleDOSBoxTitleChange(int32_t newCycles, int newFrameskip, bool newPaused)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
 	[emulator _didChangeEmulationState];
@@ -132,7 +132,7 @@ Bitu boxer_idealOutputMode(Bitu flags)
 	return GFX_CAN_32 | GFX_SCALING;
 }
 
-bool boxer_startFrame(Bit8u * &frameBuffer, int & pitch)
+bool boxer_startFrame(uint8_t * &frameBuffer, int & pitch)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
 	return [[emulator videoHandler] startFrameWithBuffer: (void **)&frameBuffer pitch: &pitch];
@@ -144,7 +144,7 @@ void boxer_finishFrame(const uint16_t *dirtyBlocks)
 	[[emulator videoHandler] finishFrameWithChanges: dirtyBlocks];	
 }
 
-Bitu boxer_getRGBPaletteEntry(Bit8u red, Bit8u green, Bit8u blue)
+Bitu boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
 	return [[emulator videoHandler] paletteEntryWithRed: red green: green blue: blue];
@@ -214,7 +214,7 @@ bool boxer_hasPendingCommandsForShell(DOS_Shell *shell)
 	return emulator.commandQueue.count > 0;
 }
 
-void boxer_shellWillReadCommandInputFromHandle(DOS_Shell *shell, Bit16u handle)
+void boxer_shellWillReadCommandInputFromHandle(DOS_Shell *shell, uint16_t handle)
 {
     if (handle == STDIN)
     {
@@ -222,7 +222,7 @@ void boxer_shellWillReadCommandInputFromHandle(DOS_Shell *shell, Bit16u handle)
         emulator.waitingForCommandInput = YES;
     }
 }
-void boxer_shellDidReadCommandInputFromHandle(DOS_Shell *shell, Bit16u handle)
+void boxer_shellDidReadCommandInputFromHandle(DOS_Shell *shell, uint16_t handle)
 {
     if (handle == STDIN)
     {
@@ -306,13 +306,13 @@ bool boxer_shouldAllowWriteAccessToPath(const char *path, DOS_Drive *dosboxDrive
 }
 
 //Tells Boxer to resync its cached drives - called by DOSBox functions that add/remove drives
-void boxer_driveDidMount(Bit8u driveIndex)
+void boxer_driveDidMount(uint8_t driveIndex)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
 	[emulator _syncDriveCache];
 }
 
-void boxer_driveDidUnmount(Bit8u driveIndex)
+void boxer_driveDidUnmount(uint8_t driveIndex)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
 	[emulator _syncDriveCache];
@@ -471,7 +471,7 @@ bool boxer_continueListeningForKeyEvents()
     return true;
 }
 
-bool boxer_getNextKeyCodeInPasteBuffer(Bit16u *outKeyCode, bool consumeKey)
+bool boxer_getNextKeyCodeInPasteBuffer(uint16_t *outKeyCode, bool consumeKey)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
     
@@ -628,3 +628,15 @@ void MAPPER_AutoType(std::vector<std::string> &sequence,
                      const uint32_t wait_ms,
                      const uint32_t pacing_ms) {}
 std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix) {return std::vector<std::string>();}
+// Boxer owns mouse capture and focus state instead of DOSBox's SDL frontend.
+bool mouse_is_captured = false;
+
+void GFX_UpdateMouseState()
+{
+	// AppKit's input controller applies capture changes directly.
+}
+
+void MAPPER_AutoTypeStopImmediately()
+{
+	// Boxer does not use the SDL mapper's auto-typing queue.
+}

@@ -16,6 +16,7 @@
 
 #import "config.h"
 #import "video.h"
+#include <cstdint>
 #include <stdio.h>
 
 #if __cplusplus
@@ -44,23 +45,23 @@ extern "C" {
 	
 #pragma mark - Rendering
 	Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double scalex, double scaley, GFX_CallBack_t callback, double pixel_aspect);
-	bool boxer_startFrame(Bit8u * & frameBuffer, int &pitch);
+	bool boxer_startFrame(uint8_t * & frameBuffer, int &pitch);
 	void boxer_finishFrame(const uint16_t *dirtyBlocks);
 	Bitu boxer_idealOutputMode(Bitu flags);
 	
 	void boxer_applyRenderingStrategy(void);
-	Bitu boxer_getRGBPaletteEntry(Bit8u red, Bit8u green, Bit8u blue);
+	Bitu boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue);
     void boxer_setShader(const char* src);
 	
     /// Defined in vga_other.cpp to give Boxer access to Hercules and CGA graphics mode options.
-    Bit8u boxer_herculesTintMode(void);
-    void boxer_setHerculesTintMode(Bit8u tint);
+    uint8_t boxer_herculesTintMode(void);
+    void boxer_setHerculesTintMode(uint8_t tint);
     
     double boxer_CGACompositeHueOffset(void);
     void boxer_setCGACompositeHueOffset(double hue);
     
-    Bit8u boxer_CGAComponentMode(void);
-    void boxer_setCGAComponentMode(Bit8u newCGA);
+    uint8_t boxer_CGAComponentMode(void);
+    void boxer_setCGAComponentMode(uint8_t newCGA);
 
     int boxer_GetDisplayRefreshRate(void);
     
@@ -80,8 +81,8 @@ extern "C" {
 	bool boxer_shellShouldRunCommand(DOS_Shell *shell, char* cmd, char* args);
     
     /// Called from shell_misc.cpp to let Boxer know the shell is waiting for command input.
-    void boxer_shellWillReadCommandInputFromHandle(DOS_Shell *shell, Bit16u handle);
-    void boxer_shellDidReadCommandInputFromHandle(DOS_Shell *shell, Bit16u handle);
+    void boxer_shellWillReadCommandInputFromHandle(DOS_Shell *shell, uint16_t handle);
+    void boxer_shellDidReadCommandInputFromHandle(DOS_Shell *shell, uint16_t handle);
     
 	/// Called from shell_misc.cpp to let Boxer rewrite or interrupt the shell's input processing.
     /// Returns true if Boxer has modified any of the parameters passed by reference.
@@ -118,8 +119,8 @@ extern "C" {
 	bool boxer_shouldAllowWriteAccessToPath(const char *filePath, DOS_Drive *dosboxDrive);
 	
 	/// Called from dos_programs.cpp et al: informs Boxer of drive mount/unmount events.
-	void boxer_driveDidMount(Bit8u driveIndex);
-	void boxer_driveDidUnmount(Bit8u driveIndex);
+	void boxer_driveDidMount(uint8_t driveIndex);
+	void boxer_driveDidUnmount(uint8_t driveIndex);
 	
 	/// Called from drive_local.cpp to notify Boxer when DOSBox has created or deleted a local file.
 	void boxer_didCreateLocalFile(const char *path, DOS_Drive *dosboxDrive);
@@ -142,7 +143,7 @@ extern "C" {
     
 #pragma mark - Runloop and event loop handling
     
-	void boxer_handleDOSBoxTitleChange(Bit32s cycles, int frameskip, bool paused);
+	void boxer_handleDOSBoxTitleChange(int32_t cycles, int frameskip, bool paused);
 	
 	/// Called from dosbox.cpp to allow control over the emulation loop.
 	void boxer_runLoopWillStartWithContextInfo(void **contextInfo);
@@ -184,7 +185,7 @@ extern "C" {
     ///
     /// Returns true if a key code was retrieved, or false otherwise.
     /// If consumeKey is true, the key will be removed from the buffer as it is read.
-    bool boxer_getNextKeyCodeInPasteBuffer(Bit16u *outKeyCode, bool consumeKey);
+    bool boxer_getNextKeyCodeInPasteBuffer(uint16_t *outKeyCode, bool consumeKey);
     
     
 #pragma mark - Printer support

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14269.14" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="25095" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14269.14"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="25095"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -18,16 +18,16 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES"/>
             <rect key="contentRect" x="1030" y="229" width="340" height="384"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="878"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1440" height="869"/>
             <view key="contentView" id="25">
                 <rect key="frame" x="0.0" y="0.0" width="340" height="384"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <customView id="53">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="53">
                         <rect key="frame" x="0.0" y="0.0" width="340" height="40"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <button verticalHuggingPriority="750" id="46">
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="46">
                                 <rect key="frame" x="20" y="7" width="160" height="25"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="roundTextured" title="Acknowledgements" bezelStyle="texturedRounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="47">
@@ -38,7 +38,7 @@
                                     <action selector="showAcknowledgements:" target="-2" id="52"/>
                                 </connections>
                             </button>
-                            <button verticalHuggingPriority="750" id="48">
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="48">
                                 <rect key="frame" x="193" y="7" width="127" height="25"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="roundTextured" title="Boxer Website" bezelStyle="texturedRounded" image="NSFollowLinkFreestandingTemplate" imagePosition="right" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="49">
@@ -51,11 +51,11 @@
                             </button>
                         </subviews>
                     </customView>
-                    <customView id="54" customClass="BXAboutBackgroundView">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="54" customClass="BXAboutBackgroundView">
                         <rect key="frame" x="0.0" y="40" width="340" height="344"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <textField verticalHuggingPriority="750" tag="1" id="31" customClass="BXAboutDarkLabel">
+                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" tag="1" translatesAutoresizingMaskIntoConstraints="NO" id="31" customClass="BXAboutDarkLabel">
                                 <rect key="frame" x="20" y="226" width="172" height="38"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="36">
@@ -66,7 +66,7 @@ into DOS emulation.</string>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField verticalHuggingPriority="750" id="55" customClass="BXAboutLabel">
+                            <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="55" customClass="BXAboutLabel">
                                 <rect key="frame" x="20" y="46" width="160" height="167"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="56">
@@ -74,13 +74,13 @@ into DOS emulation.</string>
                                     <string key="title">Boxer is designed by
 Alun Bestor &amp; released under the GNU Public License.
 
-Boxer is based on DOSBox 0.74, which is 
+Boxer is based on DOSBox 0.79, which is 
 © 2002–2010 by the DOSBox Team.</string>
                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField verticalHuggingPriority="750" id="57" customClass="BXAboutLightLabel">
+                            <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="57" customClass="BXAboutLightLabel">
                                 <rect key="frame" x="20" y="20" width="303" height="17"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" sendsActionOnEndEditing="YES" title="[Version 1.2 | build 20111031.1]" id="58">
@@ -97,9 +97,10 @@ Boxer is based on DOSBox 0.74, which is
             <connections>
                 <outlet property="delegate" destination="-2" id="28"/>
             </connections>
+            <point key="canvasLocation" x="139" y="142"/>
         </window>
     </objects>
     <resources>
-        <image name="NSFollowLinkFreestandingTemplate" width="14" height="14"/>
+        <image name="NSFollowLinkFreestandingTemplate" width="21" height="21"/>
     </resources>
 </document>

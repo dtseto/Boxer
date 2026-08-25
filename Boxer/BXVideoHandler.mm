@@ -165,7 +165,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_setHerculesTintMode((Bit8u)self.herculesTint);
+        boxer_setHerculesTintMode((uint8_t)self.herculesTint);
     }
 }
 
@@ -181,7 +181,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_setCGAComponentMode((Bit8u)self.CGAComposite);
+        boxer_setCGAComponentMode((uint8_t)self.CGAComposite);
     }
 }
 

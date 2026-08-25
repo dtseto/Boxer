@@ -1,3 +1,6 @@
+#ifndef BXCoalfaceAudio_h
+#define BXCoalfaceAudio_h
+
 /* 
  Copyright (c) 2013 Alun Bestor and contributors. All rights reserved.
  This source file is released under the GNU General Public License 2.0. A full copy of this license
@@ -6,6 +9,7 @@
  */
 
 #import "BXCoalface.h"
+#include <cstdint>
 #include <string>
 
 typedef enum {
@@ -20,10 +24,12 @@ void boxer_suggestMIDIHandler(std::string const &handlerName, const char *config
 bool boxer_MIDIAvailable(void);
 
 /// Dispatch MIDI messages sent from DOSBox's MPU-401 emulation.
-void boxer_sendMIDIMessage(Bit8u *msg);
-void boxer_sendMIDISysex(Bit8u *msg, Bitu len);
+void boxer_sendMIDIMessage(uint8_t *msg);
+void boxer_sendMIDISysex(uint8_t *msg, size_t len);
 
 float boxer_masterVolume(BXAudioChannel channel);
 
 /// Defined in mixer.cpp. Update the volumes of all active channels.
 void boxer_updateVolumes();
+
+#endif /* BXCoalfaceAudio_h */

@@ -34,13 +34,17 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testBoxerPatchesMarkerInventoryMatchesSource() throws {
         // Protects every BOXER marker documented in BOXER_PATCHES.md.
+        try requireAnnotated079Migration()
+        let manifestMarkers = try markerSetFromManifest()
         XCTAssertEqual(Self.documentedRows.count, 14)
         XCTAssertEqual(documentedMarkerSet().count, 111)
-        XCTAssertEqual(documentedMarkerSet(), try sourceMarkerSet())
+        XCTAssertEqual(manifestMarkers, documentedMarkerSet(), "The executable migration coverage table must track the manifest")
+        try assertMarkerInventory(manifestMarkers: manifestMarkers)
     }
 
     func testCoreBridgeContracts() throws {
         // Protects BOXER marker: coalface-remaps
+        try requireAnnotated079Migration()
         try expectBlock("include/dosbox.h", marker: "coalface-remaps", contains: "#include \"BXCoalface.h\"")
         for remap in ["#define GFX_Events boxer_processEvents",
                       "#define GFX_StartUpdate boxer_startFrame",
@@ -55,11 +59,14 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testRunLoopAndShutdownContracts() throws {
         // Protects BOXER markers: runloop-termination, runloop-event-cancellation, runloop-context, shutdown-drive-clear
+        try requireAnnotated079Migration()
         try expect("src/dosbox.cpp", contains: "if (!boxer_runLoopShouldContinue()) return 1;")
         try expectBlock("src/dosbox.cpp", marker: "runloop-context", contains: "boxer_runLoopWillStartWithContextInfo(&contextInfo);")
         try expectBlock("src/dosbox.cpp", marker: "runloop-context", contains: "boxer_runLoopDidFinishWithContextInfo(contextInfo);")
-        try expect("src/dos/dos.cpp", contains: "for (Bit16u i = 0; i < DOS_DRIVES; i++)")
-        try expect("src/dos/dos.cpp", contains: "Drives[i] = 0;")
+        try expect("src/dos/dos.cpp", contains: "for (uint16_t i = 0; i < DOS_DRIVES; i++)")
+        try expect("src/dos/dos.cpp", contains: "Drives[i] = nullptr;")
+        let emulator = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator.mm"))
+        XCTAssertTrue(emulator.contains("CROSS_DetermineConfigPaths();"))
     }
 
     func testBuildCompatibilityContracts() throws {
@@ -83,6 +90,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testMIDIRoutingContracts() throws {
         // Protects BOXER marker: midi-routing
+        try requireAnnotated079Migration()
         try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "#include \"BXCoalfaceAudio.h\"")
         try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "boxer_sendMIDIMessage(midi.rt_buf);")
         try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "boxer_sendMIDIMessage(midi.cmd_buf);")
@@ -93,16 +101,19 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testMixerVolumeBridgeContracts() throws {
         // Protects BOXER marker: mixer-volume-bridge
+        try requireAnnotated079Migration()
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "#import \"BXCoalfaceAudio.h\"")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "boxer_masterVolume(BXLeftChannel)")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "boxer_masterVolume(BXRightChannel)")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "void boxer_updateVolumes()")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "it.second->UpdateVolume();")
-        try expect("src/hardware/mixer.cpp", contains: "ShowVolume(\"MASTER\", boxer_masterVolume(BXLeftChannel), boxer_masterVolume(BXRightChannel));")
+        try expect("src/hardware/mixer.cpp", contains: "const AudioFrame boxer_master_volume")
+        try expect("src/hardware/mixer.cpp", contains: "show_channel(convert_ansi_markup(master_channel_string)")
     }
 
     func testVideoRenderingContracts() throws {
         // Protects BOXER markers: render-reset-strategy, display-mode-controls, display-refresh-rate, capture-file-routing, core-mode-title-refresh
+        try requireAnnotated079Migration()
         try expectBlock("src/gui/render.cpp", marker: "render-reset-strategy", contains: "boxer_applyRenderingStrategy();")
         try expectBlock("src/hardware/vga_other.cpp", marker: "display-mode-controls", contains: "boxer_setHerculesTintMode")
         try expectBlock("src/hardware/vga_other.cpp", marker: "display-mode-controls", contains: "boxer_setCGACompositeHueOffset")
@@ -114,6 +125,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testKeyboardContracts() throws {
         // Protects BOXER markers: keyboard-buffer-capacity, console-read-cancel, console-paste-availability, bios-key-paste-pop, bios-key-paste-peek, caps-lock-state, num-lock-state, scroll-lock-state, int16-cancel, keyboard-layout-switching-api, keyboard-cpi-buffer-storage, keyboard-layout-state-methods, keyboard-layout-bridge, macos-preferred-keyboard-layout, us-layout-remap-fix
+        try requireAnnotated079Migration()
         try expect("src/hardware/keyboard.cpp", contains: "Bitu boxer_keyboardBufferRemaining()")
         try expect("src/dos/dev_con.h", contains: "boxer_continueListeningForKeyEvents()")
         try expect("src/dos/dev_con.h", contains: "boxer_numKeyCodesInPasteBuffer()")
@@ -129,6 +141,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testJoystickOwnershipContracts() throws {
         // Protects BOXER markers: gameport-timing-export, gameport-timing-state, mapper-free-autofire, gameport-poll-activation, gameport-timing-config, preserve-controller-ownership, dos-visible-joystick-state, joystick-handler-install-end
+        try requireAnnotated079Migration()
         try expect("include/joystick.h", contains: "extern bool gameport_timed;")
         try expect("src/hardware/joystick.cpp", contains: "bool gameport_timed")
         try expect("src/hardware/joystick.cpp", contains: "mapper-free-autofire")
@@ -204,7 +217,21 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(application.contains("[URL.path isEqualToString: @\"/report-an-issue\"]"))
         XCTAssertTrue(application.contains("return [self bx_openURL: URL];"))
 
-        XCTAssertTrue(controller.contains("reportTitle.length ? title : @\"Boxer Error Report\""))
+        let reportMethod = try sourceRegion(
+            in: controller,
+            beginningWith: "- (NSURL *) _writeIssueWithTitle:",
+            endingBefore: "- (void) reportIssueWithTitle:"
+        )
+        XCTAssertTrue(reportMethod.contains("title.length ? title : @\"Boxer Error Report\""),
+                      "An empty or nil title must use the stable Boxer error-report title")
+        XCTAssertTrue(reportMethod.contains("reportTitle"), "A supplied title must remain the report title")
+        XCTAssertTrue(reportMethod.contains("allowedCharacters"), "Filename generation must use an explicit safe-character policy")
+        XCTAssertTrue(reportMethod.contains("[safeTitle appendString: @\"-\"]"),
+                      "Invalid filename characters must be replaced")
+        XCTAssertTrue(reportMethod.contains("URLByAppendingPathComponent: fileName"),
+                      "The report must be created below the selected local report directory")
+        XCTAssertTrue(reportMethod.contains("[report writeToURL: reportURL"),
+                      "The generated diagnostic body must be written to the returned local URL")
         XCTAssertTrue(controller.contains("exception.reason ?: error.localizedDescription ?: @\"Unknown error\""))
         XCTAssertTrue(controller.contains("the error did not include an exception object"))
         XCTAssertTrue(controller.contains("revealInFinder: (BOOL)revealInFinder"))
@@ -225,6 +252,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testGameboxDriveAndMediaContracts() throws {
         // Protects BOXER markers: drive-system-path, initialize-drive-system-path, retrieve-drive-system-path, fat-drive-system-path, iso-drive-system-path, local-drive-system-path, drive-cache-filter-bridge, hide-host-metadata, file-create-write-policy, file-open-write-policy, file-open-write-policy-end, file-delete-write-policy, local-dir-create-policy, local-file-created, local-file-removed, local-open-file-removed, imgmount-drive-mounted, mount-drive-mounted, drive-unmounted, invalid-fat-image-fails-construction, invalid-fat-bootsector-fails-construction, suppress-cdrom-image-error-text, file-unavailable-notification, local-file-unavailable-notification, local-file-unavailable, unavailable-file-read, unavailable-file-write, unavailable-file-seek, unavailable-file-timestamp
+        try requireAnnotated079Migration()
         try expectBlock("include/dos_system.h", marker: "drive-system-path", contains: "systempath")
         try expect("src/dos/drives.cpp", contains: "DOS_Drive::DOS_Drive()")
         try expect("src/dos/drives.cpp", contains: "char * DOS_Drive::getSystemPath(void)")
@@ -258,6 +286,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testShellLifecycleContracts() throws {
         // Protects BOXER markers: current-shell-export, active-shell-global, shell-run-lifecycle, shell-misc-bridge, shell-input-injection, shell-command-filter, batch-lifecycle-bridge, batch-file-ended, program-launch-lifecycle
+        try requireAnnotated079Migration()
         try expect("include/shell.h", contains: "extern DOS_Shell * currentShell;")
         try expect("src/shell/shell.cpp", contains: "DOS_Shell *currentShell")
         try expectBlock("src/shell/shell.cpp", marker: "shell-run-lifecycle", contains: "boxer_shellWillStart(this);")
@@ -273,6 +302,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testShellCommandUXContracts() throws {
         // Protects BOXER markers: hide-intro-command, shell-command-ux, delete-help-if-no-args, delete-unix-path-tolerance, rename-help-if-no-args, mkdir-help-if-no-args, mkdir-unix-path-tolerance, rmdir-help-if-no-args, rmdir-unix-path-tolerance, dir-unix-path-trailing-slash, dir-unix-path-tolerance, copy-help-if-no-args, copy-unix-path-tolerance, if-help-if-no-args, type-help-if-no-args, call-help-if-no-args, subst-help-if-no-args, loadhigh-help-if-no-args, loadhigh-unix-path-tolerance
+        try requireAnnotated079Migration()
         try expect("src/dos/dos_programs.cpp", contains: "hide-intro-command")
         try expectBlock("src/shell/shell_cmds.cpp", marker: "shell-command-ux", contains: "#define HELP_IF_NO_ARGS(command)")
         for marker in ["delete-help-if-no-args", "delete-unix-path-tolerance", "rename-help-if-no-args",
@@ -287,6 +317,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testPrinterRoutingContracts() throws {
         // Protects BOXER markers: printer-redirection, parport-skip-occupied-lpt, bios-parport-include, int17-printer-emulation, bios-parport-detection-disabled, bios-equipment-parport-count, bios-refresh-parport-count, int21-printer-output
+        try requireAnnotated079Migration()
         try expectBlock("src/hardware/parport/printer_redir.cpp", marker: "printer-redirection", contains: "#import \"BXCoalface.h\"")
         try expectBlock("src/hardware/parport/printer_redir.cpp", marker: "printer-redirection", contains: "boxer_PRINTER_isInited")
         try expectBlock("src/hardware/parport/printer_redir.cpp", marker: "printer-redirection", contains: "boxer_PRINTER_writedata")
@@ -298,8 +329,9 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testLocalizationContracts() throws {
         // Protects BOXER markers: localization-routing, upstream-localization-disabled
+        try requireAnnotated079Migration()
         try expect("src/misc/messages.cpp", contains: "#include \"dosbox.h\"")
-        try expectBlock("src/misc/messages.cpp", marker: "localization-routing", contains: "return boxer_localizedStringForKey(msg);")
+        try expectBlock("src/misc/messages.cpp", marker: "localization-routing", contains: "return boxer_localizedStringForKey(requested_name);")
         try expect("src/misc/messages.cpp", contains: "upstream-localization-disabled")
         try expect("src/misc/messages.cpp", contains: "const char *MSG_Get(char const *requested_name)")
     }
@@ -326,10 +358,24 @@ final class BoxerIntegrationContractTests: XCTestCase {
                 "-I", dosboxRoot.appendingPathComponent("include").path,
                 "-I", dosboxRoot.appendingPathComponent("src").path,
                 "-I", dosboxRoot.appendingPathComponent("src/hardware").path,
+                "-I", dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3").path,
+                "-I", dosboxRoot.appendingPathComponent("subprojects/speexdsp-1.2.1/include").path,
                 "-I", projectRoot.appendingPathComponent("Boxer").path,
                 "-I", projectRoot.appendingPathComponent("Frameworks/SDL2.framework/Headers").path,
                 "-I", dosboxRoot.appendingPathComponent("submodules/loguru").path,
                 "-I", dosboxRoot.appendingPathComponent("src/libs/ghc").path,
+                "-I", dosboxRoot.appendingPathComponent("src/libs/whereami").path,
+                dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3/iir/Biquad.cpp").path,
+                dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3/iir/Butterworth.cpp").path,
+                dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3/iir/Cascade.cpp").path,
+                dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3/iir/ChebyshevI.cpp").path,
+                dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3/iir/ChebyshevII.cpp").path,
+                dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3/iir/Custom.cpp").path,
+                dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3/iir/PoleFilter.cpp").path,
+                dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3/iir/RBJ.cpp").path,
+                dosboxRoot.appendingPathComponent("src/hardware/compressor.cpp").path,
+                dosboxRoot.appendingPathComponent("src/libs/tal-chorus/Lfo.cpp").path,
+                dosboxRoot.appendingPathComponent("src/misc/support.cpp").path,
                 harnessSource.path,
                 "-Wl,-dead_strip",
                 "-Wl,-undefined,dynamic_lookup",
@@ -438,15 +484,15 @@ final class BoxerIntegrationContractTests: XCTestCase {
         Bitu CaptureState = 0;
         const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
 
-        void CAPTURE_AddMidi(bool, Bitu, Bit8u *) {}
+        void CAPTURE_AddMidi(bool, Bitu, uint8_t *) {}
 
-        void boxer_sendMIDIMessage(Bit8u *msg)
+        void boxer_sendMIDIMessage(uint8_t *msg)
         {
             const auto len = MIDI_evt_len[msg[0]] ? MIDI_evt_len[msg[0]] : 1;
             channel_messages.push_back({std::vector<uint8_t>(msg, msg + len)});
         }
 
-        void boxer_sendMIDISysex(Bit8u *msg, Bitu len)
+        void boxer_sendMIDISysex(uint8_t *msg, size_t len)
         {
             sysex_messages.push_back({std::vector<uint8_t>(msg, msg + len)});
         }
@@ -505,6 +551,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
     private func mixerHarnessSource() -> String {
         """
         #include <array>
+        #include <chrono>
         #include <cmath>
         #include <cstdint>
         #include <cstring>
@@ -536,12 +583,13 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
         void LOG_MSG(const char *, ...) {}
         Bitu CaptureState = 0;
+        const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
         bool ticksLocked = false;
-        Bit32s CPU_Cycles = 0;
-        Bit32s CPU_CycleLeft = 0;
-        Bit32s CPU_CycleMax = 1000;
+        int32_t CPU_Cycles = 0;
+        int32_t CPU_CycleLeft = 0;
+        int32_t CPU_CycleMax = 1000;
 
-        void CAPTURE_AddWave(Bit32u, Bit32u, Bit16s *) {}
+        void CAPTURE_AddWave(uint32_t, uint32_t, int16_t *) {}
         void MIXER_AddConfigSection(Section_prop *) {}
         void MIDI_AddConfigSection(Section_prop *) {}
         void MIDI_ListAll(Program *) {}
@@ -581,29 +629,29 @@ final class BoxerIntegrationContractTests: XCTestCase {
         static void ResetMixer()
         {
             mixer.work = {};
-            mixer.mastervol = {1.0f, 1.0f};
+            mixer.master_volume = {1.0f, 1.0f};
             mixer.channels.clear();
             mixer.pos = 0;
-            mixer.done = 0;
+            mixer.frames_done = 0;
             mixer.tick_add = 0;
             mixer.tick_counter = 0;
-            mixer.nosound = false;
-            mixer.freq = 1000;
+            mixer.state = MixerState::On;
+            mixer.sample_rate = 1000;
             mixer.blocksize = 16;
             mixer.sdldevice = 1;
-            mixer.needed = 0;
-            mixer.min_needed = 0;
-            mixer.max_needed = MIXER_BUFSIZE;
+            mixer.frames_needed = 0;
+            mixer.min_frames_needed = 0;
+            mixer.max_frames_needed = MIXER_BUFSIZE;
             handler_calls = 0;
         }
 
         static void CreateActiveChannel()
         {
-            test_channel = std::make_shared<MixerChannel>(TestHandler, "boxer-test");
-            test_channel->SetFreq(1000);
-            test_channel->SetScale(1.0);
+            test_channel = std::make_shared<MixerChannel>(TestHandler, "boxer-test", channel_features_t{});
+            test_channel->SetSampleRate(1000);
+            test_channel->SetVolumeScale(1.0);
             test_channel->SetVolume(1.0f, 1.0f);
-            test_channel->MapChannels(0, 1);
+            test_channel->ChangeChannelMap(LEFT, RIGHT);
             test_channel->Enable(false);
             mixer.channels["boxer-test"] = test_channel;
             test_channel->Enable(true);
@@ -614,10 +662,10 @@ final class BoxerIntegrationContractTests: XCTestCase {
             std::array<int16_t, 32> output = {};
             std::memset(mixer.work.data(), 0, sizeof(mixer.work));
             mixer.pos = 0;
-            mixer.done = 0;
-            mixer.needed = 0;
-            mixer.min_needed = 0;
-            mixer.max_needed = MIXER_BUFSIZE;
+            mixer.frames_done = 0;
+            mixer.frames_needed = 0;
+            mixer.min_frames_needed = 0;
+            mixer.max_frames_needed = MIXER_BUFSIZE;
 
             MIXER_MixData(8);
             MIXER_CallBack(nullptr, reinterpret_cast<Uint8 *>(output.data()), 8 * 2 * static_cast<int>(sizeof(int16_t)));
@@ -678,9 +726,9 @@ final class BoxerIntegrationContractTests: XCTestCase {
                 return 7;
             }
 
-            MIXER_DelChannel("boxer-test");
-            if (MIXER_FindChannel("boxer-test") != nullptr) {
-                std::cerr << "channel cleanup failed\\n";
+            test_channel->Enable(false);
+            if (MIXER_FindChannel("boxer-test") != test_channel) {
+                std::cerr << "disabled channel was not retained for safe reuse\\n";
                 return 8;
             }
 
@@ -707,9 +755,89 @@ final class BoxerIntegrationContractTests: XCTestCase {
         return (process.terminationStatus, output)
     }
 
-    private func sourceMarkerSet() throws -> Set<String> {
-        let markerRegex = try NSRegularExpression(pattern: #"BOXER-(?:BEGIN|END|HOOK):\s*([a-z0-9-]+)"#)
+    private struct MarkerInventory {
+        var begins: [String: Int] = [:]
+        var ends: [String: Int] = [:]
+        var hooks: [String: Int] = [:]
+
+        var identifiers: Set<String> {
+            Set(begins.keys).union(ends.keys).union(hooks.keys)
+        }
+    }
+
+    private enum MigrationContractError: LocalizedError {
+        case partialTree(markerCount: Int)
+
+        var errorDescription: String? {
+            switch self {
+            case .partialTree(let markerCount):
+                return "Found \(markerCount) BOXER markers without BOXER_PATCHES.md. This is a partial migration tree, not the 0.78.1 baseline."
+            }
+        }
+    }
+
+    private func requireAnnotated079Migration() throws {
+        let manifestURL = dosboxRoot.appendingPathComponent("BOXER_PATCHES.md")
+        if FileManager.default.fileExists(atPath: manifestURL.path) {
+            return
+        }
+
+        let inventory = try sourceMarkerInventory()
+        let markerCount = inventory.begins.values.reduce(0, +)
+            + inventory.ends.values.reduce(0, +)
+            + inventory.hooks.values.reduce(0, +)
+        guard markerCount == 0 else {
+            throw MigrationContractError.partialTree(markerCount: markerCount)
+        }
+        throw XCTSkip("Requires the annotated 0.79 Boxer DOSBox patch layer; BOXER_PATCHES.md is absent from the current 0.78.1 baseline.")
+    }
+
+    private func markerSetFromManifest() throws -> Set<String> {
+        let manifestURL = dosboxRoot.appendingPathComponent("BOXER_PATCHES.md")
+        let manifest = try source(at: manifestURL)
+        let tokenRegex = try NSRegularExpression(pattern: #"`([a-z0-9-]+)`"#)
         var markers = Set<String>()
+
+        for line in manifest.split(separator: "\n") where line.first == "|" {
+            let columns = line.split(separator: "|", omittingEmptySubsequences: false)
+            guard columns.count > 2 else { continue }
+            let markerColumn = String(columns[2])
+            let range = NSRange(markerColumn.startIndex..<markerColumn.endIndex, in: markerColumn)
+            for match in tokenRegex.matches(in: markerColumn, range: range) {
+                if let markerRange = Range(match.range(at: 1), in: markerColumn) {
+                    markers.insert(String(markerColumn[markerRange]))
+                }
+            }
+        }
+        XCTAssertFalse(markers.isEmpty, "BOXER_PATCHES.md must document at least one source marker")
+        return markers
+    }
+
+    private func assertMarkerInventory(manifestMarkers: Set<String>,
+                                       file: StaticString = #filePath,
+                                       line: UInt = #line) throws {
+        let inventory = try sourceMarkerInventory()
+        XCTAssertEqual(inventory.identifiers, manifestMarkers,
+                       "BOXER_PATCHES.md and DOSBox source marker identifiers differ", file: file, line: line)
+
+        for marker in manifestMarkers.sorted() {
+            let beginCount = inventory.begins[marker, default: 0]
+            let endCount = inventory.ends[marker, default: 0]
+            let hookCount = inventory.hooks[marker, default: 0]
+            if hookCount > 0 {
+                XCTAssertEqual(hookCount, 1, "Duplicate BOXER-HOOK marker: \(marker)", file: file, line: line)
+                XCTAssertEqual(beginCount + endCount, 0,
+                               "Marker \(marker) mixes HOOK and BEGIN/END forms", file: file, line: line)
+            } else {
+                XCTAssertEqual(beginCount, 1, "Expected exactly one BOXER-BEGIN marker: \(marker)", file: file, line: line)
+                XCTAssertEqual(endCount, 1, "Expected exactly one BOXER-END marker: \(marker)", file: file, line: line)
+            }
+        }
+    }
+
+    private func sourceMarkerInventory() throws -> MarkerInventory {
+        let markerRegex = try NSRegularExpression(pattern: #"BOXER-(BEGIN|END|HOOK):\s*([a-z0-9-]+)"#)
+        var inventory = MarkerInventory()
         for root in [dosboxRoot.appendingPathComponent("include"), dosboxRoot.appendingPathComponent("src")] {
             guard let files = FileManager.default.enumerator(at: root, includingPropertiesForKeys: [.isRegularFileKey]) else {
                 XCTFail("Could not enumerate \(root.path)")
@@ -723,13 +851,20 @@ final class BoxerIntegrationContractTests: XCTestCase {
                 }
                 let range = NSRange(contents.startIndex..<contents.endIndex, in: contents)
                 for match in markerRegex.matches(in: contents, range: range) {
-                    if let markerRange = Range(match.range(at: 1), in: contents) {
-                        markers.insert(String(contents[markerRange]))
+                    guard let kindRange = Range(match.range(at: 1), in: contents),
+                          let markerRange = Range(match.range(at: 2), in: contents) else { continue }
+                    let kind = String(contents[kindRange])
+                    let marker = String(contents[markerRange])
+                    switch kind {
+                    case "BEGIN": inventory.begins[marker, default: 0] += 1
+                    case "END": inventory.ends[marker, default: 0] += 1
+                    case "HOOK": inventory.hooks[marker, default: 0] += 1
+                    default: break
                     }
                 }
             }
         }
-        return markers
+        return inventory
     }
 
     private func expect(_ relativePath: String, contains needle: String, file: StaticString = #filePath, line: UInt = #line) throws {

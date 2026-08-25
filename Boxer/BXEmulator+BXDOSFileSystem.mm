@@ -582,7 +582,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		if (!dosPath) return nil;
 		
 		char fullPath[DOS_PATHLENGTH];
-		Bit8u driveIndex;
+		uint8_t driveIndex;
 		BOOL resolved = DOS_MakeName(dosPath, fullPath, &driveIndex);
                 
 		if (resolved)
@@ -604,7 +604,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		if (!dosPath) return nil;
 		
 		char fullPath[DOS_PATHLENGTH];
-		Bit8u driveIndex;
+		uint8_t driveIndex;
 		BOOL resolved = DOS_MakeName(dosPath, fullPath, &driveIndex);
         
 		if (resolved)
@@ -657,7 +657,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
             return nil;
 		
 		char fullPath[DOS_PATHLENGTH];
-		Bit8u driveIndex;
+		uint8_t driveIndex;
 		BOOL resolved = DOS_MakeName(dosCPath, fullPath, &driveIndex);
         
 		if (resolved)
@@ -691,7 +691,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		
         //First resolve what could be a relative path to an absolute one and determine which drive it's located on.
 		char fullCPath[DOS_PATHLENGTH];
-		Bit8u driveIndex;
+		uint8_t driveIndex;
 		BOOL resolved = DOS_MakeName(dosCPath, fullCPath, &driveIndex);
         
         //Then, ask the Boxer drive itself to hand over a logical URL that will correspond to that resource.

@@ -74,23 +74,23 @@
       }
     },
     "56.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Boxer is designed by\\nAlun Bestor & released under the GNU Public License.\\n\\nBoxer is based on DOSBox 0.74, which is \\n© 2002–2010 by the DOSBox Team.\"; ObjectID = \"56\";",
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Boxer is designed by\\nAlun Bestor & released under the GNU Public License.\\n\\nBoxer is based on DOSBox 0.79, which is \\n© 2002–2010 by the DOSBox Team.\"; ObjectID = \"56\";",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Boxer is designed by\nAlun Bestor & released under the GNU Public License.\n\nBoxer is based on DOSBox 0.74, which is \n© 2002–2019 by the DOSBox Team."
+            "value" : "Boxer is designed by\nAlun Bestor & released under the GNU Public License.\n\nBoxer is based on DOSBox 0.79, which is \n© 2002–2019 by the DOSBox Team."
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Boxer está diseñado por\nAlun Bestor & publicado bajo la licencia pública GNU.\n\nBoxer está basado en DOSBox 0.74, el cual es \n© 2002–2019 por el equipo DOSBox."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Boxer est conçu par\nAlun Bestor et publié sous licence GNU Public License.\n\nBoxer est basé sur DOSBox 0.74, \n© 2002–2010 par l’équipe DOSBox."
           }
         }

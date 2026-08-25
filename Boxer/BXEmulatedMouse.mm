@@ -12,6 +12,10 @@
 #import "video.h"
 #import "mouse.h"
 
+#include <algorithm>
+
+extern bool mouse_is_captured;
+
 
 #pragma mark -
 #pragma mark Private method declarations
@@ -82,12 +86,15 @@
 		//TODO: try making this relative to the DOS driver's max mouse position instead.
 		NSPoint canvasDelta = NSMakePoint(delta.x * canvas.size.width,
 										  delta.y * canvas.size.height);
-		
-		Mouse_CursorMoved(canvasDelta.x,
-						  canvasDelta.y,
-						  point.x,
-						  point.y,
-						  locked);
+		const auto absoluteX = static_cast<uint16_t>(std::clamp(
+			point.x * canvas.size.width, 0.0, static_cast<double>(UINT16_MAX)));
+		const auto absoluteY = static_cast<uint16_t>(std::clamp(
+			point.y * canvas.size.height, 0.0, static_cast<double>(UINT16_MAX)));
+
+		// Boxer owns capture state; keep v0.79's mouse core synchronized so it
+		// chooses relative or absolute DOS-driver behavior consistently.
+		mouse_is_captured = locked;
+		MOUSE_EventMoved(canvasDelta.x, canvasDelta.y, absoluteX, absoluteY);
 	}
 }
 
@@ -113,7 +120,7 @@
 	{
 		if (pressed)
 		{
-			Mouse_ButtonPressed(button);
+			MOUSE_EventPressed(button);
             self.pressedButtons |= buttonMask;
             
             _lastButtonDown[button] = [NSDate timeIntervalSinceReferenceDate];
@@ -140,7 +147,7 @@
             }
             else
             {
-                Mouse_ButtonReleased(button);
+				MOUSE_EventReleased(button);
                 self.pressedButtons &= ~buttonMask;
                 
                 _lastButtonDown[button] = 0;

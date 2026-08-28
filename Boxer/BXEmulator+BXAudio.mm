@@ -190,8 +190,7 @@ void _renderMIDIOutput(Bitu numFrames)
         channel = MIXER_AddChannel(_renderMIDIOutput,
                                    (int)sampleRate,
                                    BXMIDIChannelName,
-                                   {ChannelFeature::Sleep,
-                                    ChannelFeature::Stereo,
+                                   {ChannelFeature::Stereo,
                                     ChannelFeature::Synthesizer}).get();
     }
     channel->Enable(true);

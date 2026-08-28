@@ -74,7 +74,7 @@ into DOS emulation.</string>
                                     <string key="title">Boxer is designed by
 Alun Bestor &amp; released under the GNU Public License.
 
-Boxer is based on DOSBox 0.79, which is 
+Boxer is based on DOSBox 0.79.1, which is 
 © 2002–2010 by the DOSBox Team.</string>
                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>

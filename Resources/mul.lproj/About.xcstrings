@@ -74,7 +74,7 @@
       }
     },
     "56.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Boxer is designed by\\nAlun Bestor & released under the GNU Public License.\\n\\nBoxer is based on DOSBox 0.79, which is \\n© 2002–2010 by the DOSBox Team.\"; ObjectID = \"56\";",
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Boxer is designed by\\nAlun Bestor & released under the GNU Public License.\\n\\nBoxer is based on DOSBox 0.79.1, which is \\n© 2002–2010 by the DOSBox Team.\"; ObjectID = \"56\";",
       "localizations" : {
         "en" : {
           "stringUnit" : {

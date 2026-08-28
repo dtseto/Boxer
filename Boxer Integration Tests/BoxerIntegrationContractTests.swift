@@ -743,6 +743,14 @@ final class BoxerIntegrationContractTests: XCTestCase {
         process.executableURL = URL(fileURLWithPath: executable)
         process.arguments = arguments
 
+        // Xcode test hosts can inherit loader paths from a different installed
+        // Xcode, which makes xcrun load an incompatible set of frameworks.
+        // Toolchain subprocesses must resolve all of their libraries from the
+        // developer directory selected by xcrun.
+        process.environment = ProcessInfo.processInfo.environment.filter {
+            !$0.key.hasPrefix("DYLD_")
+        }
+
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe

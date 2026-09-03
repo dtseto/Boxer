@@ -389,11 +389,6 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(runResult.output.contains("mixer runtime harness passed"), runResult.output)
     }
 
-    func testRuntimeJoystickOwnershipBehavior() throws {
-        // Protects BOXER markers: preserve-controller-ownership, gameport-poll-activation, dos-visible-joystick-state, joystick-handler-install-end
-        throw XCTSkip("Runtime joystick test requires a test target linked to DOSBox joystick.cpp with fake boxer_setJoystickActive and IO handler inspection. Required behavior: one 0x201 path, first poll activates Boxer exactly once, repeated polls do not duplicate ownership, shutdown/reinitialize remains single-path.")
-    }
-
     func testRuntimeMIDIRoutingBehavior() throws {
         // Protects BOXER marker: midi-routing
         let tempDirectory = FileManager.default.temporaryDirectory
@@ -443,19 +438,9 @@ final class BoxerIntegrationContractTests: XCTestCase {
         throw XCTSkip("Runtime filesystem test requires a DOSBox filesystem harness with fake Boxer file-policy callbacks and temporary drives. Required behavior: protected metadata is denied, allowed files create/delete, mount/unmount notifications fire, invalid images fail without half-mounted state.")
     }
 
-    func testRuntimeKeyboardPasteAndCancellationBehavior() throws {
-        // Protects BOXER markers: bios-key-paste-pop, bios-key-paste-peek, console-read-cancel, int16-cancel
-        throw XCTSkip("Runtime keyboard test requires fake Boxer paste/cancellation hooks linked to BIOS keyboard and console code. Required behavior: pasted keys preserve order, peek/pop boundaries hold, full buffers stay coherent, and cancellation breaks blocking reads.")
-    }
-
     func testRuntimeShellCallbackOrderingBehavior() throws {
         // Protects BOXER markers: shell-run-lifecycle, shell-input-injection, shell-command-filter, batch-lifecycle-bridge, program-launch-lifecycle
         throw XCTSkip("Runtime shell test requires fake Boxer shell callbacks linked to DOS_Shell. Required behavior: shell, injected command, batch, program launch/termination, prompt return, and shell finish callbacks occur once in order.")
-    }
-
-    func testRuntimePrinterRoutingBehavior() throws {
-        // Protects BOXER markers: printer-redirection, int17-printer-emulation, int21-printer-output
-        throw XCTSkip("Runtime printer test requires fake Boxer printer sinks linked to parport/printer code. Required behavior: DOS/LPT output reaches Boxer exactly once and status/equipment count remain coherent.")
     }
 
     private func documentedMarkerSet() -> Set<String> {

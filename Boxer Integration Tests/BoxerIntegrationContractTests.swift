@@ -433,11 +433,6 @@ final class BoxerIntegrationContractTests: XCTestCase {
         throw XCTSkip("Runtime lifecycle test requires a test target linked to DOSBox run-loop and DOS shutdown symbols with fake Boxer cancellation/context hooks. Required behavior: cancellation terminates, context callbacks balance, drives/callbacks clean up, and reinitialization does not duplicate state.")
     }
 
-    func testRuntimeGameboxFilesystemBehavior() throws {
-        // Protects BOXER markers: file-create-write-policy, file-open-write-policy, file-delete-write-policy, local-file-created, local-file-removed, mount-drive-mounted, drive-unmounted
-        throw XCTSkip("Runtime filesystem test requires a DOSBox filesystem harness with fake Boxer file-policy callbacks and temporary drives. Required behavior: protected metadata is denied, allowed files create/delete, mount/unmount notifications fire, invalid images fail without half-mounted state.")
-    }
-
     func testRuntimeShellCallbackOrderingBehavior() throws {
         // Protects BOXER markers: shell-run-lifecycle, shell-input-injection, shell-command-filter, batch-lifecycle-bridge, program-launch-lifecycle
         throw XCTSkip("Runtime shell test requires fake Boxer shell callbacks linked to DOS_Shell. Required behavior: shell, injected command, batch, program launch/termination, prompt return, and shell finish callbacks occur once in order.")

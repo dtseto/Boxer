@@ -173,6 +173,51 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         )
     }
 
+    // Protected BOXER marker: file-open-write-policy. Behavioral invariant:
+    // a denied write-only open is rejected without producing a DOS file,
+    // while denied read/write access is deliberately downgraded to read-only;
+    // allowed read/write access retains its flags and a second lifecycle starts
+    // clean. Historical references: fd6e3fb60, 4e359684f, 92281b3ee. Real
+    // entry point/source: localDrive::FileOpen from src/dos/drive_local.cpp.
+    // Fake dependencies: minimal drive/cache/file shapes, open-file lookup,
+    // DOS error sink, Boxer write policy, and isolated host storage. Supported
+    // adapter/version: DOSBox079Adapter, v0.79.1 only. Mutations: bypassing the
+    // policy or removing the read/write downgrade must fail.
+    func testRuntimeFileOpenPolicyAndReadOnlyDowngrade() throws {
+        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let source = try String(
+            contentsOf: adapter.productionSources(for: .filesystem)[0],
+            encoding: .utf8
+        )
+        let function = try productionFunction(
+            beginningWith: "bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)",
+            in: source
+        )
+        let normal = try compileAndRunFileOpen(source: function, label: "normal")
+        XCTAssertEqual(normal.status, 0, normal.output)
+        XCTAssertTrue(normal.output.contains("file open runtime harness passed"), normal.output)
+
+        let bypass = try replacingFirst(
+            "!boxer_shouldAllowWriteAccessToPath(newname, this)",
+            with: "false",
+            in: function
+        )
+        let bypassResult = try compileAndRunFileOpen(source: bypass, label: "policy-bypass")
+        XCTAssertEqual(bypassResult.status, 10, "File-open policy bypass did not fail behaviorally: \(bypassResult.output)")
+
+        let removedDowngrade = try replacingFirst(
+            "flags = (flags & ~3u) | OPEN_READ;\n\t\t\ttype = \"rb\";",
+            with: "DOS_SetError(DOSERR_ACCESS_DENIED);\n\t\t\treturn false;",
+            in: function
+        )
+        let downgradeResult = try compileAndRunFileOpen(source: removedDowngrade, label: "removed-downgrade")
+        XCTAssertEqual(
+            downgradeResult.status,
+            12,
+            "Removed read/write downgrade did not fail behaviorally: \(downgradeResult.output)"
+        )
+    }
+
     // Protected BOXER markers: file-delete-write-policy, local-file-removed,
     // local-open-file-removed. Behavioral invariant: missing or denied deletes
     // do not mutate host/cache/notification state, while an allowed delete
@@ -221,6 +266,97 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         )
     }
 
+    // Protected BOXER markers: drive-system-path, local-drive-system-path.
+    // Behavioral invariant: real local-drive backing-path entry points expand
+    // DOS names through the drive cache before returning a host path or opening
+    // a host file, and repeat cleanly in a second lifecycle. Historical
+    // references: fd6e3fb60, 4e359684f, 92281b3ee. Real entry points/source:
+    // localDrive::GetSystemFilename and GetSystemFilePtr from
+    // src/dos/drive_local.cpp. Fake dependencies: minimal drive/cache shape and
+    // deterministic case-expansion mapping in isolated storage. Supported
+    // adapter/version: DOSBox079Adapter, v0.79.1 only. Mutation: removing host
+    // path expansion must fail.
+    func testRuntimeHostBackingPathsRemainAvailable() throws {
+        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let source = try String(
+            contentsOf: adapter.productionSources(for: .filesystem)[0],
+            encoding: .utf8
+        )
+        let filename = try productionFunction(
+            beginningWith: "bool localDrive::GetSystemFilename(char *sysName, char const * const dosName)",
+            in: source
+        )
+        let filePointer = try productionFunction(
+            beginningWith: "FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const type)",
+            in: source
+        )
+        let fragment = "\(filePointer)\n\n\(filename)"
+        let normal = try compileAndRunBackingPaths(source: fragment, label: "normal")
+        XCTAssertEqual(normal.status, 0, normal.output)
+        XCTAssertTrue(normal.output.contains("host backing path runtime harness passed"), normal.output)
+
+        let mutation = try replacingFirst(
+            "dirCache.ExpandName(sysName);",
+            with: "/* mutation: backing path expansion removed */",
+            in: fragment
+        )
+        let mutationResult = try compileAndRunBackingPaths(source: mutation, label: "removed-expansion")
+        XCTAssertEqual(
+            mutationResult.status,
+            10,
+            "Removed backing-path expansion did not fail behaviorally: \(mutationResult.output)"
+        )
+    }
+
+    // Protected BOXER markers: local-drive-unmount, drive-cache-clear.
+    // Behavioral invariant: real local-drive unmount deletes the drive, which
+    // destroys cached trees and outstanding directory-search entries; cache
+    // reset releases stale state and creates an independent root, and two full
+    // mount/unmount cycles leave no retained cache objects. Historical
+    // references: fd6e3fb60, 4e359684f, 92281b3ee. Real entry points/sources:
+    // localDrive::UnMount from src/dos/drive_local.cpp and DOS_Drive_Cache
+    // constructors, destructor, Clear, EmptyCache, ClearFileInfo, and
+    // DeleteFileInfo from src/dos/drive_cache.cpp. Fake dependencies: minimal
+    // DOS drive base shape and deterministic SetBaseDir. Supported adapter:
+    // DOSBox079Adapter, v0.79.1 only. Mutation: removing destructor Clear must
+    // fail by retaining the cache root/tree.
+    func testRuntimeDriveCacheTeardownAndSecondSession() throws {
+        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let localSource = try String(contentsOf: adapter.productionSources(for: .filesystem)[0], encoding: .utf8)
+        let cacheSource = try String(contentsOf: adapter.productionSources(for: .filesystem)[1], encoding: .utf8)
+        let constructors = try productionSource(
+            beginningWith: "DOS_Drive_Cache::DOS_Drive_Cache(void)",
+            endingBefore: "DOS_Drive_Cache::~DOS_Drive_Cache(void)",
+            in: cacheSource
+        )
+        let signatures = [
+            "DOS_Drive_Cache::~DOS_Drive_Cache(void)",
+            "void DOS_Drive_Cache::Clear(void)",
+            "void DOS_Drive_Cache::EmptyCache(void)",
+            "void DOS_Drive_Cache::ClearFileInfo(CFileInfo *dir)",
+            "void DOS_Drive_Cache::DeleteFileInfo(CFileInfo *dir)"
+        ]
+        let cacheFunctions = try signatures.map { try productionFunction(beginningWith: $0, in: cacheSource) }.joined(separator: "\n\n")
+        let cacheFragment = "\(constructors)\n\n\(cacheFunctions)"
+        let unmount = try productionFunction(beginningWith: "Bits localDrive::UnMount(void)", in: localSource)
+        let fragment = "\(cacheFragment)\n\n\(unmount)"
+        let normal = try compileAndRunDriveTeardown(source: fragment, label: "normal")
+        XCTAssertEqual(normal.status, 0, normal.output)
+        XCTAssertTrue(normal.output.contains("drive cache teardown runtime harness passed"), normal.output)
+
+        let mutation = try replacingFirst(
+            "DOS_Drive_Cache::~DOS_Drive_Cache(void) {\n\tClear();",
+            with: "DOS_Drive_Cache::~DOS_Drive_Cache(void) {\n\t/* mutation: root cache clear removed */",
+            in: fragment
+        )
+        let mutationResult = try compileAndRunDriveTeardown(source: mutation, label: "removed-clear")
+        XCTAssertEqual(
+            mutationResult.status,
+            12,
+            "Removed cache clear did not fail behaviorally: \(mutationResult.output)"
+        )
+    }
+
     private func localFileSource(from source: String) throws -> String {
         let signatures = [
             "bool localFile::ftell_and_check()",
@@ -259,6 +395,18 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             cursor = source.index(after: cursor)
         }
         throw BoxerRuntimeHarnessError.launchFailed("Unbalanced production function: \(signature)")
+    }
+
+    private func productionSource(
+        beginningWith start: String,
+        endingBefore end: String,
+        in source: String
+    ) throws -> String {
+        guard let startRange = source.range(of: start),
+              let endRange = source.range(of: end, range: startRange.upperBound..<source.endIndex) else {
+            throw BoxerRuntimeHarnessError.launchFailed("Could not find production range: \(start) ... \(end)")
+        }
+        return String(source[startRange.lowerBound..<endRange.lowerBound])
     }
 
     private func replacingFirst(_ needle: String, with replacement: String, in source: String) throws -> String {
@@ -392,6 +540,85 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         XCTAssertEqual(compile.status, 0, compile.output)
         guard compile.status == 0 else { return compile }
         return try BoxerRuntimeProcessRunner.run(executable: binary.path, arguments: [fixture.path])
+    }
+
+    private func compileAndRunFileOpen(
+        source: String,
+        label: String
+    ) throws -> BoxerRuntimeProcessResult {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BoxerFileOpen-\(label)-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let productionSource = directory.appendingPathComponent("file-open-production.cpp")
+        let harnessSource = directory.appendingPathComponent("file-open-harness.cpp")
+        let binary = directory.appendingPathComponent("file-open-harness")
+        let fixture = directory.appendingPathComponent("fixture", isDirectory: true)
+        try FileManager.default.createDirectory(at: fixture, withIntermediateDirectories: true)
+        try "payload".write(to: fixture.appendingPathComponent("DATA.DAT"), atomically: true, encoding: .utf8)
+        try source.write(to: productionSource, atomically: true, encoding: .utf8)
+        try fileOpenHarness(sourcePath: productionSource.path)
+            .write(to: harnessSource, atomically: true, encoding: .utf8)
+        let compile = try BoxerRuntimeProcessRunner.run(
+            executable: "/usr/bin/xcrun",
+            arguments: ["clang++", "-std=c++17", harnessSource.path, "-o", binary.path]
+        )
+        XCTAssertEqual(compile.status, 0, compile.output)
+        guard compile.status == 0 else { return compile }
+        return try BoxerRuntimeProcessRunner.run(executable: binary.path, arguments: [fixture.path])
+    }
+
+    private func compileAndRunBackingPaths(
+        source: String,
+        label: String
+    ) throws -> BoxerRuntimeProcessResult {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BoxerBackingPaths-\(label)-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let productionSource = directory.appendingPathComponent("backing-path-production.cpp")
+        let harnessSource = directory.appendingPathComponent("backing-path-harness.cpp")
+        let binary = directory.appendingPathComponent("backing-path-harness")
+        let fixture = directory.appendingPathComponent("fixture", isDirectory: true)
+        try FileManager.default.createDirectory(at: fixture, withIntermediateDirectories: true)
+        try "payload".write(
+            to: fixture.appendingPathComponent("actual.dat"),
+            atomically: true,
+            encoding: .utf8
+        )
+        try source.write(to: productionSource, atomically: true, encoding: .utf8)
+        try backingPathHarness(sourcePath: productionSource.path)
+            .write(to: harnessSource, atomically: true, encoding: .utf8)
+        let compile = try BoxerRuntimeProcessRunner.run(
+            executable: "/usr/bin/xcrun",
+            arguments: ["clang++", "-std=c++17", harnessSource.path, "-o", binary.path]
+        )
+        XCTAssertEqual(compile.status, 0, compile.output)
+        guard compile.status == 0 else { return compile }
+        return try BoxerRuntimeProcessRunner.run(executable: binary.path, arguments: [fixture.path])
+    }
+
+    private func compileAndRunDriveTeardown(
+        source: String,
+        label: String
+    ) throws -> BoxerRuntimeProcessResult {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("BoxerDriveTeardown-\(label)-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let productionSource = directory.appendingPathComponent("drive-teardown-production.cpp")
+        let harnessSource = directory.appendingPathComponent("drive-teardown-harness.cpp")
+        let binary = directory.appendingPathComponent("drive-teardown-harness")
+        try source.write(to: productionSource, atomically: true, encoding: .utf8)
+        try driveTeardownHarness(sourcePath: productionSource.path)
+            .write(to: harnessSource, atomically: true, encoding: .utf8)
+        let compile = try BoxerRuntimeProcessRunner.run(
+            executable: "/usr/bin/xcrun",
+            arguments: ["clang++", "-std=c++17", harnessSource.path, "-o", binary.path]
+        )
+        XCTAssertEqual(compile.status, 0, compile.output)
+        guard compile.status == 0 else { return compile }
+        return try BoxerRuntimeProcessRunner.run(executable: binary.path, arguments: [])
     }
 
     private func harness(sourcePath: String) -> String {
@@ -854,6 +1081,283 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             if (const auto result = run_cycle(argv[1], 1)) return result;
             if (const auto result = run_cycle(argv[1], 2)) return result + 20;
             std::cout << "file delete runtime harness passed\\n";
+            return 0;
+        }
+        """
+    }
+
+    private func fileOpenHarness(sourcePath: String) -> String {
+        """
+        #include <cstdint>
+        #include <cstdio>
+        #include <cstring>
+        #include <iostream>
+        #include <string>
+
+        #define CROSS_LEN 4096
+        #define CROSS_FILENAME(path) do {} while (0)
+        #define LOG_MSG(...) do {} while (0)
+        constexpr uint16_t DOSERR_ACCESS_DENIED = 5;
+        constexpr uint16_t DOSERR_ACCESS_CODE_INVALID = 12;
+        constexpr uint16_t DOSERR_INVALID_HANDLE = 6;
+        constexpr uint32_t OPEN_READ = 0;
+        constexpr uint32_t OPEN_WRITE = 1;
+        constexpr uint32_t OPEN_READWRITE = 2;
+        constexpr uint32_t OPEN_READ_NO_MOD = 3;
+        static void safe_strcpy(char *destination, const char *source) {
+            std::snprintf(destination, CROSS_LEN, "%s", source);
+        }
+        static void safe_strcat(char *destination, const char *source) {
+            std::strncat(destination, source, CROSS_LEN - std::strlen(destination) - 1);
+        }
+        static FILE *fopen_wrap(const char *path, const char *mode) { return std::fopen(path, mode); }
+        static bool IsFirstEncounter(const char *) { return true; }
+        static std::string get_basename(const char *path) { return path; }
+
+        class localDrive;
+        class DOS_File {
+        public:
+            virtual ~DOS_File() = default;
+            uint32_t flags = 0;
+        };
+        class localFile final : public DOS_File {
+        public:
+            localFile(const char *, FILE *handle, const char *) : file(handle) {}
+            ~localFile() override { if (file) std::fclose(file); }
+            void Flush() { ++flushes; }
+            FILE *file;
+            int flushes = 0;
+        };
+        struct FakeCache { void ExpandName(char *) { ++expansions; } int expansions = 0; };
+        class localDrive {
+        public:
+            explicit localDrive(const char *root) { safe_strcpy(basedir, root); }
+            bool FileOpen(DOS_File **file, char *name, uint32_t flags);
+            char basedir[CROSS_LEN] = {};
+            FakeCache dirCache;
+        };
+        static bool allow_write = false;
+        static int policy_calls = 0;
+        static uint16_t last_error = 0;
+        bool boxer_shouldAllowWriteAccessToPath(const char *, localDrive *) { ++policy_calls; return allow_write; }
+        void DOS_SetError(uint16_t error) { last_error = error; }
+        DOS_File *FindOpenFile(localDrive *, const char *) { return nullptr; }
+
+        #include "\(sourcePath)"
+
+        static int run_cycle(const std::string &root) {
+            localDrive drive((root + "/").c_str());
+            char name[] = "DATA.DAT";
+            DOS_File *file = nullptr;
+            allow_write = false;
+            policy_calls = 0;
+            last_error = 0;
+            if (drive.FileOpen(&file, name, OPEN_WRITE) || file)
+                return 10;
+            if (last_error != DOSERR_ACCESS_DENIED || policy_calls != 1)
+                return 11;
+            if (!drive.FileOpen(&file, name, OPEN_READWRITE) || !file || file->flags != OPEN_READ)
+                return 12;
+            delete file;
+            file = nullptr;
+            allow_write = true;
+            if (!drive.FileOpen(&file, name, OPEN_READWRITE) || !file || file->flags != OPEN_READWRITE)
+                return 13;
+            delete file;
+            file = nullptr;
+            if (!drive.FileOpen(&file, name, OPEN_READ) || !file || file->flags != OPEN_READ)
+                return 14;
+            delete file;
+            if (policy_calls != 3 || drive.dirCache.expansions != 4)
+                return 15;
+            return 0;
+        }
+        int main(int argc, char **argv) {
+            if (argc != 2) return 50;
+            if (const auto result = run_cycle(argv[1])) return result;
+            if (const auto result = run_cycle(argv[1])) return result + 20;
+            std::cout << "file open runtime harness passed\\n";
+            return 0;
+        }
+        """
+    }
+
+    private func backingPathHarness(sourcePath: String) -> String {
+        """
+        #include <cstdint>
+        #include <cstdio>
+        #include <cstring>
+        #include <iostream>
+        #include <string>
+
+        #define CROSS_LEN 4096
+        #define CROSS_FILENAME(path) replace_slashes(path)
+        static void replace_slashes(char *path) {
+            for (; *path; ++path) if (*path == '\\\\') *path = '/';
+        }
+        static void safe_strcpy(char *destination, const char *source) {
+            std::snprintf(destination, CROSS_LEN, "%s", source);
+        }
+        static void safe_strcat(char *destination, const char *source) {
+            std::strncat(destination, source, CROSS_LEN - std::strlen(destination) - 1);
+        }
+        static FILE *fopen_wrap(const char *path, const char *mode) { return std::fopen(path, mode); }
+
+        struct FakeCache {
+            int expansions = 0;
+            void ExpandName(char *path) {
+                ++expansions;
+                const std::string value(path);
+                const auto slash = value.find_last_of('/');
+                const std::string name = slash == std::string::npos ? value : value.substr(slash + 1);
+                if (name == "ALIAS.DAT") {
+                    const std::string expanded = value.substr(0, slash + 1) + "actual.dat";
+                    safe_strcpy(path, expanded.c_str());
+                }
+            }
+        };
+        class localDrive {
+        public:
+            explicit localDrive(const char *root) { safe_strcpy(basedir, root); }
+            FILE *GetSystemFilePtr(const char *name, const char *type);
+            bool GetSystemFilename(char *system_name, const char *dos_name);
+            char basedir[CROSS_LEN] = {};
+            FakeCache dirCache;
+        };
+
+        #include "\(sourcePath)"
+
+        static int run_cycle(const std::string &root) {
+            localDrive drive((root + "/").c_str());
+            char system_name[CROSS_LEN] = {};
+            if (!drive.GetSystemFilename(system_name, "ALIAS.DAT") ||
+                std::string(system_name) != root + "/actual.dat")
+                return 10;
+            FILE *file = drive.GetSystemFilePtr("ALIAS.DAT", "rb");
+            if (!file)
+                return 11;
+            char contents[8] = {};
+            const auto count = std::fread(contents, 1, 7, file);
+            std::fclose(file);
+            if (count != 7 || std::string(contents, 7) != "payload")
+                return 12;
+            if (drive.dirCache.expansions != 2)
+                return 13;
+            return 0;
+        }
+        int main(int argc, char **argv) {
+            if (argc != 2) return 50;
+            if (const auto result = run_cycle(argv[1])) return result;
+            if (const auto result = run_cycle(argv[1])) return result + 20;
+            std::cout << "host backing path runtime harness passed\\n";
+            return 0;
+        }
+        """
+    }
+
+    private func driveTeardownHarness(sourcePath: String) -> String {
+        """
+        #include <cstdint>
+        #include <cstring>
+        #include <iostream>
+        #include <vector>
+
+        #define CROSS_LEN 4096
+        #define DOS_NAMELENGTH_ASCII 13
+        #define MAX_OPENDIRS 8
+        using Bits = int32_t;
+        using Bitu = uint32_t;
+
+        class DOS_Drive_Cache {
+        public:
+            enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
+            class CFileInfo {
+            public:
+                CFileInfo() : id(MAX_OPENDIRS) { ++live_count; }
+                virtual ~CFileInfo() {
+                    for (auto *entry : fileList) delete entry;
+                    --live_count;
+                }
+                char orgname[CROSS_LEN] = {};
+                char shortname[DOS_NAMELENGTH_ASCII] = {};
+                bool isOverlayDir = false;
+                bool isDir = false;
+                uint16_t id;
+                Bitu nextEntry = 0;
+                unsigned shortNr = 0;
+                std::vector<CFileInfo *> fileList;
+                std::vector<CFileInfo *> longNameList;
+                static int live_count;
+            };
+            DOS_Drive_Cache(void);
+            DOS_Drive_Cache(const char *path);
+            ~DOS_Drive_Cache(void);
+            void EmptyCache(void);
+            void SetBaseDir(const char *path) { std::snprintf(basePath, CROSS_LEN, "%s", path); ++base_sets; }
+            void seed() {
+                auto *child = new CFileInfo;
+                child->id = 1;
+                dirBase->fileList.push_back(child);
+                dirSearch[1] = child;
+                dirFindFirst[2] = new CFileInfo;
+            }
+            bool reset_state_is_clean() const {
+                return dirBase && dirBase->fileList.empty() && !save_dir && srchNr == 0 &&
+                       nextFreeFindFirst == 0 && dirSearch[1] == nullptr;
+            }
+            static int base_sets;
+        private:
+            void ClearFileInfo(CFileInfo *dir);
+            void DeleteFileInfo(CFileInfo *dir);
+            void Clear(void);
+            CFileInfo *dirBase;
+            char dirPath[CROSS_LEN];
+            char basePath[CROSS_LEN];
+            TDirSort sortDirType;
+            CFileInfo *save_dir;
+            char save_path[CROSS_LEN];
+            char save_expanded[CROSS_LEN];
+            uint16_t srchNr;
+            CFileInfo *dirSearch[MAX_OPENDIRS];
+            CFileInfo *dirFindFirst[MAX_OPENDIRS];
+            uint16_t nextFreeFindFirst;
+            char label[CROSS_LEN];
+            bool updatelabel;
+        };
+        int DOS_Drive_Cache::CFileInfo::live_count = 0;
+        int DOS_Drive_Cache::base_sets = 0;
+
+        class DOS_Drive { public: virtual ~DOS_Drive() = default; virtual Bits UnMount() = 0; };
+        class localDrive final : public DOS_Drive {
+        public:
+            explicit localDrive(const char *path) : dirCache(path) {}
+            Bits UnMount(void) override;
+            void seed() { dirCache.seed(); }
+            void reset() { dirCache.EmptyCache(); }
+            bool reset_state_is_clean() const { return dirCache.reset_state_is_clean(); }
+        private:
+            DOS_Drive_Cache dirCache;
+        };
+
+        #include "\(sourcePath)"
+
+        static int run_cycle() {
+            auto *drive = new localDrive("/fixture/");
+            drive->seed();
+            if (DOS_Drive_Cache::CFileInfo::live_count != 3)
+                return 10;
+            drive->reset();
+            if (!drive->reset_state_is_clean() || DOS_Drive_Cache::CFileInfo::live_count != 2)
+                return 11;
+            if (drive->UnMount() != 0 || DOS_Drive_Cache::CFileInfo::live_count != 0)
+                return 12;
+            return 0;
+        }
+        int main() {
+            if (const auto result = run_cycle()) return result;
+            if (const auto result = run_cycle()) return result + 20;
+            if (DOS_Drive_Cache::base_sets != 4) return 40;
+            std::cout << "drive cache teardown runtime harness passed\\n";
             return 0;
         }
         """

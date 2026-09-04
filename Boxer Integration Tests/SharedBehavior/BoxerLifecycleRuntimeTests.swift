@@ -29,8 +29,9 @@ final class BoxerLifecycleRuntimeTests: XCTestCase {
     //   Shared lifecycle expectation through version adapters; instantiated
     //   here with DOSBox079Adapter.
     //
-    // Mutation guard:
-    //   Removing or duplicating either context callback must fail.
+    // Mutation guards:
+    //   Removing either context callback or either cancellation checkpoint
+    //   must fail.
     func testRuntimeRunLoopContextAndSecondSessionBehavior() throws {
         let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
         let sourceURL = adapter.productionSources(for: .lifecycle)[0]
@@ -52,6 +53,27 @@ final class BoxerLifecycleRuntimeTests: XCTestCase {
                 in: range,
                 with: "/* mutation: \(label) */"
             )
+            let result = try compileAndRun(source: mutated, label: label)
+            XCTAssertNotEqual(result.status, 0, "Lifecycle mutation \(label) unexpectedly passed")
+        }
+
+        for (needle, replacement, label) in [
+            (
+                "if (!boxer_runLoopShouldContinue()) return 1;\n\n\t\tif (PIC_RunQueue())",
+                "if (false) return 1;\n\n\t\tif (PIC_RunQueue())",
+                "remove-entry-cancellation"
+            ),
+            (
+                "if (!boxer_runLoopShouldContinue()) return 1;\n\t\t\tif (ticksRemain > 0)",
+                "if (false) return 1;\n\t\t\tif (ticksRemain > 0)",
+                "remove-event-cancellation"
+            )
+        ] {
+            guard let range = source.range(of: needle) else {
+                XCTFail("Could not create lifecycle mutation \(label)")
+                continue
+            }
+            let mutated = source.replacingCharacters(in: range, with: replacement)
             let result = try compileAndRun(source: mutated, label: label)
             XCTAssertNotEqual(result.status, 0, "Lifecycle mutation \(label) unexpectedly passed")
         }
@@ -103,6 +125,10 @@ final class BoxerLifecycleRuntimeTests: XCTestCase {
         static std::vector<int> events;
         static int next_context = 0;
         static int loop_calls = 0;
+        static int continuation_mode = 0;
+        static int continuation_calls = 0;
+        static int pic_calls = 0;
+        static int event_calls = 0;
 
         namespace loguru {
         Verbosity current_verbosity_cutoff() { return Verbosity_OFF; }
@@ -121,9 +147,31 @@ final class BoxerLifecycleRuntimeTests: XCTestCase {
             events.push_back(value * 10 + 2);
         }
 
-        bool boxer_runLoopShouldContinue() { return true; }
+        bool boxer_runLoopShouldContinue()
+        {
+            ++continuation_calls;
+            if (continuation_mode == 1)
+                return false;
+            if (continuation_mode == 2)
+                return continuation_calls < 2;
+            return true;
+        }
+
+        bool PIC_RunQueue() { ++pic_calls; return false; }
+        bool GFX_Events() { ++event_calls; return true; }
 
         #include "\(sourcePath)"
+
+        int32_t CPU_CycleMax = 0;
+        int32_t CPU_CyclePercUsed = 0;
+        int32_t CPU_CycleLimit = 0;
+        int64_t CPU_IODelayRemoved = 0;
+        bool CPU_CycleAutoAdjust = false;
+        bool CPU_SkipCycleAutoAdjust = false;
+        CPU_Decoder *cpudecoder = nullptr;
+        CallBack_Handler CallBack_Handlers[CB_MAX] = {};
+        const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
+        void TIMER_AddTick() {}
 
         static Bitu controlled_loop()
         {
@@ -146,13 +194,44 @@ final class BoxerLifecycleRuntimeTests: XCTestCase {
             return 0;
         }
 
+        static int run_cancellation_checks()
+        {
+            continuation_mode = 1;
+            continuation_calls = pic_calls = event_calls = 0;
+            if (Normal_Loop() != 1 || continuation_calls != 1 || pic_calls != 0 || event_calls != 0)
+                return 50;
+
+            continuation_mode = 2;
+            continuation_calls = pic_calls = event_calls = 0;
+            if (Normal_Loop() != 1 || continuation_calls != 2 || pic_calls != 1 || event_calls != 1)
+                return 51;
+            continuation_mode = 0;
+            return 0;
+        }
+
+        static int run_shutdown_and_reuse_check()
+        {
+            events.clear();
+            loop_calls = 0;
+            shutdown_requested = true;
+            DOSBOX_SetLoop(controlled_loop);
+            DOSBOX_RunMachine();
+            if (loop_calls != 0 || !events.empty())
+                return 52;
+            return run_session();
+        }
+
         int main()
         {
+            if (const auto result = run_cancellation_checks())
+                return result;
+            if (const auto result = run_shutdown_and_reuse_check())
+                return result;
             if (const auto result = run_session())
                 return result;
             if (const auto result = run_session())
                 return result + 20;
-            if (next_context != 2)
+            if (next_context != 3)
                 return 40;
 
             std::cout << "lifecycle runtime harness passed\\n";

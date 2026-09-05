@@ -85,6 +85,7 @@ void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
 {
     CommandLine *commandLine;
     Config *configuration;
+    BXEmulatorStartupPhaseCallback _startupPhaseCallback;
 }
 @synthesize processName = _processName;
 @synthesize lastProcess = _lastProcess;
@@ -225,6 +226,7 @@ static BOOL _hasStartedEmulator = NO;
     [_driveCache release]; _driveCache = nil;
     [_commandQueue release]; _commandQueue = nil;
     [_pendingSysexMessages release]; _pendingSysexMessages = nil;
+    [_startupPhaseCallback release]; _startupPhaseCallback = nil;
 	
 	[super dealloc];
 #pragma clang diagnostic pop
@@ -829,6 +831,20 @@ static BOOL _hasStartedEmulator = NO;
 
 @implementation BXEmulator (BXEmulatorInternals)
 
+- (BXEmulatorStartupPhaseCallback) startupPhaseCallback
+{
+    return _startupPhaseCallback;
+}
+
+- (void) setStartupPhaseCallback: (BXEmulatorStartupPhaseCallback)callback
+{
+    if (_startupPhaseCallback != callback)
+    {
+        [_startupPhaseCallback release];
+        _startupPhaseCallback = [callback copy];
+    }
+}
+
 - (DOS_Shell *) _currentShell
 {
 	return currentShell;
@@ -1013,6 +1029,8 @@ static BOOL _hasStartedEmulator = NO;
             commandLine = new CommandLine(0, argv);
             control.reset(new Config(commandLine));
             configuration = control.get();
+            if (self.startupPhaseCallback)
+                self.startupPhaseCallback(BXEmulatorStartupPhaseConfigurationCreated);
             
             //DOSBox Staging 0.79 caches its platform configuration directory
             //before DOS and the virtual Z: drive are initialized.
@@ -1021,6 +1039,8 @@ static BOOL _hasStartedEmulator = NO;
             //Sets up the vast swathes of DOSBox configuration file parameters,
             //and registers the shell to start up when we finish initializing.
             DOSBOX_Init();
+            if (self.startupPhaseCallback)
+                self.startupPhaseCallback(BXEmulatorStartupPhaseDOSBoxConfigured);
 
             //Ask our delegate for the configuration files we should be loading today.
             NSArray *configURLs = [self.delegate configurationURLsForEmulator: self];
@@ -1032,6 +1052,11 @@ static BOOL _hasStartedEmulator = NO;
 
             //Initialise each DOSBox module based on the loaded configuration.
             control->Init();
+
+            // Keep this nil-by-default checkpoint after real subsystem initialization:
+            // lifecycle regression tests use it to prove exceptional rollback and reuse.
+            if (self.startupPhaseCallback)
+                self.startupPhaseCallback(BXEmulatorStartupPhaseSubsystemsInitialized);
             
             [self _didInitialize];
         }

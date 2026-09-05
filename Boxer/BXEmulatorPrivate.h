@@ -164,7 +164,20 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 /// BXEmulatorPrivate declares the internal interface that should only be seen by
 /// BXEmulator and its C++-aware helpers. It uses C++-specific symbols and cannot be
 /// included from any C or Obj-C implementation file.
+typedef NS_ENUM(NSUInteger, BXEmulatorStartupPhase) {
+    BXEmulatorStartupPhaseConfigurationCreated,
+    BXEmulatorStartupPhaseDOSBoxConfigured,
+    BXEmulatorStartupPhaseSubsystemsInitialized,
+};
+
+typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
+
 @interface BXEmulator (BXEmulatorInternals)
+
+/// An internal, nil-by-default observation seam for validating startup rollback against
+/// production DOSBox initialization. Ordinary execution never installs this callback,
+/// so preserving it across upstream merges does not alter the production startup path.
+@property (nonatomic, copy, nullable) BXEmulatorStartupPhaseCallback startupPhaseCallback;
 
 /// Called at emulator startup and replicates DOSBox's original startup process.
 /// This initializes SDL, requests and parses any config files for this session,

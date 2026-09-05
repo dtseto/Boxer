@@ -430,12 +430,36 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
     func testRuntimeLifecycleBehavior() throws {
         // Protects BOXER markers: runloop-termination, runloop-event-cancellation, runloop-context, shutdown-drive-clear
-        throw XCTSkip("Runtime lifecycle test requires a test target linked to DOSBox run-loop and DOS shutdown symbols with fake Boxer cancellation/context hooks. Required behavior: cancellation terminates, context callbacks balance, drives/callbacks clean up, and reinitialization does not duplicate state.")
+        // The production-linked behavior is exercised by BoxerLifecycleRuntimeTests.
+        let runtimeTest = try source(at: projectRoot.appendingPathComponent("Boxer Integration Tests/SharedBehavior/BoxerLifecycleRuntimeTests.swift"))
+        let hostHarness = try source(at: projectRoot.appendingPathComponent("Boxer Integration Tests/RuntimeHarnessSupport/BoxerLifecycleHostHarness.mm"))
+        XCTAssertTrue(runtimeTest.contains("BoxerRunProductionLifecycleHarness"))
+        XCTAssertTrue(hostHarness.contains("[emulator _startDOSBox]"))
+        XCTAssertTrue(hostHarness.contains("BXEmulatorStartupPhaseSubsystemsInitialized"))
+        XCTAssertTrue(hostHarness.contains("BoxerLifecycleFailure::characterPointer"))
+        XCTAssertTrue(hostHarness.contains("BoxerLifecycleFailure::emulatorException"))
     }
 
     func testRuntimeShellCallbackOrderingBehavior() throws {
         // Protects BOXER markers: shell-run-lifecycle, shell-input-injection, shell-command-filter, batch-lifecycle-bridge, program-launch-lifecycle
-        throw XCTSkip("Runtime shell test requires fake Boxer shell callbacks linked to DOS_Shell. Required behavior: shell, injected command, batch, program launch/termination, prompt return, and shell finish callbacks occur once in order.")
+        let runtimeTest = try source(at: projectRoot.appendingPathComponent("Boxer Integration Tests/SharedBehavior/BoxerShellRuntimeTests.swift"))
+        for entryPoint in [
+            "void DOS_Shell::Run()",
+            "BatchFile::~BatchFile()",
+            "bool DOS_Shell::Execute(char * name,char * args)",
+            "void DOS_Shell::InputCommand(char * line)"
+        ] {
+            XCTAssertTrue(runtimeTest.contains(entryPoint), "Missing production-linked shell entry point: \(entryPoint)")
+        }
+        for callback in [
+            "boxer_shellWillExecuteFileAtDOSPath",
+            "boxer_shellDidExecuteFileAtDOSPath",
+            "boxer_shellWillReadCommandInputFromHandle",
+            "boxer_shellDidReadCommandInputFromHandle",
+            "boxer_handleShellCommandInput"
+        ] {
+            XCTAssertTrue(runtimeTest.contains(callback), "Missing runtime protection for \(callback)")
+        }
     }
 
     private func documentedMarkerSet() -> Set<String> {

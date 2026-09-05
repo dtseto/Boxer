@@ -1,6 +1,9 @@
 import Foundation
 import XCTest
 
+@_silgen_name("BoxerRunProductionLifecycleHarness")
+private func BoxerRunProductionLifecycleHarness() -> Int32
+
 final class BoxerLifecycleRuntimeTests: XCTestCase {
     private var projectRoot: URL {
         URL(fileURLWithPath: #filePath)
@@ -32,6 +35,14 @@ final class BoxerLifecycleRuntimeTests: XCTestCase {
     // Mutation guards:
     //   Removing either context callback or either cancellation checkpoint
     //   must fail.
+    func testProductionExceptionalCleanupAndReinitialization() {
+        XCTAssertEqual(
+            BoxerRunProductionLifecycleHarness(),
+            0,
+            "Real BXEmulator/DOSBox initialization did not cleanly shut down and reinitialize"
+        )
+    }
+
     func testRuntimeRunLoopContextAndSecondSessionBehavior() throws {
         let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
         let sourceURL = adapter.productionSources(for: .lifecycle)[0]

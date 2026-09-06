@@ -291,6 +291,23 @@ final class BoxerIntegrationContractTests: XCTestCase {
                        "A relative-only outer condition makes the absolute-path branch unreachable")
     }
 
+    func testStartupTargetMarksSessionReadyBeforeOpeningURL() throws {
+        let session = try source(at: projectRoot.appendingPathComponent("Boxer/BXSession.m"))
+        let launchCommands = try sourceRegion(
+            in: session,
+            beginningWith: "- (void) runLaunchCommandsForEmulator:",
+            endingBefore: "- (NSSize) maxFrameSizeForEmulator:"
+        )
+
+        let readiness = "self.canOpenURLs = !self.emulator.isRunningActiveProcess;"
+        let openTarget = "[self openURLInDOS: targetURL"
+        let readinessRange = try XCTUnwrap(launchCommands.range(of: readiness))
+        let openRange = try XCTUnwrap(launchCommands.range(of: openTarget))
+
+        XCTAssertLessThan(readinessRange.lowerBound, openRange.lowerBound,
+                          "The end-of-AUTOEXEC launch hook must mark an idle session ready before opening its startup target")
+    }
+
     func testLegacyGameboxesReceiveExactlyOneFallbackCDrive() throws {
         let gamebox = try source(at: projectRoot.appendingPathComponent("Boxer/BXGamebox.m"))
         let bundledDrives = try sourceRegion(

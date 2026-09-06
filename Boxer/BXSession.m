@@ -1361,6 +1361,11 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
     //file or folder we're pointing at.
 	NSURL *targetURL = self.targetURL;
     NSString *arguments = self.targetArguments;
+
+    //The launch hook runs at the end of AUTOEXEC.BAT, before the shell's first
+    //return-to-prompt notification. At this point the session is fully configured
+    //and may launch its startup target as long as no guest program is active.
+    self.canOpenURLs = !self.emulator.isRunningActiveProcess;
     
 	if (targetURL)
 	{

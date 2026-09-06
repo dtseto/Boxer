@@ -8,5 +8,5 @@
 	path = Vendor/OpenEmuShaders
 	url = https://github.com/dtseto/OpenEmu-Shaders.git
 [submodule "DOSBox-Staging"]
-	path = DOSBox-Staging
-	url = https://github.com/MaddTheSane/dosbox-staging.git
+    path = DOSBox-Staging
+    url = https://github.com/dtseto/dosbox-staging.git

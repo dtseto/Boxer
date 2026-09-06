@@ -268,6 +268,29 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/dos/drive_local.cpp", marker: "local-file-unavailable", contains: "void localFile::willBecomeUnavailable()")
     }
 
+    func testSavedStartupProgramSupportsLegacyAbsoluteAndRelativePaths() throws {
+        let session = try source(at: projectRoot.appendingPathComponent("Boxer/BXSession.m"))
+        let startupSelection = try sourceRegion(
+            in: session,
+            beginningWith: "NSString *previousPath = [self.gameSettings objectForKey: BXGameboxSettingsLastProgramPathKey];",
+            endingBefore: "//Once we've finished, clear any flags that override the startup program"
+        )
+
+        XCTAssertTrue(startupSelection.contains("if (previousPath.length > 0)"),
+                      "Any nonempty saved path must be considered, including legacy absolute paths")
+        XCTAssertTrue(startupSelection.contains("if (previousPath.isAbsolutePath)"),
+                      "Legacy absolute paths must be converted directly to file URLs")
+        XCTAssertTrue(startupSelection.contains("[NSURL fileURLWithPath: previousPath]"))
+        XCTAssertTrue(startupSelection.contains("[baseURL URLByAppendingPathComponent: previousPath]"),
+                      "Portable relative paths must still resolve from the gamebox resources")
+        XCTAssertTrue(startupSelection.contains("if ([previousURL checkResourceIsReachableAndReturnError: NULL])"),
+                      "Saved programs must be reachable before becoming the startup target")
+        XCTAssertTrue(startupSelection.contains("NSDictionary *defaultLauncher = self.gamebox.defaultLauncher;"),
+                      "An unavailable saved program must continue to fall back to the default launcher")
+        XCTAssertFalse(startupSelection.contains("previousPath && !previousPath.isAbsolutePath"),
+                       "A relative-only outer condition makes the absolute-path branch unreachable")
+    }
+
     func testLegacyGameboxesReceiveExactlyOneFallbackCDrive() throws {
         let gamebox = try source(at: projectRoot.appendingPathComponent("Boxer/BXGamebox.m"))
         let bundledDrives = try sourceRegion(

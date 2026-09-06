@@ -6,7 +6,7 @@
 	url = https://github.com/MaddTheSane/Boxer-MT32Emu.git
 [submodule "Vendor/OpenEmuShaders"]
 	path = Vendor/OpenEmuShaders
-	url = https://github.com/OpenEmu/OpenEmu-Shaders.git
+	url = https://github.com/dtseto/OpenEmu-Shaders.git
 [submodule "DOSBox-Staging"]
 	path = DOSBox-Staging
 	url = https://github.com/MaddTheSane/dosbox-staging.git

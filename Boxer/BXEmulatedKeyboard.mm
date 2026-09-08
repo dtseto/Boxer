@@ -18,8 +18,8 @@
 #pragma mark Private method declarations
 
 //Implemented in dos_keyboard_layout.cpp
-Bitu DOS_SwitchKeyboardLayout(const char* new_layout, Bit32s& tried_cp);
-Bitu DOS_LoadKeyboardLayout(const char * layoutname, Bit32s codepage, const char * codepagefile);
+Bitu DOS_SwitchKeyboardLayout(const char* new_layout, int32_t& tried_cp);
+Bitu DOS_LoadKeyboardLayout(const char * layoutname, int32_t codepage, const char * codepagefile);
 const char* DOS_GetLoadedLayout(void);
 
 @interface BXEmulatedKeyboard ()
@@ -335,7 +335,7 @@ const char* DOS_GetLoadedLayout(void);
         //TODO: if we're at the DOS prompt anyway, then run KEYB to let it handle such cases.
         if (boxer_keyboardLayoutSupported(layoutName))
         {   
-            Bit32s codepage = -1;
+            int32_t codepage = -1;
             DOS_SwitchKeyboardLayout(layoutName, codepage);
         }
         

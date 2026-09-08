@@ -39,9 +39,10 @@ BXDriveGeometry BXCDROMGeometry			= {2048, 1, 65535, 0};		//~650MB, no free spac
 
 #pragma mark - Externs
 
-//Defined in dos_files.cpp
-extern DOS_File * Files[DOS_FILES];
-extern DOS_Drive * Drives[DOS_DRIVES];
+//Files and Drives are declared by dos/dos_files.h. They were plain arrays of
+//raw pointers up to 0.78; at 0.83 they are std::array of unique_ptr/shared_ptr,
+//so Boxer can no longer redeclare them here.
+#import "dos/dos_files.h"
 
 //Defined in dos_mscdex.cpp
 void MSCDEX_SetCDInterface(int intNr, int forceCD);
@@ -300,7 +301,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 			{
 				const char *cLabel = [driveLabel cStringUsingEncoding: BXDirectStringEncoding];
                 if (cLabel) {
-					DOSBoxDrive->SetLabel(cLabel, drive.isCDROM, false);
+					DOSBoxDrive->dirCache.SetLabel(cLabel, drive.isCDROM, false);
                 }
 			}
 			
@@ -452,7 +453,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	{
 		for (NSUInteger i=0; i < DOS_DRIVES; i++)
 		{
-			if (Drives[i]) Drives[i]->EmptyCache();
+			if (Drives[i].get()) Drives[i].get()->EmptyCache();
 		}
 	}
 }
@@ -531,9 +532,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		dosPath = [dosPath substringFromIndex: 2];
 		
         NSUInteger driveIndex = [self _indexOfDriveLetter: driveLetter];
-        dosDrive = Drives[driveIndex];
+        dosDrive = Drives[driveIndex].get();
 	}
-    else dosDrive = Drives[DOS_GetDefaultDrive()];
+    else dosDrive = Drives[DOS_GetDefaultDrive()].get();
     
     if (!dosDrive) return NO;
     
@@ -565,7 +566,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	if (self.isExecuting)
 	{
-        DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()];
+        DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()].get();
         const char *currentDir = currentDOSBoxDrive->curdir;
 		return [NSString stringWithCString: currentDir
                                   encoding: BXDirectStringEncoding];
@@ -582,12 +583,12 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		if (!dosPath) return nil;
 		
 		char fullPath[DOS_PATHLENGTH];
-		Bit8u driveIndex;
+		uint8_t driveIndex;
 		BOOL resolved = DOS_MakeName(dosPath, fullPath, &driveIndex);
                 
 		if (resolved)
 		{
-			DOS_Drive *dosboxDrive = Drives[driveIndex];
+			DOS_Drive *dosboxDrive = Drives[driveIndex].get();
             return [self _driveMatchingDOSBoxDrive: dosboxDrive];
 		}
 		else return nil;
@@ -604,7 +605,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		if (!dosPath) return nil;
 		
 		char fullPath[DOS_PATHLENGTH];
-		Bit8u driveIndex;
+		uint8_t driveIndex;
 		BOOL resolved = DOS_MakeName(dosPath, fullPath, &driveIndex);
         
 		if (resolved)
@@ -627,7 +628,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	if (self.isExecuting)
 	{
-		DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()];
+		DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()].get();
 		const char *currentDir = currentDOSBoxDrive->curdir;
 		
 		NSURL *localURL	= [self _filesystemURLForDOSPath: currentDir
@@ -657,12 +658,12 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
             return nil;
 		
 		char fullPath[DOS_PATHLENGTH];
-		Bit8u driveIndex;
+		uint8_t driveIndex;
 		BOOL resolved = DOS_MakeName(dosCPath, fullPath, &driveIndex);
         
 		if (resolved)
 		{
-			DOS_Drive *dosboxDrive = Drives[driveIndex];
+			DOS_Drive *dosboxDrive = Drives[driveIndex].get();
 			NSURL *localURL	= [self _filesystemURLForDOSPath: fullPath onDOSBoxDrive: dosboxDrive];
 			
 			if (localURL)
@@ -691,7 +692,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		
         //First resolve what could be a relative path to an absolute one and determine which drive it's located on.
 		char fullCPath[DOS_PATHLENGTH];
-		Bit8u driveIndex;
+		uint8_t driveIndex;
 		BOOL resolved = DOS_MakeName(dosCPath, fullCPath, &driveIndex);
         
         //Then, ask the Boxer drive itself to hand over a logical URL that will correspond to that resource.
@@ -756,7 +757,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	if (!self.isExecuting) return nil;
 	
 	NSUInteger driveIndex	= [self _indexOfDriveLetter: drive.letter];
-	DOS_Drive *DOSBoxDrive	= Drives[driveIndex];
+	DOS_Drive *DOSBoxDrive	= Drives[driveIndex].get();
     //The drive is not mounted in DOS: give up
 	if (!DOSBoxDrive) return nil;
     
@@ -797,10 +798,16 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		BOOL hasShortName = NO;
 		if (cDirPath && cFileName)
 		{
-            //FIXME: getShortName will always fail for ISO9660 images, which do not (cannot) track long
-            //filenames but instead use the ISO filesystem's names. To correctly resolve the paths that
-            //OS X sees, we would need to be able to compare ISO vs Joliet names in the image's filesystem.
-            hasShortName = DOSBoxDrive->getShortName(cDirPath, cFileName, buffer);
+            //Boxer used to call DOSBoxDrive->getShortName() here. That was a
+            //virtual Boxer itself added to DOS_Drive in the 0.78 fork, and no
+            //drive ever overrode it -- the base implementation returned false,
+            //so this branch has always fallen through to the guess below. The
+            //hook is not carried into 0.83 rather than reinstating dead API.
+            //
+            //TODO: to do this properly, resolve short names through
+            //DOS_Drive_Cache::GetShortName() on the drive's public dirCache,
+            //which takes a single combined path rather than dir + filename.
+            hasShortName = NO;
 		}
         
 		if (hasShortName)
@@ -893,7 +900,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	NSUInteger i;
 	for (i=0; i < DOS_DRIVES; i++)
 	{
-		if (Drives[i] == dosDrive)
+		if (Drives[i].get() == dosDrive)
 		{
 			return [_driveCache objectForKey: [self _driveLetterForIndex: i]];
 		}
@@ -910,7 +917,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 - (DOS_Drive *)_DOSBoxDriveMatchingDrive: (BXDrive *)drive
 {
 	NSUInteger index = [self _indexOfDriveLetter: drive.letter];
-	if (Drives[index]) return Drives[index];
+	if (Drives[index].get()) return Drives[index].get();
 	else return NULL;
 }
 
@@ -924,7 +931,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	NSUInteger i;
 	for (i=0; i < DOS_DRIVES; i++)
 	{
-		if (Drives[i] == drive) return i;
+		if (Drives[i].get() == drive) return i;
 	}
 	return NSNotFound;
 }
@@ -937,9 +944,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	
 	//There was already a drive at that index, bail out
 	//TODO: populate an NSError object as well?
-	if (Drives[index]) return NO;
+	if (Drives[index].get()) return NO;
 	
-	Drives[index] = drive;
+	Drives[index].get() = drive;
 	mem_writeb(Real2Phys(dos.tables.mediaid)+((PhysPt)index)*2, drive->GetMediaByte());
 	
 	return YES;
@@ -951,7 +958,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	//The specified drive is not mounted, don't continue
     //(We don't treat this as an error situation either.)
-	if (!Drives[index]) return NO;
+	if (!Drives[index].get()) return NO;
 	
     NSInteger result = DriveManager::UnmountDrive((int)index);
 	if (result == BXDOSBoxUnmountSuccess)
@@ -1001,7 +1008,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	NSAssert1(index < DOS_DRIVES, @"index %lu passed to _driveFromDOSBoxDriveAtIndex was beyond the range of DOSBox's drive array.", (unsigned long)index);
     
-    DOS_Drive *dosboxDrive = Drives[index];
+    DOS_Drive *dosboxDrive = Drives[index].get();
 	if (dosboxDrive != NULL)
 	{
 		NSString *driveLetter	= [[self.class driveLetters] objectAtIndex: index];
@@ -1318,7 +1325,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		BXDrive *drive		= [_driveCache objectForKey: letter];
 		
 		//A drive exists in DOSBox that we don't have a record of yet, add it to our cache
-		if (Drives[i] && !drive)
+		if (Drives[i].get() && !drive)
 		{
 			drive = [self _driveFromDOSBoxDriveAtIndex: i];
 			[self _addDriveToCache: drive];
@@ -1329,7 +1336,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 							   userInfo: @{ @"drive": drive }];
 		}
 		//A drive no longer exists in DOSBox which we have a leftover record for, remove it
-		else if (!Drives[i] && drive)
+		else if (!Drives[i].get() && drive)
 		{
 			[self _removeDriveFromCache: drive];
 			

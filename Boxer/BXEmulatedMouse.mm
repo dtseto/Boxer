@@ -83,11 +83,13 @@
 		NSPoint canvasDelta = NSMakePoint(delta.x * canvas.size.width,
 										  delta.y * canvas.size.height);
 		
-		Mouse_CursorMoved(canvasDelta.x,
-						  canvasDelta.y,
-						  point.x,
-						  point.y,
-						  locked);
+        // 0.83 renamed this and dropped the trailing 'locked' argument: whether
+        // the pointer is captured is now tracked by the mouse subsystem itself
+        // (GFX_SetMouseCapture), not passed in per event.
+        MOUSE_EventMoved(canvasDelta.x,
+                         canvasDelta.y,
+                         point.x,
+                         point.y);
 	}
 }
 
@@ -113,7 +115,7 @@
 	{
 		if (pressed)
 		{
-			Mouse_ButtonPressed(button);
+			MOUSE_EventButton((MouseButtonId)button, true);
             self.pressedButtons |= buttonMask;
             
             _lastButtonDown[button] = [NSDate timeIntervalSinceReferenceDate];
@@ -140,7 +142,7 @@
             }
             else
             {
-                Mouse_ButtonReleased(button);
+                MOUSE_EventButton((MouseButtonId)button, false);
                 self.pressedButtons &= ~buttonMask;
                 
                 _lastButtonDown[button] = 0;

@@ -1512,7 +1512,7 @@
 		9F631D7A16947AE900AD06C4 /* BXDocumentationBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXDocumentationBrowser.h; sourceTree = "<group>"; };
 		9F631D7B16947AE900AD06C4 /* BXDocumentationBrowser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXDocumentationBrowser.m; sourceTree = "<group>"; };
 		9F6463F516C67414008B65BF /* BXOutputBinding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BXOutputBinding.h; path = Input/BXOutputBinding.h; sourceTree = "<group>"; };
-		9F6463F616C67415008B65BF /* BXOutputBinding.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = BXOutputBinding.m; path = Input/BXOutputBinding.m; sourceTree = "<group>"; };
+		9F6463F616C67415008B65BF /* BXOutputBinding.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = BXOutputBinding.mm; path = Input/BXOutputBinding.mm; sourceTree = "<group>"; };
 		9F675DE30F8F4D49001FCE5F /* BXEmulator+BXDOSFileSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "BXEmulator+BXDOSFileSystem.h"; sourceTree = "<group>"; };
 		9F675DE40F8F4D49001FCE5F /* BXEmulator+BXDOSFileSystem.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "BXEmulator+BXDOSFileSystem.mm"; sourceTree = "<group>"; };
 		9F6785591649A6BC007FE89A /* BXPrintStatusPanelController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXPrintStatusPanelController.h; sourceTree = "<group>"; };
@@ -1697,7 +1697,7 @@
 		9FCC2F981366EF170013F083 /* BXEmulatedKeyboard.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXEmulatedKeyboard.h; sourceTree = "<group>"; };
 		9FCC2F991366EF170013F083 /* BXEmulatedKeyboard.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BXEmulatedKeyboard.mm; sourceTree = "<group>"; };
 		9FCC2FF21366FA820013F083 /* BXInputController+BXKeyboardInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "BXInputController+BXKeyboardInput.h"; sourceTree = "<group>"; };
-		9FCC2FF31366FA820013F083 /* BXInputController+BXKeyboardInput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "BXInputController+BXKeyboardInput.mm"; sourceTree = "<group>"; };
+		9FCC2FF31366FA820013F083 /* BXInputController+BXKeyboardInput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "BXInputController+BXKeyboardInput.mm"; sourceTree = "<group>"; };
 		9FCC2FF81366FB840013F083 /* BXInputControllerPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXInputControllerPrivate.h; sourceTree = "<group>"; };
 		9FCC303B13670F680013F083 /* KeyboardLayouts.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = KeyboardLayouts.plist; sourceTree = "<group>"; };
 		9FD011BB10C2A02F00670CE1 /* BXGameboxPanelController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXGameboxPanelController.h; sourceTree = "<group>"; };
@@ -1745,7 +1745,7 @@
 		9FDFB48115DBC73D004EA615 /* Help.help */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Help.help; sourceTree = "<group>"; };
 		9FE202470F6D749500B3A38C /* Snapshot.aiff */ = {isa = PBXFileReference; lastKnownFileType = audio.aiff; path = Snapshot.aiff; sourceTree = "<group>"; };
 		9FE50B571365845200495EBE /* BXInputController+BXJoystickInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "BXInputController+BXJoystickInput.h"; sourceTree = "<group>"; };
-		9FE50B581365845200495EBE /* BXInputController+BXJoystickInput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "BXInputController+BXJoystickInput.mm"; sourceTree = "<group>"; };
+		9FE50B581365845200495EBE /* BXInputController+BXJoystickInput.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = "BXInputController+BXJoystickInput.mm"; sourceTree = "<group>"; };
 		9FE90BF511F8D1DC003CFFFF /* ADBDelegatedView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ADBDelegatedView.h; sourceTree = "<group>"; };
 		9FE90BF611F8D1DC003CFFFF /* ADBDelegatedView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ADBDelegatedView.m; sourceTree = "<group>"; };
 		9FEA1831144BFD8F00E39ACD /* BXAudioSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXAudioSource.h; sourceTree = "<group>"; };

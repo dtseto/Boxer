@@ -80,6 +80,10 @@ void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
 
 #pragma mark - Implementation
 
+// Replaces DOSBox's CPU_OldCycleMax, removed in 0.83: it only ever backed
+// Boxer's own save/restore of the cycle count around auto-speed changes.
+static int boxer_savedCycleMax = 0;
+
 @implementation BXEmulator
 {
     CommandLine *commandLine;
@@ -282,7 +286,7 @@ static BOOL _hasStartedEmulator = NO;
         
             //Tells DOSBox to close the current shell at the end of the commandline input loop
             DOS_Shell *shell = self._currentShell;
-            if (shell) shutdown_requested = YES;
+            if (shell) DOSBOX_RequestShutdown();
         }
 
         self.cancelled = YES;
@@ -420,10 +424,12 @@ static BOOL _hasStartedEmulator = NO;
 		//Turn off automatic speed scaling
         self.autoSpeed = NO;
         
-		CPU_OldCycleMax = CPU_CycleMax = (Bit32s)newSpeed;
+        // CPU_OldCycleMax was a DOSBox global up to 0.78; it existed only for
+        // this save/restore, so Boxer keeps it now.
+        boxer_savedCycleMax = CPU_CycleMax = (int)newSpeed;
 		
 		//Stop DOSBox from resetting the cycles after a program exits
-		CPU_AutoDetermineMode &= ~CPU_AUTODETERMINE_CYCLES;
+		auto_determine_mode.auto_cycles = false;
 		
 		//Wipe out the cycles queue: we do this because DOSBox's CPU functions do whenever they modify the cycles
 		CPU_CycleLeft	= 0;
@@ -456,8 +462,8 @@ static BOOL _hasStartedEmulator = NO;
         else
         {
             //Be a good boy and record/restore the old cycles setting
-            if (autoSpeed)	CPU_OldCycleMax = CPU_CycleMax;
-            else			CPU_CycleMax = CPU_OldCycleMax;
+            if (autoSpeed)	boxer_savedCycleMax = CPU_CycleMax;
+            else			CPU_CycleMax = boxer_savedCycleMax;
             
             //Always force the usage percentage to 100
             CPU_CyclePercUsed = 100;
@@ -558,7 +564,7 @@ static BOOL _hasStartedEmulator = NO;
 		}
 		
 		//Prevent DOSBox from resetting the core mode after a program exits
-		CPU_AutoDetermineMode &= ~CPU_AUTODETERMINE_CORE;
+		auto_determine_mode.auto_core = false;
 		
 		//Reset DOSBox's emulated cycles counters
 		CPU_CycleLeft=0;
@@ -960,7 +966,7 @@ static BOOL _hasStartedEmulator = NO;
 	//TWEAK: it's only safe to break out once initialization is done, since some
 	//of DOSBox's initialization routines rely on running tasks on the run loop
 	//and may crash if they fail to complete.
-	if ((self.isCancelled || shutdown_requested) && self.isInitialized)
+	if ((self.isCancelled || DOSBOX_IsShutdownRequested()) && self.isInitialized)
     {
         return NO;
 	}
@@ -1026,13 +1032,15 @@ static BOOL _hasStartedEmulator = NO;
             }
 
             //Initialise each DOSBox module based on the loaded configuration.
-            control->Init();
+            DOSBOX_InitModules();
             
             [self _didInitialize];
         }
         
-		//Start up the main machine.
-		control->StartUp();
+		//Start up the main machine. Up to 0.78 this was control->StartUp(),
+		//which invoked the registered start function; 0.83 starts the shell
+		//directly.
+		SHELL_InitAndRun();
 	}
 	catch (char *errMessage)
 	{

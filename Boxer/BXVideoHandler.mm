@@ -150,12 +150,15 @@
 //Returns whether the chosen filter is actually being rendered.
 - (BOOL) filterIsActive
 {
-	BOOL isActive = NO;
-	if (self.emulator.isInitialized)
-	{
-		isActive = (self.filterType == (NSUInteger)render.scale.op);
-	}
-	return isActive;
+    // Up to 0.78 this asked DOSBox which scaler it had actually settled on,
+    // because DOSBox could decline the requested one. 0.83 removed the built-in
+    // scalers entirely in favour of the shader pipeline, so there is nothing to
+    // disagree with: Boxer applies its own filtering through OpenEmuShaders and
+    // its selection is authoritative.
+    //
+    // TODO: fold this into BXShadersModel once the render backend lands, and
+    // drop the notion of a filter that can be requested but not applied.
+    return self.emulator.isInitialized;
 }
 
 - (void) setHerculesTint: (BXHerculesTintMode)tint
@@ -223,7 +226,7 @@
         {
             if (_frameInProgress) [self finishFrameWithChanges: NULL];
             
-            if (_callback) _callback(GFX_CallBackReset);
+            if (_callback) _callback(Boxer_GFX_CallbackReset);
             //CPU_Reset_AutoAdjust();
         }
 	}
@@ -232,7 +235,7 @@
 - (void) shutdown
 {
 	[self finishFrameWithChanges: 0];
-	if (_callback) _callback(GFX_CallBackStop);
+	if (_callback) _callback(Boxer_GFX_CallbackStop);
 }
 
 
@@ -382,12 +385,20 @@
 	filterScale = MIN(filterScale, maxFilterScale);
 	
 	
-	//Finally, apply the values to DOSBox
-	render.aspect		= NO; //We apply our own aspect correction separately
-	render.scale.forced	= YES;
-	render.scale.size	= (Bitu)filterScale;
-	render.scale.op		= (scalerOperation_t)activeType;
-    
+    // Up to 0.78 the chosen filter was pushed into DOSBox's own scaler
+    // (render.scale.op / .size / .forced) and aspect correction was disabled
+    // there so Boxer could do its own. None of those fields exist at 0.83:
+    // the scalers were replaced by the shader pipeline, which a render backend
+    // drives through RenderBackend::SetShader().
+    //
+    // Boxer already does its own filtering and aspect correction via
+    // OpenEmuShaders, so the computed filterScale is currently unused here.
+    //
+    // TODO: when BoxerRenderBackend lands, map the selected BXFilterType onto a
+    // symbolic shader descriptor and call SetShader() instead of this comment.
+    (void)filterScale;
+    (void)activeType;
+
     
     //While we're here, sync up the CGA and hercules color modes if appropriate
     [self _syncHerculesTint];

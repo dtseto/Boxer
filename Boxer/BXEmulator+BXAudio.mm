@@ -263,32 +263,32 @@ void _renderMIDIOutput(Bitu numFrames)
         case BXAudioFormat8Bit:
             if (isSigned)
             {
-                if (isStereo)   channel->AddSamples_s8s(numFrames, (const Bit8s *)buffer);
-                else            channel->AddSamples_m8s(numFrames, (const Bit8s *)buffer);
+                if (isStereo)   channel->AddSamples_s8s(numFrames, (const int8_t *)buffer);
+                else            channel->AddSamples_m8s(numFrames, (const int8_t *)buffer);
             }
             else
             {
-                if (isStereo)   channel->AddSamples_s8(numFrames, (const Bit8u *)buffer);
-                else            channel->AddSamples_m8(numFrames, (const Bit8u *)buffer);
+                if (isStereo)   channel->AddSamples_s8(numFrames, (const uint8_t *)buffer);
+                else            channel->AddSamples_m8(numFrames, (const uint8_t *)buffer);
             }
             break;
         
         case BXAudioFormat16Bit:
             if (isSigned)
             {
-                if (isStereo)   channel->AddSamples_s16(numFrames, (const Bit16s *)buffer);
-                else            channel->AddSamples_m16(numFrames, (const Bit16s *)buffer);
+                if (isStereo)   channel->AddSamples_s16(numFrames, (const int16_t *)buffer);
+                else            channel->AddSamples_m16(numFrames, (const int16_t *)buffer);
             }
             else
             {
-                if (isStereo)   channel->AddSamples_s16u(numFrames, (const Bit16u *)buffer);
-                else            channel->AddSamples_m16u(numFrames, (const Bit16u *)buffer);
+                if (isStereo)   channel->AddSamples_s16u(numFrames, (const uint16_t *)buffer);
+                else            channel->AddSamples_m16u(numFrames, (const uint16_t *)buffer);
             }
             break;
             
         case BXAudioFormat32Bit:
-            if (isStereo)       channel->AddSamples_s32(numFrames, (const Bit32s *)buffer);
-            else                channel->AddSamples_m32(numFrames, (const Bit32s *)buffer);
+            if (isStereo)       channel->AddSamples_s32(numFrames, (const int32_t *)buffer);
+            else                channel->AddSamples_m32(numFrames, (const int32_t *)buffer);
     }
 }
 

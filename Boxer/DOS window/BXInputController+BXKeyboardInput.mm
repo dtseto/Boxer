@@ -447,11 +447,11 @@
 		map[kVK_ANSI_Period] = KBD_period;
 		map[kVK_ANSI_Slash] = KBD_slash;
         
-		map[kVK_JIS_Yen] = KBD_extra_lt_gt;
-		map[kVK_JIS_Underscore] = KBD_extra_lt_gt;
-		map[kVK_ISO_Section] = KBD_extra_lt_gt;
-		map[kVK_ISO_Section] = KBD_extra_lt_gt;
-		map[kVK_ISO_Section] = KBD_extra_lt_gt;
+		map[kVK_JIS_Yen] = KBD_oem102;
+		map[kVK_JIS_Underscore] = KBD_oem102;
+		map[kVK_ISO_Section] = KBD_oem102;
+		map[kVK_ISO_Section] = KBD_oem102;
+		map[kVK_ISO_Section] = KBD_oem102;
 		
 		mapGenerated = YES;
 	}

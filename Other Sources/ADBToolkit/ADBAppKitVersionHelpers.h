@@ -46,6 +46,17 @@
 #define NSAppKitVersionNumber10_8 1187
 #endif
 
+// These are implemented in a plain .m file, so they must keep C linkage when
+// the header is read from Objective-C++. BXInputController became a .mm file in
+// the 0.83 migration, which is where this first mattered.
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 BOOL isRunningOnLionOrAbove(void);
 BOOL isRunningOnMountainLionOrAbove(void);
 BOOL isRunningOnMavericksOrAbove(void);
+
+#if defined(__cplusplus)
+}
+#endif

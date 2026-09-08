@@ -44,14 +44,6 @@ bool boxer_runLoopShouldContinue()
 	return [[BXEmulator currentEmulator] _runLoopShouldContinue];
 }
 
-/// Notifies Boxer of changes to title and speed settings
-void boxer_handleDOSBoxTitleChange(int32_t newCycles, int newFrameskip, bool newPaused)
-{
-	BXEmulator *emulator = [BXEmulator currentEmulator];
-	[emulator _didChangeEmulationState];
-}
-
-
 #pragma mark - Shell-related functions
 
 void boxer_shellWillStart(DOS_Shell *shell)
@@ -510,10 +502,10 @@ void restart_program(std::vector<std::string> & parameters) {
     E_Exit("Restarting not implemented!");
 }
 
-const char *DOSBOX_GetDetailedVersion() noexcept
-{
-    return "Boxer-build";
-}
+// DOSBOX_GetDetailedVersion() used to be defined here because it lived in
+// sdlmain.cpp, which Boxer does not compile. At 0.83 it moved to dosbox.cpp,
+// which Boxer does compile -- so Boxer's stub was a duplicate symbol, and
+// DOSBox now reports its real version rather than "Boxer-build".
 
 #pragma mark - No-ops
 

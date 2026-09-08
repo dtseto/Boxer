@@ -18,7 +18,7 @@
 
 // Minimum 5-char long Git hash of the build; can be longer to guarantee
 // uniqueness (e.g., da3c5, c22ef8)
-#define BUILD_GIT_HASH "254fba753"
+#define BUILD_GIT_HASH "d33b7ffae"
 
 
 // Operating System
@@ -111,6 +111,16 @@
 // the only Ethernet backend and needs libslirp; embedders that do not link it
 // build without network support.
 #define C_SLIRP 0  // Boxer does not link libslirp and exposes no network settings; src/network/ethernet_slirp.cpp is not compiled
+
+// Define to 1 to enable the SoundCanvas SC-55 MIDI device. It is satisfied by
+// the in-tree CLAP plugin host, but it is still a MIDI device an embedder that
+// drives MIDI itself has no way to expose.
+#define C_SOUNDCANVAS 0  // Boxer drives MIDI itself and has no way to expose an upstream MIDI device; src/midi/soundcanvas.cpp is not compiled
+
+// Define to 1 to enable the built-in web server. It needs asio and is reached
+// from the emulation loop; embedders that host DOSBox inside their own
+// application build without it.
+#define C_WEBSERVER 0  // Boxer hosts DOSBox inside its own application and exposes no web server; src/webserver/ is not compiled
 
 // Define to 1 to enable parallel port printer redirection. This requires a
 // host-side printer backend to be linked in (Boxer provides one via

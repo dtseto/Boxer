@@ -40,6 +40,7 @@
 #import "gui/private/common.h"
 #import "gui/render/render.h"
 #import "gui/render/render_backend.h"
+#import "gui/titlebar.h"
 #import "hardware/input/mouse.h"
 #import "misc/rendered_image.h"
 #import "utils/rect.h"
@@ -420,3 +421,66 @@ void GFX_SetMouseVisibility(const bool /*requested_visible*/) {}
 void GFX_SetMouseRawInput(const bool /*requested_raw_input*/) {}
 void GFX_SetMouseHint(const MouseHint /*requested_hint_id*/) {}
 void GFX_CenterMouse() {}
+
+
+#pragma mark - Title bar
+//
+// DOSBox used to keep its window title up to date by calling GFX_SetTitle,
+// which Boxer remapped to boxer_handleDOSBoxTitleChange to learn that the
+// emulation speed or the running program had changed. 0.83 moved all of that
+// into gui/titlebar.cpp, which Boxer does not compile -- but the notifications
+// themselves come from cpu.cpp, dos_execute.cpp, mixer.cpp and the capture
+// module, all of which Boxer does build. So Boxer answers them here.
+//
+// Only two of them tell Boxer something it does not already know: the cycles
+// changing behind its back, and the name of the program that is running.
+// Everything else is state Boxer initiated itself and already reflects in its
+// own UI.
+
+/// The 8-character MCB name of the program currently in the foreground.
+///
+/// Up to 0.78 this was a global in dos_execute.cpp that Boxer read directly
+/// whenever the emulation state changed. 0.83 deleted the global and pushes the
+/// name to the frontend instead, so the frontend keeps it -- preserving both
+/// the symbol BXEmulator reads and its pull-based timing.
+///
+/// TODO: now that this arrives as a notification rather than a poll, Boxer could
+/// update BXEmulator.processName the moment the program changes, instead of
+/// waiting for the next emulation-state change to notice.
+static char _runningProgramName[9] = "DOSBOX";
+const char *RunningProgram = _runningProgramName;
+
+void TITLEBAR_NotifyProgramName(const std::string& segment_name,
+                                const std::string& canonical_name)
+{
+    // The canonical (full path) name is new in 0.83 and has no consumer in
+    // Boxer: BXEmulator tracks launched programs through its own shell hooks,
+    // which know the path already.
+    (void)canonical_name;
+
+    strlcpy(_runningProgramName, segment_name.c_str(), sizeof(_runningProgramName));
+}
+
+void TITLEBAR_NotifyCyclesChanged()
+{
+    // The successor to GFX_SetTitle for Boxer's purposes: DOSBox has changed
+    // the CPU speed or core by itself (auto-cycles adjusting, a protected-mode
+    // program starting), so Boxer's speed controls need to re-read it.
+    [[BXEmulator currentEmulator] _didChangeEmulationState];
+}
+
+void TITLEBAR_RefreshTitle()
+{
+    // Means "the title's contents changed"; for Boxer that is the same event.
+    [[BXEmulator currentEmulator] _didChangeEmulationState];
+}
+
+// The rest are notifications about state Boxer itself initiated, and already
+// shows in its own interface: it drives audio and video capture through
+// BXSession, and mutes the mixer itself when the session pauses (see B2 in
+// FINDINGS.md).
+
+void TITLEBAR_NotifyBooting() {}
+void TITLEBAR_NotifyAudioCaptureStatus(const bool /*is_capturing*/) {}
+void TITLEBAR_NotifyVideoCaptureStatus(const bool /*is_capturing*/) {}
+void TITLEBAR_NotifyAudioMutedStatus(const bool /*is_muted*/) {}

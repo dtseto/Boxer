@@ -5445,6 +5445,16 @@
 					"$(inherited)",
 					/opt/homebrew/lib,
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lpng16",
+					"-lopusfile",
+					"-lopus",
+					"-logg",
+					"-lspeexdsp",
+					"-lz-ng",
+					"-liir",
+				);
 				MARKETING_VERSION = "2.0.0-alpha";
 				OTHER_CFLAGS = "-mstackrealign";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dtseto.boxer-standalone";
@@ -5504,6 +5514,16 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/opt/homebrew/lib,
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lpng16",
+					"-lopusfile",
+					"-lopus",
+					"-logg",
+					"-lspeexdsp",
+					"-lz-ng",
+					"-liir",
 				);
 				MARKETING_VERSION = "2.0.0-alpha";
 				OTHER_CFLAGS = "-mstackrealign";
@@ -5707,6 +5727,16 @@
 					"$(inherited)",
 					/opt/homebrew/lib,
 				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lpng16",
+					"-lopusfile",
+					"-lopus",
+					"-logg",
+					"-lspeexdsp",
+					"-lz-ng",
+					"-liir",
+				);
 				MARKETING_VERSION = "2.0.2-alpha";
 				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				OTHER_CFLAGS = "-mstackrealign";
@@ -5773,6 +5803,16 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/opt/homebrew/lib,
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-lpng16",
+					"-lopusfile",
+					"-lopus",
+					"-logg",
+					"-lspeexdsp",
+					"-lz-ng",
+					"-liir",
 				);
 				MARKETING_VERSION = "2.0.2-alpha";
 				MTL_LANGUAGE_REVISION = UseDeploymentTarget;

@@ -142,14 +142,6 @@ extern "C" {
     
 #pragma mark - Runloop and event loop handling
     
-	/// Notifies Boxer that the emulation speed or pause state changed.
-	///
-	/// Up to 0.78 this was GFX_SetTitle, which DOSBox called whenever it
-	/// rewrote its window title. 0.83 moved that into gui/titlebar.cpp, which
-	/// Boxer does not compile, so the hook is bound to the TITLEBAR_* entry
-	/// points Boxer supplies instead -- see BXGFXBridge.mm.
-	void boxer_handleDOSBoxTitleChange(int32_t cycles, int frameskip, bool paused);
-	
 	/// Called from dosbox.cpp to allow control over the emulation loop.
 	void boxer_runLoopWillStartWithContextInfo(void **contextInfo);
 	void boxer_runLoopDidFinishWithContextInfo(void *contextInfo);
@@ -170,6 +162,7 @@ extern "C" {
     bool boxer_keyboardLayoutLoaded();
     const char *boxer_keyboardLayoutName();
     bool boxer_keyboardLayoutSupported(const char *code);
+    bool boxer_switchKeyboardLayout(const char *code);
     bool boxer_keyboardLayoutActive();
     void boxer_setKeyboardLayoutActive(bool active);
     void boxer_setNumLockActive(bool active);

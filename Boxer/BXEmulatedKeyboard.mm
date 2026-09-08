@@ -17,10 +17,6 @@
 #pragma mark -
 #pragma mark Private method declarations
 
-//Implemented in dos_keyboard_layout.cpp
-Bitu DOS_SwitchKeyboardLayout(const char* new_layout, int32_t& tried_cp);
-Bitu DOS_LoadKeyboardLayout(const char * layoutname, int32_t codepage, const char * codepagefile);
-const char* DOS_GetLoadedLayout(void);
 
 @interface BXEmulatedKeyboard ()
 
@@ -335,8 +331,13 @@ const char* DOS_GetLoadedLayout(void);
         //TODO: if we're at the DOS prompt anyway, then run KEYB to let it handle such cases.
         if (boxer_keyboardLayoutSupported(layoutName))
         {   
-            int32_t codepage = -1;
-            DOS_SwitchKeyboardLayout(layoutName, codepage);
+            // Was DOS_SwitchKeyboardLayout(layoutName, &codepage) up to 0.78.
+            // 0.83 removed that free function and folded switching into
+            // DOS_LoadKeyboardLayout(), which also reloads the code page and
+            // screen font -- the very thing the note above says we must not do
+            // mid-program. boxer_switchKeyboardLayout keeps the layout-only
+            // path, on the same private method upstream still calls.
+            boxer_switchKeyboardLayout(layoutName);
         }
         
         //Whether we can apply it or not, mark this as our preferred layout so that

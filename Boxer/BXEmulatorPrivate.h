@@ -28,6 +28,7 @@
 #import "BXDrive.h"
 #include <stdexcept>
 #include <execinfo.h>
+#include <memory>
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -37,6 +38,12 @@ NS_ASSUME_NONNULL_BEGIN
 class DOS_Shell;
 class DOS_Drive;
 class MixerChannel;
+
+/// 0.83's @c Drives[] array holds @c std::shared_ptr<DOS_Drive> , and @c localDrive
+/// requires shared ownership outright (it calls @c weak_from_this() to hand itself
+/// to the files it opens). So Boxer's drive factories hand back a shared pointer
+/// rather than a raw one, and DOSBox and Boxer share the lifetime between them.
+typedef std::shared_ptr<DOS_Drive> BXDOSBoxDrivePtr;
 
 /// The drive geometry settings used by @c -_DOSBoxDriveFromPath:freeSpace:geometry:mediaID:error:
 /// for mounting local folders as FAT drives.
@@ -240,7 +247,7 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 /// @param drive    The DOSBox drive instance to add.
 /// @return @c YES if the drive was successfully added to the Drives array, or @c NO if there was an error.
 //TODO: should populate an optional NSError object for cases like this.
-- (BOOL) _addDOSBoxDrive: (DOS_Drive *)drive
+- (BOOL) _addDOSBoxDrive: (BXDOSBoxDrivePtr)drive
                  atIndex: (NSUInteger)driveIndex;
 
 /// Unmounts the DOSBox drive at the specified index and clears any references to the drive.
@@ -269,24 +276,24 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 /// @param imagePath        The local filesystem path to the image to mount for the drive.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (nullable DOS_Drive *) _floppyDriveFromImageAtPath: (NSString *)imagePath
-                                               error: (NSError **)outError;
+- (BXDOSBoxDrivePtr) _floppyDriveFromImageAtPath: (NSString *)imagePath
+                                           error: (NSError **)outError;
 
 /// Creates a new DOSBox hard drive instance from a disk image. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param imagePath        The local filesystem path to the image to mount for the drive.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (nullable DOS_Drive *) _hardDriveFromImageAtPath: (NSString *)imagePath
-                                             error: (NSError **)outError;
+- (BXDOSBoxDrivePtr) _hardDriveFromImageAtPath: (NSString *)imagePath
+                                         error: (NSError **)outError;
 
 /// Creates a new DOSBox CDROM drive instance from a disk image. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param imagePath        The local filesystem path to the image to mount for the drive.
 /// @param driveIndex       The index at which the new drive will be located. Required for MSCDEX.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (nullable DOS_Drive *) _CDROMDriveFromImageAtPath: (NSString *)imagePath
-                                           forIndex: (NSUInteger)driveIndex
-                                              error: (NSError **)outError;
+- (BXDOSBoxDrivePtr) _CDROMDriveFromImageAtPath: (NSString *)imagePath
+                                       forIndex: (NSUInteger)driveIndex
+                                          error: (NSError **)outError;
 
 /// Creates a new DOSBox CDROM drive instance from a local folder. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param path             The local filesystem path to the folder to use as the mount point for the drive.
@@ -295,7 +302,7 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 ///                         If @c NO, the drive will not provide CD audio.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (nullable DOS_Drive *) _CDROMDriveFromPath: (NSString *)path
+- (BXDOSBoxDrivePtr) _CDROMDriveFromPath: (NSString *)path
                                     forIndex: (NSUInteger)driveIndex
                                    withAudio: (BOOL)useCDAudio
                                        error: (NSError **)outError;
@@ -308,7 +315,7 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 ///                         when reporting the free space, to prevent problems with naive drive space checks.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (DOS_Drive *) _hardDriveFromPath: (NSString *)path
+- (BXDOSBoxDrivePtr) _hardDriveFromPath: (NSString *)path
                          freeSpace: (NSInteger)freeSpace
                              error: (NSError **)outError;
 
@@ -321,7 +328,7 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 ///                         when reporting the free space, to prevent problems with naive drive space checks.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or \c NULL if drive creation failed.
-- (DOS_Drive *) _hardDriveFromPath: (NSString *)path
+- (BXDOSBoxDrivePtr) _hardDriveFromPath: (NSString *)path
                    overlayedByPath: (NSString *)shadowedPath
                          freeSpace: (NSInteger)freeSpace
                              error: (NSError **)outError;
@@ -334,7 +341,7 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 ///                         when reporting the free space, to prevent problems with naive drive space checks.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (DOS_Drive *) _floppyDriveFromPath: (NSString *)path
+- (BXDOSBoxDrivePtr) _floppyDriveFromPath: (NSString *)path
                            freeSpace: (NSInteger)freeSpace
                                error: (NSError **)outError;
 
@@ -348,7 +355,7 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 /// @param mediaID          The media descriptor ID to report for this drive.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (DOS_Drive *) _DOSBoxDriveFromPath: (NSString *)path
+- (BXDOSBoxDrivePtr) _DOSBoxDriveFromPath: (NSString *)path
 						   freeSpace: (NSInteger)freeSpace
 							geometry: (BXDriveGeometry)size
 							 mediaID: (NSUInteger)mediaID
@@ -365,7 +372,7 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 /// @param mediaID          The media descriptor ID to report for this drive.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or \c NULL if drive creation failed.
-- (DOS_Drive *) _DOSBoxDriveFromPath: (NSString *)path
+- (BXDOSBoxDrivePtr) _DOSBoxDriveFromPath: (NSString *)path
                      overlayedByPath: (NSString *)shadowedPath
                            freeSpace: (NSInteger)freeSpace
                             geometry: (BXDriveGeometry)size

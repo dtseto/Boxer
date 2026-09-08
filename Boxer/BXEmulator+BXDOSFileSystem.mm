@@ -214,7 +214,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     //we finish putting the drive in place.
 	_driveBeingMounted = drive;
 	
-	DOS_Drive *DOSBoxDrive = NULL;
+	BXDOSBoxDrivePtr DOSBoxDrive = nullptr;
 	NSUInteger index = [self _indexOfDriveLetter: driveLetter];
     
     
@@ -327,7 +327,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
             //TODO: let _addDOSBoxDrive:atIndex: populate an error.
             if (outError) *outError = [BXEmulatorDriveLetterOccupiedError errorWithDrive: drive];
             
-			delete DOSBoxDrive;
+            //No delete: DOSBoxDrive is a shared_ptr now, and releasing our
+            //reference here is the last one when registration failed.
+            DOSBoxDrive = nullptr;
             
             _driveBeingMounted = nil;
             
@@ -453,7 +455,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	{
 		for (NSUInteger i=0; i < DOS_DRIVES; i++)
 		{
-			if (Drives[i].get()) Drives[i].get()->EmptyCache();
+			if (Drives[i]) Drives[i]->EmptyCache();
 		}
 	}
 }
@@ -937,17 +939,27 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 }
 
 //Registers a new drive with DOSBox and adds it to the drive list.
-- (BOOL) _addDOSBoxDrive: (DOS_Drive *)drive
+- (BOOL) _addDOSBoxDrive: (BXDOSBoxDrivePtr)drive
                  atIndex: (NSUInteger)index
 {
 	NSAssert1(index < DOS_DRIVES, @"index %lu passed to _addDOSBoxDrive was beyond the range of DOSBox's drive array.", (unsigned long)index);
 	
 	//There was already a drive at that index, bail out
 	//TODO: populate an NSError object as well?
-	if (Drives[index].get()) return NO;
+	if (Drives[index]) return NO;
 	
-	Drives[index].get() = drive;
-	mem_writeb(Real2Phys(dos.tables.mediaid)+((PhysPt)index)*2, drive->GetMediaByte());
+	//Register the drive with the DriveManager as well as putting it in Drives[]:
+	//this is what upstream's own MOUNT does, and it is what makes DriveManager
+	//aware of the drive when we later ask it to unmount one.
+	DriveManager::RegisterFilesystemImage((int)index, drive);
+	Drives[index] = drive;
+	
+	//Real2Phys() was renamed RealToPhysical() when the memory helpers were
+	//tidied up. The stride is a fix, not a rename: DPB entries are 9 bytes
+	//apart, as every other writer of this table in DOSBox has it — Boxer's
+	//*2 dates back to DOSBox 0.74 and has been writing each drive's media
+	//byte into the wrong DPB slot ever since.
+	mem_writeb(RealToPhysical(dos.tables.mediaid) + ((PhysPt)index) * 9, drive->GetMediaByte());
 	
 	return YES;
 }
@@ -958,14 +970,14 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	//The specified drive is not mounted, don't continue
     //(We don't treat this as an error situation either.)
-	if (!Drives[index].get()) return NO;
+	if (!Drives[index]) return NO;
 	
     NSInteger result = DriveManager::UnmountDrive((int)index);
 	if (result == BXDOSBoxUnmountSuccess)
 	{
         [self _closeFilesForDOSBoxDriveAtIndex: index];
         
-		Drives[index] = NULL;
+		Drives[index] = nullptr;
 		return YES;
 	}
 	else
@@ -989,7 +1001,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     {
         if (Files[i] && Files[i]->GetDrive() == index)
         {
-            DOS_File *origFile = Files[i];
+            DOS_File *origFile = Files[i].get();
             //DOS_File->GetDrive() returns 0 for the special CON system file,
             //which also corresponds to the drive index for A, so ignore this file.
             if (index == 0 && origFile->IsName("CON")) continue;
@@ -1021,7 +1033,12 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		}
 		else
 		{
-            NSString *drivePath = [NSString stringWithCString: dosboxDrive->getSystemPath()
+            //getSystemPath() was Boxer's own addition to the 0.78 fork, and it
+            //returned a `systempath` member Boxer also added. 0.83 has the same
+            //thing as public upstream API: DOS_Drive::info, populated with the
+            //backing host path by localDrive, isoDrive and fatDrive exactly where
+            //the fork populated systempath. So this is a rename, not a hook.
+            NSString *drivePath = [NSString stringWithCString: dosboxDrive->GetInfo()
                                                      encoding: BXDirectStringEncoding];
             
             NSURL *driveURL, *baseURL = self.baseURL;
@@ -1065,19 +1082,19 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 }
 
 //Create a new DOS_Drive CDROM from a path to a disc image.
-- (DOS_Drive *) _CDROMDriveFromImageAtPath: (NSString *)path
-                                  forIndex: (NSUInteger)index
-                                     error: (NSError **)outError
+- (BXDOSBoxDrivePtr) _CDROMDriveFromImageAtPath: (NSString *)path
+                                       forIndex: (NSUInteger)index
+                                          error: (NSError **)outError
 {
 	//MSCDEX_SetCDInterface(CDROM_USE_SDL, -1);
 	
 	char driveLetter		= index + 'A';
 	const char *drivePath	= [path cStringUsingEncoding: BXDirectStringEncoding];
 	//If the path couldn't be encoded, don't attempt to go further
-	if (!drivePath) return nil;
+	if (!drivePath) return nullptr;
 	
 	int errorCode = BXDOSBoxMountUnknownError;
-	DOS_Drive *drive = new isoDrive(driveLetter, drivePath, BXCDROMMediaID, errorCode);
+	auto drive = std::make_shared<isoDrive>(driveLetter, drivePath, BXCDROMMediaID, errorCode);
 	
 	if (errorCode == BXDOSBoxMountSuccess || errorCode == BXDOSBoxMountSuccessCDROMLimited)
 	{
@@ -1085,7 +1102,6 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     }
     else
     {
-		delete drive;
      
         if (outError) 
         {
@@ -1101,78 +1117,70 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                                         userInfo: @{NSFilePathErrorKey: path}];
         }
         
-        return nil;
+        return nullptr;
 	}
-	return drive;
 }
 
 //Create a new DOS_Drive floppy from a path to a raw disk image.
-- (DOS_Drive *) _floppyDriveFromImageAtPath: (NSString *)path
-                                      error: (NSError **)outError
+- (BXDOSBoxDrivePtr) _floppyDriveFromImageAtPath: (NSString *)path
+                                           error: (NSError **)outError
 {	
 	const char *drivePath = [path cStringUsingEncoding: BXDirectStringEncoding];
 	//If the path couldn't be encoded, don't attempt to go further
-	if (!drivePath) return nil;
+	if (!drivePath) return nullptr;
 	
-	fatDrive *drive = new fatDrive(drivePath, 0, 0, 0, 0, 0, false);
-	if (!drive || !drive->created_successfully)
+	auto drive = std::make_shared<fatDrive>(drivePath, 0, 0, 0, 0, 0, false);
+	if (!drive->created_successfully)
     {
-        delete drive;
-    
         //Assume this is always a corrupted-image problem
         if (outError) *outError = [NSError errorWithDomain: BXDOSBoxMountErrorDomain
                                                       code: BXDOSBoxMountInvalidImageFormat
                                                   userInfo: @{NSFilePathErrorKey: path}];
         
-        return nil;
+        return nullptr;
     }
-	return (DOS_Drive *)drive;
+	return drive;
 }
 
 //Create a new DOS_Drive floppy from a path to a raw disk image.
 //Currently unimplemented as this requires data about the
 //volume layout of the image.
-- (DOS_Drive *) _hardDriveFromImageAtPath: (NSString *)path
-                                    error: (NSError **)outError
+- (BXDOSBoxDrivePtr) _hardDriveFromImageAtPath: (NSString *)path
+                                         error: (NSError **)outError
 {
     if (outError) *outError = [NSError errorWithDomain: BXDOSBoxMountErrorDomain
                                                   code: BXDOSBoxMountInvalidImageFormat
                                               userInfo: nil];
-    return nil;
+    return nullptr;
 }
 
 //Create a new DOS_Drive CDROM from a path to a filesystem folder.
-- (DOS_Drive *) _CDROMDriveFromPath: (NSString *)path
-						   forIndex: (NSUInteger)index
-						  withAudio: (BOOL)useCDAudio
-                              error: (NSError **)outError
+- (BXDOSBoxDrivePtr) _CDROMDriveFromPath: (NSString *)path
+                                forIndex: (NSUInteger)index
+                               withAudio: (BOOL)useCDAudio
+                                   error: (NSError **)outError
 {
 	BXDriveGeometry geometry = BXCDROMGeometry;
     
-#if !defined(C_SDL2)
-    int SDLCDNum = -1;
-	
-	
-	//Check that any audio CDs are actually present before enabling CD audio:
-	//this fixes Warcraft II's copy protection, which will fail if audio tracks
-	//are reported to be present but cannot be found.
-	if (useCDAudio && SDL_CDNumDrives() > 0)
-	{
-        //NOTE: SDL's CD audio API for OS X only ever exposes one CD, which will be #0.
-        SDLCDNum = 0;
-	}
-#endif
-    
-	//NOTE: ioctl is currently unimplemented for OS X in DOSBox 0.74, so this will always fall back to SDL.
-	//MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DIO, SDLCDNum);
+	//The SDL_CDNumDrives() probe that used to live here was SDL 1.2's physical
+	//CD-ROM API. It survived only because it sat behind a `#if !defined(C_SDL2)`
+	//guard; 0.83 no longer defines C_SDL2, which made it live code again and
+	//broke the build. There is nothing to port it to — 0.83 dropped physical
+	//CD-ROM support entirely, and CD audio now only ever comes from the tracks
+	//in a disc image. `useCDAudio` therefore no longer has anything to gate on
+	//this path: a folder mounted as a CD-ROM has no audio tracks either way.
+	//
+	//(The probe existed to fix Warcraft II's copy protection, which fails if
+	//audio tracks are reported present but cannot be found. That cannot happen
+	//now: this drive reports no tracks at all.)
 	
 	char driveLetter		= index + 'A';
 	const char *drivePath	= [path cStringUsingEncoding: BXDirectStringEncoding];
 	//If the path couldn't be encoded, don't attempt to go further
-	if (!drivePath) return nil;
+	if (!drivePath) return nullptr;
 	
 	int errorCode = BXDOSBoxMountUnknownError;
-	DOS_Drive *drive = new cdromDrive(driveLetter,
+	auto drive = std::make_shared<cdromDrive>(driveLetter,
 									  drivePath,
 									  geometry.bytesPerSector,
 									  geometry.sectorsPerCluster,
@@ -1187,21 +1195,19 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     }
     else
     {
-        delete drive;
-        
         if (outError)
             *outError = [NSError errorWithDomain: BXDOSBoxMountErrorDomain
                                             code: errorCode
                                         userInfo: nil];
 		
-		return nil;
+		return nullptr;
 	}
 }
 
 //Create a new DOS_Drive hard disk from a path to a filesystem folder.
-- (DOS_Drive *) _hardDriveFromPath: (NSString *)path
-                         freeSpace: (NSInteger)freeSpace
-                             error: (NSError **)outError
+- (BXDOSBoxDrivePtr) _hardDriveFromPath: (NSString *)path
+                              freeSpace: (NSInteger)freeSpace
+                                  error: (NSError **)outError
 {
 	return [self _DOSBoxDriveFromPath: path
 							freeSpace: freeSpace
@@ -1210,10 +1216,10 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                                 error: outError];
 }
 
-- (DOS_Drive *) _hardDriveFromPath: (NSString *)path
-                   overlayedByPath: (NSString *)shadowedPath
-                         freeSpace: (NSInteger)freeSpace
-                             error: (NSError **)outError
+- (BXDOSBoxDrivePtr) _hardDriveFromPath: (NSString *)path
+                        overlayedByPath: (NSString *)shadowedPath
+                              freeSpace: (NSInteger)freeSpace
+                                  error: (NSError **)outError
 {
     return [self _DOSBoxDriveFromPath: path
                       overlayedByPath: shadowedPath
@@ -1224,9 +1230,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 }
 
 //Create a new DOS_Drive floppy disk from a path to a filesystem folder.
-- (DOS_Drive *) _floppyDriveFromPath: (NSString *)path
-                           freeSpace: (NSInteger)freeSpace
-                               error: (NSError **)outError
+- (BXDOSBoxDrivePtr) _floppyDriveFromPath: (NSString *)path
+                                freeSpace: (NSInteger)freeSpace
+                                    error: (NSError **)outError
 {
 	return [self _DOSBoxDriveFromPath: path
 							freeSpace: freeSpace
@@ -1236,11 +1242,11 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 }
 
 //Internal DOS_Drive localdrive function for the two wrapper methods above
-- (DOS_Drive *)	_DOSBoxDriveFromPath: (NSString *)path
-						   freeSpace: (NSInteger)freeSpace
-							geometry: (BXDriveGeometry)geometry
-							 mediaID: (NSUInteger)mediaID
-                               error: (NSError **)outError
+- (BXDOSBoxDrivePtr) _DOSBoxDriveFromPath: (NSString *)path
+                                freeSpace: (NSInteger)freeSpace
+                                 geometry: (BXDriveGeometry)geometry
+                                  mediaID: (NSUInteger)mediaID
+                                    error: (NSError **)outError
 {
 	if (freeSpace >= 0) //BXDefaultFreespace is -1
 	{
@@ -1252,20 +1258,32 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	
     //NOTE: as far as DOSBox is concerned there's actually nothing that can go wrong here,
     //so outError goes unused.
-	return new localDrive(drivePath,
-						  geometry.bytesPerSector,
-						  geometry.sectorsPerCluster,
-						  geometry.numClusters,
-						  geometry.freeClusters,
-						  mediaID);
+    //
+    //localDrive must be owned by a shared_ptr: it calls weak_from_this() to hand
+    //itself to each file it opens.
+    //
+    //The two trailing arguments are new in 0.83. `readonly` stays false because
+    //Boxer does not delegate write protection to DOSBox — it vetoes writes
+    //through boxer_shouldAllowWriteAccessToPath(), which asks BXDrive.readOnly
+    //and the emulator delegate — and `always_open_ro_files` follows upstream's
+    //default. Passing true for either would apply a second, independent policy
+    //on top of Boxer's own.
+	return std::make_shared<localDrive>(drivePath,
+						  (uint16_t)geometry.bytesPerSector,
+						  (uint8_t)geometry.sectorsPerCluster,
+						  (uint16_t)geometry.numClusters,
+						  (uint16_t)geometry.freeClusters,
+						  (uint8_t)mediaID,
+						  false,
+						  false);
 }
 
-- (DOS_Drive *) _DOSBoxDriveFromPath: (NSString *)path
-                     overlayedByPath: (NSString *)shadowedPath
-                           freeSpace: (NSInteger)freeSpace
-                            geometry: (BXDriveGeometry)geometry
-                             mediaID: (NSUInteger)mediaID
-                               error: (NSError **)outError
+- (BXDOSBoxDrivePtr) _DOSBoxDriveFromPath: (NSString *)path
+                          overlayedByPath: (NSString *)shadowedPath
+                                freeSpace: (NSInteger)freeSpace
+                                 geometry: (BXDriveGeometry)geometry
+                                  mediaID: (NSUInteger)mediaID
+                                    error: (NSError **)outError
 {
     if (freeSpace >= 0) //BXDefaultFreespace is -1
     {
@@ -1296,7 +1314,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     }
 
     uint8_t err;
-    auto overlay = new Overlay_Drive(drivePath,
+    auto overlay = std::make_shared<Overlay_Drive>(drivePath,
                                      shadowPath,
                                      geometry.bytesPerSector,
                                      geometry.sectorsPerCluster,
@@ -1305,11 +1323,10 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                                      mediaID,
                                      err);
     if (err != 0) {
-        delete overlay;
         if (outError) {
             *outError = [NSError errorWithDomain:@"io.github.dosbox-staging.overlayErrors" code:err userInfo:@{NSFilePathErrorKey: path}];
         }
-        return NULL;
+        return nullptr;
     }
     
     return overlay;
@@ -1325,7 +1342,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		BXDrive *drive		= [_driveCache objectForKey: letter];
 		
 		//A drive exists in DOSBox that we don't have a record of yet, add it to our cache
-		if (Drives[i].get() && !drive)
+		if (Drives[i] && !drive)
 		{
 			drive = [self _driveFromDOSBoxDriveAtIndex: i];
 			[self _addDriveToCache: drive];
@@ -1336,7 +1353,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 							   userInfo: @{ @"drive": drive }];
 		}
 		//A drive no longer exists in DOSBox which we have a leftover record for, remove it
-		else if (!Drives[i].get() && drive)
+		else if (!Drives[i] && drive)
 		{
 			[self _removeDriveFromCache: drive];
 			
@@ -1418,7 +1435,10 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 			//which also corresponds to the drive index for A, so skip it
 			if (index == 0 && !strcmp(Files[i]->GetName(), "CON")) continue;
 			
-			if (Files[i]->IsOpen()) return YES;
+			//0.83 removed DOS_File::IsOpen() and the `open` flag behind it:
+			//a non-null entry in Files[] is now what 'open' means, which the
+			//loop condition above has already established.
+			return YES;
 		}
 	}
 	return NO;
@@ -1468,10 +1488,13 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         else
             driveRelativePath = dosPath;
         
-		char filePath[CROSS_LEN];
-		localDOSBoxDrive->GetSystemFilename(filePath, driveRelativePath);
+		//GetSystemFilename(char *out, const char *dosName) became
+		//MapDosToHostFilename(const char *dosName) returning a std::string.
+		//The body is unchanged: basedir + name, cross-normalised, then
+		//expanded through the drive's directory cache.
+		const std::string filePath = localDOSBoxDrive->MapDosToHostFilename(driveRelativePath);
         
-        NSURL *localURL = [NSURL URLFromFileSystemRepresentation: filePath].URLByStandardizingPath;
+        NSURL *localURL = [NSURL URLFromFileSystemRepresentation: filePath.c_str()].URLByStandardizingPath;
         
         //Roundtrip the URL through the filesystem, in case it remaps it to another location.
         NSString *logicalPath = [filesystem pathForFileURL: localURL];

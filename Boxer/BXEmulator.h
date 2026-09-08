@@ -136,9 +136,9 @@ extern NSStringEncoding BXDirectStringEncoding;
     BOOL _waitingForCommandInput;
     BOOL _clearsScreenBeforeCommandExecution;
     
-    //Whether an SDL CD-ROM was playing when we paused the emulator.
-    //Used to selectively resume CD-ROM playback after unpausing.
-    BOOL _cdromWasPlaying;
+    //Whether it was us that muted DOSBox's mixer when we paused the emulator,
+    //so that resuming doesn't undo a mute the user asked for themselves.
+    BOOL _audioMutedForPause;
     
     //The thread on which start was called.
     NSThread *_emulationThread;

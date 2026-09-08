@@ -8,11 +8,6 @@
 #import "BXCoalface.h"
 #include <string>
 
-typedef enum {
-    BXLeftChannel,
-    BXRightChannel
-} BXAudioChannel;
-
 /// Tell BXEmulator the preferred MIDI handler according to the DOSBox configuration.
 void boxer_suggestMIDIHandler(std::string const &handlerName, const char *configParams);
 
@@ -22,8 +17,3 @@ bool boxer_MIDIAvailable(void);
 /// Dispatch MIDI messages sent from DOSBox's MPU-401 emulation.
 void boxer_sendMIDIMessage(uint8_t *msg);
 void boxer_sendMIDISysex(uint8_t *msg, Bitu len);
-
-float boxer_masterVolume(BXAudioChannel channel);
-
-/// Defined in mixer.cpp. Update the volumes of all active channels.
-void boxer_updateVolumes();

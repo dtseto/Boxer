@@ -19,6 +19,25 @@
 
 static const char *BXMIDIChannelName = "MIDI";
 
+//DOSBox used to hand every mixer channel a shared `MixTemp` scratch buffer to
+//render into. 0.83's channels each do their own conversion and the buffer is
+//gone, so Boxer supplies its own. These are only ever touched from DOSBox's
+//mixer thread, which is the sole caller of a channel's handler.
+static uint8_t BXMixerScratchBuffer[MixerBufferByteSize];
+
+//The widest frame we can be handed is 32-bit stereo, so this is the largest
+//number of frames the scratch buffer can hold. (The mixer asks for about a
+//millisecond at a time — 48 frames at 48kHz — so this is never the limit in
+//practice, but 0.78 had no bound here at all.)
+static const NSUInteger BXMixerScratchMaxFrames = MixerBufferByteSize / (sizeof(int32_t) * 2);
+
+//0.83 kept only a handful of AddSamples_* entry points: unsigned 8-bit mono,
+//signed 16-bit mono and stereo, float mono and stereo, and a byte-swapped
+//16-bit pair. Every other combination 0.78 accepted — signed 8-bit, unsigned
+//8-bit stereo, unsigned 16-bit, and 32-bit — has to be converted here first.
+static int16_t BXMixerConversionBuffer[BXMixerScratchMaxFrames * 2];
+static float BXMixerFloatBuffer[BXMixerScratchMaxFrames * 2];
+
 NSString * const BXEmulatorDidDisplayMT32MessageNotification = @"BXEmulatorDidDisplayMT32MessageNotification";
 
 NSString * const BXMIDIMusicTypeKey                 = @"MIDI Music Type";
@@ -149,37 +168,50 @@ NSString * const BXMIDIExternalDeviceNeedsMT32SysexDelaysKey = @"Needs MT-32 Sys
 
 - (void) _suspendAudio
 {
-    SDL_PauseAudio(YES);
+    //SDL_PauseAudio() only ever addressed SDL 1.2's single implicit audio
+    //device. 0.83's mixer opens its own device with SDL_OpenAudioDevice() and
+    //drives it from a dedicated mixer thread, so pausing the legacy device
+    //silences nothing. MIXER_Mute() is the supported equivalent: it stops the
+    //mixer emitting frames, drops whatever is already queued, and mutes MIDI.
+    //
+    //Don't touch the mixer if the user muted it themselves, or resuming would
+    //silently undo their mute.
+    _audioMutedForPause = !MIXER_IsManuallyMuted();
+    if (_audioMutedForPause)
+        MIXER_Mute();
     
-#if !defined(C_SDL2)
-    _cdromWasPlaying = (SDL_CDStatus(NULL) == CD_PLAYING);
-    if (_cdromWasPlaying)
-        SDL_CDPause(NULL);
-#endif
+    //The SDL_CDStatus()/SDL_CDPause() pair that used to live here was SDL 1.2's
+    //physical CD-ROM API, which SDL2 does not have; it survived only because it
+    //sat behind a `#if !defined(C_SDL2)` guard and 0.83 no longer defines
+    //C_SDL2. There is nothing to port it to: 0.83 has no physical CD support,
+    //and CD audio from disc images is mixed through the CDAUDIO mixer channel
+    //like everything else, so the mute above already covers it.
     
     [self.activeMIDIDevice pause];
 }
 
 - (void) _resumeAudio
 {
-    SDL_PauseAudio(NO);
-
-#if !defined(C_SDL2)
-    if (_cdromWasPlaying)
-        SDL_CDResume(NULL);
-#endif
+    if (_audioMutedForPause)
+    {
+        MIXER_Unmute();
+        _audioMutedForPause = NO;
+    }
     
     [self.activeMIDIDevice resume];
 }
 
 
 //Called periodically by our MIDI channel to fill its buffer with audio data.
-void _renderMIDIOutput(Bitu numFrames)
+//MIXER_Handler is now a std::function<void(int)>, so this takes a plain int.
+static void _renderMIDIOutput(const int numFrames)
 {
     //We need to look up the corresponding channel for this because DOSBox's
     //mixer doesn't pass any context with its callbacks.
     MixerChannel *channel = MIXER_FindChannel(BXMIDIChannelName).get();
-    if (channel) [[BXEmulator currentEmulator] _renderMIDIOutputToChannel: channel frames: numFrames];
+    if (channel && numFrames > 0)
+        [[BXEmulator currentEmulator] _renderMIDIOutputToChannel: channel
+                                                          frames: (NSUInteger)numFrames];
 }
 
 
@@ -190,27 +222,45 @@ void _renderMIDIOutput(Bitu numFrames)
 
 - (MixerChannel *) _addMIDIMixerChannelWithSampleRate: (NSUInteger)sampleRate
 {
-    MixerChannel *channel = [self _MIDIMixerChannel];
+    MixerChannelPtr channel = MIXER_FindChannel(BXMIDIChannelName);
     
     if (channel)
     {
-        channel->SetFreq(sampleRate);
+        //SetFreq() was renamed SetSampleRate() when the mixer gained real
+        //resampling; the units (Hz) are unchanged.
+        channel->SetSampleRate((int)sampleRate);
     }
     else
     {
-        channel = MIXER_AddChannel(_renderMIDIOutput, sampleRate, BXMIDIChannelName).get();
+        //0.83 requires a channel's features to be declared up front: they
+        //decide whether it gets a stereo lineout and how the MIXER command
+        //presents it. Boxer's MIDI devices render stereo synthesizer output.
+        //ChannelFeature::Sleep is deliberately omitted — it lets an idle
+        //channel disable itself, and Boxer adds and removes this channel
+        //explicitly instead.
+        channel = MIXER_AddChannel(_renderMIDIOutput,
+                                   (int)sampleRate,
+                                   BXMIDIChannelName,
+                                   {ChannelFeature::Stereo,
+                                    ChannelFeature::Synthesizer});
+        
+        //Match what upstream's own MIDI devices ask for: proper band-limited
+        //resampling rather than the mixer's default lerp-or-resample.
+        channel->SetResampleMethod(ResampleMethod::Resample);
     }
     channel->Enable(true);
-    return channel;
+    return channel.get();
 }
 
 - (void) _removeMIDIMixerChannel
 {
-    MixerChannel *channel = [self _MIDIMixerChannel];
+    //MIXER_DelChannel(name) became MIXER_DeregisterChannel(ptr): the mixer owns
+    //its channels as shared_ptrs now and matches them by identity, not by name.
+    MixerChannelPtr channel = MIXER_FindChannel(BXMIDIChannelName);
     if (channel)
     {
         channel->Enable(false);
-        MIXER_DelChannel(BXMIDIChannelName);
+        MIXER_DeregisterChannel(channel);
     }
 }
 
@@ -230,21 +280,28 @@ void _renderMIDIOutput(Bitu numFrames)
     NSUInteger sampleRate = 0;
     BXAudioFormat format = BXAudioFormatAny;
     
-    void *buffer = (void *)MixTemp;
-    BOOL audioRendered = [source renderOutputToBuffer: buffer
-                                               frames: numFrames
+    //Never render more than our scratch buffer can hold. Any shortfall is
+    //made up with silence below, which is how upstream's own channel helpers
+    //handle an under-filled request.
+    NSUInteger framesToRender = MIN(numFrames, BXMixerScratchMaxFrames);
+    
+    BOOL audioRendered = [source renderOutputToBuffer: (void *)BXMixerScratchBuffer
+                                               frames: framesToRender
                                            sampleRate: &sampleRate
                                                format: &format];
     
     if (audioRendered)
     {
-        [self _renderBuffer: MixTemp
+        [self _renderBuffer: BXMixerScratchBuffer
                   toChannel: channel
-                     frames: numFrames
+                     frames: framesToRender
                      format: format];
     }
-    else
+    
+    if (!audioRendered || framesToRender < numFrames)
     {
+        //AddSilence() tops the channel up to the frame count it asked for,
+        //so it is correct both for "nothing rendered" and for a short read.
         channel->AddSilence();
     }
 }
@@ -258,37 +315,80 @@ void _renderMIDIOutput(Bitu numFrames)
     BOOL isSigned = !!(format & BXAudioFormatSigned);
     BOOL isStereo = !!(format & BXAudioFormatStereo);
     
+    const int frames = (int)numFrames;
+    const NSUInteger numSamples = numFrames * (isStereo ? 2 : 1);
+    
+    if (frames <= 0) return;
+    
     switch (size)
     {
         case BXAudioFormat8Bit:
-            if (isSigned)
+            //Unsigned 8-bit mono is the only 8-bit form 0.83 still takes
+            //directly; AddSamples_s8s/_m8s/_s8 are gone.
+            if (!isSigned && !isStereo)
             {
-                if (isStereo)   channel->AddSamples_s8s(numFrames, (const int8_t *)buffer);
-                else            channel->AddSamples_m8s(numFrames, (const int8_t *)buffer);
+                channel->AddSamples_m8(frames, (const uint8_t *)buffer);
+            }
+            //lut_u8to16/lut_s8to16 are the very tables the mixer used to widen
+            //8-bit samples with internally, so going through them here is
+            //bit-identical to what those entry points did.
+            else if (isSigned)
+            {
+                const int8_t *samples = (const int8_t *)buffer;
+                for (NSUInteger i = 0; i < numSamples; i++)
+                    BXMixerConversionBuffer[i] = lut_s8to16[samples[i]];
+                
+                if (isStereo)   channel->AddSamples_s16(frames, BXMixerConversionBuffer);
+                else            channel->AddSamples_m16(frames, BXMixerConversionBuffer);
             }
             else
             {
-                if (isStereo)   channel->AddSamples_s8(numFrames, (const uint8_t *)buffer);
-                else            channel->AddSamples_m8(numFrames, (const uint8_t *)buffer);
+                const uint8_t *samples = (const uint8_t *)buffer;
+                for (NSUInteger i = 0; i < numSamples; i++)
+                    BXMixerConversionBuffer[i] = lut_u8to16[samples[i]];
+                
+                channel->AddSamples_s16(frames, BXMixerConversionBuffer);
             }
             break;
         
         case BXAudioFormat16Bit:
             if (isSigned)
             {
-                if (isStereo)   channel->AddSamples_s16(numFrames, (const int16_t *)buffer);
-                else            channel->AddSamples_m16(numFrames, (const int16_t *)buffer);
+                if (isStereo)   channel->AddSamples_s16(frames, (const int16_t *)buffer);
+                else            channel->AddSamples_m16(frames, (const int16_t *)buffer);
             }
             else
             {
-                if (isStereo)   channel->AddSamples_s16u(numFrames, (const uint16_t *)buffer);
-                else            channel->AddSamples_m16u(numFrames, (const uint16_t *)buffer);
+                //AddSamples_s16u/_m16u are gone, so rebias to signed ourselves.
+                const uint16_t *samples = (const uint16_t *)buffer;
+                for (NSUInteger i = 0; i < numSamples; i++)
+                    BXMixerConversionBuffer[i] = (int16_t)((int32_t)samples[i] - 32768);
+                
+                if (isStereo)   channel->AddSamples_s16(frames, BXMixerConversionBuffer);
+                else            channel->AddSamples_m16(frames, BXMixerConversionBuffer);
             }
             break;
             
         case BXAudioFormat32Bit:
-            if (isStereo)       channel->AddSamples_s32(numFrames, (const int32_t *)buffer);
-            else                channel->AddSamples_m32(numFrames, (const int32_t *)buffer);
+        {
+            //AddSamples_s32/_m32 are gone too. They never treated their input
+            //as full-range 32-bit audio: DOSBox's converter cast each int32
+            //straight into the mixer's internal float scale, which is 16-bit
+            //(+/-32768) — the comment in mixer.cpp still reads "16bit and 32bit
+            //both contain 16bit data internally". The float entry points use
+            //that same scale, so a plain cast preserves the old behaviour.
+            //
+            //Nothing in Boxer produces 32-bit audio today: the only
+            //BXAudioSource in the tree is BXEmulatedMT32, which renders signed
+            //16-bit stereo. This path is untested.
+            const int32_t *samples = (const int32_t *)buffer;
+            for (NSUInteger i = 0; i < numSamples; i++)
+                BXMixerFloatBuffer[i] = (float)samples[i];
+            
+            if (isStereo)   channel->AddSamples_sfloat(frames, BXMixerFloatBuffer);
+            else            channel->AddSamples_mfloat(frames, BXMixerFloatBuffer);
+            break;
+        }
     }
 }
 
@@ -365,10 +465,18 @@ void _renderMIDIOutput(Bitu numFrames)
 
 - (void) _syncVolume
 {
-    //Update the DOSBox mixer with the new volume and mute settings.
+    //0.78's mixer called back into boxer_masterVolume() for every channel on
+    //every volume change, which is why Boxer had to patch mixer.cpp at all.
+    //0.83 has a real master gain, so Boxer just sets it and the hook — along
+    //with its boxer_updateVolumes() counterpart inside mixer.cpp — is retired.
+    //
     //Note that we can only do this once the mixer subsystem has initialized,
     //and won't need to do it before then anyway.
-    if (self.isInitialized) boxer_updateVolumes();
+    if (self.isInitialized)
+    {
+        const float volume = self.masterVolume;
+        MIXER_SetMasterVolume(AudioFrame(volume, volume));
+    }
     
     //Also update the volume of our current MIDI device.
     if (self.activeMIDIDevice)

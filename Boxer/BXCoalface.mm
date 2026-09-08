@@ -21,7 +21,9 @@
 bool boxer_processEvents()
 {
 	[[BXEmulator currentEmulator] _processEvents];
-    return !shutdown_requested || !boxer_runLoopShouldContinue();
+    //The `shutdown_requested` global became private to dosbox.cpp; 0.83 exposes
+    //it as DOSBOX_IsShutdownRequested() instead.
+    return !DOSBOX_IsShutdownRequested() || !boxer_runLoopShouldContinue();
 }
 
 /*

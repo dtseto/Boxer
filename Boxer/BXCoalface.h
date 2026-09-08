@@ -22,21 +22,28 @@
 extern "C" {
 #endif
 	
-//Remapped replacements for DOSBox's old sdlmain functions
-#define GFX_Events boxer_processEvents
-#define GFX_StartUpdate boxer_startFrame
-#define GFX_EndUpdate boxer_finishFrame
-#define Mouse_AutoLock boxer_setMouseActive
-#define GFX_SetTitle boxer_handleDOSBoxTitleChange
-#define GFX_GetDisplayRefreshRate boxer_GetDisplayRefreshRate
-#define GFX_SetSize boxer_prepareForFrameSize
-#define GFX_GetRGB boxer_getRGBPaletteEntry
-#define GFX_SetShader boxer_setShader
-#define GFX_GetBestMode boxer_idealOutputMode
-#define GFX_MaybeProcessEvents boxer_MaybeProcessEvents
-#define GFX_ShowMsg boxer_log
-#define MIDI_Available boxer_MIDIAvailable
-#define OpenCaptureFile boxer_openCaptureFile
+// Remapped replacements for DOSBox's old sdlmain functions.
+//
+// Almost all of these are gone. 0.83 renamed or removed every function they
+// remapped, and BXCoalface.h is no longer pulled in from dosbox.h, so the
+// remapping could not take effect even where the name survived. The rendering
+// and event entry points are now *defined* by Boxer in BXGFXBridge.mm against
+// upstream's real GFX_* signatures, rather than #defined away:
+//
+//   GFX_Events, GFX_MaybeProcessEvents -> GFX_PollAndHandleEvents
+//   GFX_StartUpdate, GFX_EndUpdate     -> defined directly (32bpp, no dirty rects)
+//   GFX_SetSize                        -> defined directly (new signature)
+//   GFX_GetRGB                         -> GFX_MakePixel
+//   GFX_GetBestMode                    -> gone; there is no mode negotiation
+//   GFX_SetShader                      -> RenderBackend::SetShader()
+//   GFX_GetDisplayRefreshRate          -> GFX_GetHostRefreshRate()
+//   GFX_SetTitle                       -> the TITLEBAR_* module
+//   Mouse_AutoLock                     -> gone; MOUSE_* drives GFX_SetMouseCapture()
+//   MIDI_Available, OpenCaptureFile    -> gone (MIDI_IsAvailable, the CAPTURE_* module)
+//
+// GFX_ShowMsg is the one survivor: it is still declared in misc/logging.h and
+// still means "show this message to the user", so Boxer still supplies it --
+// but as a definition of GFX_ShowMsg itself, not a rename of it.
 
 #define E_Exit(format,...) boxer_die(__PRETTY_FUNCTION__, __FILE__, __LINE__, format, ##__VA_ARGS__)
 	class DOS_Drive;
@@ -44,35 +51,20 @@ extern "C" {
 	
 #pragma mark - Rendering
 
-// NOTE (0.83 migration): this whole block is provisional and currently unused.
+// The rendering hooks that used to live here are gone. 0.83's frontend is an
+// abstract RenderBackend plus a handful of free GFX_* functions, so Boxer
+// implements that interface in BXGFXBridge.mm instead of injecting callbacks
+// into DOSBox. See "Register" entries D20-D2x in FINDINGS.md.
 //
-// Upstream rewrote the frontend: GFX_StartUpdate() now hands back a uint32_t*
-// (32bpp only), GFX_EndUpdate() takes no dirty-rectangle list, GFX_GetBestMode()
-// is gone entirely, and shaders moved behind RenderBackend::SetShader(). The
-// #define remapping below therefore no longer lines up, and BXCoalface.h is
-// deliberately NOT pulled in from dosbox.h yet -- the fork did that to make the
-// remapping global, and re-doing it now would break gui/render/render.cpp.
-//
-// These declarations are kept only so Boxer's existing implementations keep
-// compiling. They get replaced by a BoxerRenderBackend : RenderBackend.
+// Retired outright, not ported:
+//   boxer_idealOutputMode        -- no mode negotiation exists; output is 32bpp
+//   boxer_prepareForFrameSize    -- replaced by GFX_SetSize + NotifyRenderSizeChanged
+//   boxer_startFrame             -- replaced by RenderBackend::StartFrame
+//   boxer_finishFrame            -- replaced by RenderBackend::EndFrame
+//   boxer_getRGBPaletteEntry     -- replaced by RenderBackend::MakePixel
+//   boxer_setShader              -- replaced by RenderBackend::SetShader
+//   boxer_applyRenderingStrategy -- DOSBox has no scalers left to configure
 
-// Mirrors gui/private/common.h, which is not installed for consumers.
-typedef enum {
-    Boxer_GFX_CallbackReset,
-    Boxer_GFX_CallbackStop,
-    Boxer_GFX_CallbackRedraw
-} Boxer_GFX_CallbackFunctions_t;
-typedef void (*GFX_CallBack_t)(Boxer_GFX_CallbackFunctions_t function);
-
-	Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double scalex, double scaley, GFX_CallBack_t callback, double pixel_aspect);
-	bool boxer_startFrame(uint8_t * & frameBuffer, int &pitch);
-	void boxer_finishFrame(const uint16_t *dirtyBlocks);
-	Bitu boxer_idealOutputMode(Bitu flags);
-	
-	void boxer_applyRenderingStrategy(void);
-	Bitu boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue);
-    void boxer_setShader(const char* src);
-	
     /// Defined in vga_other.cpp to give Boxer access to Hercules and CGA graphics mode options.
     uint8_t boxer_herculesTintMode(void);
     void boxer_setHerculesTintMode(uint8_t tint);
@@ -83,9 +75,6 @@ typedef void (*GFX_CallBack_t)(Boxer_GFX_CallbackFunctions_t function);
     uint8_t boxer_CGAComponentMode(void);
     void boxer_setCGAComponentMode(uint8_t newCGA);
 
-    int boxer_GetDisplayRefreshRate(void);
-    
-    
 #pragma mark - Shell
     
     void boxer_shellWillStart(DOS_Shell *shell);
@@ -153,14 +142,20 @@ typedef void (*GFX_CallBack_t)(Boxer_GFX_CallbackFunctions_t function);
     
 #pragma mark - Runloop and event loop handling
     
+	/// Notifies Boxer that the emulation speed or pause state changed.
+	///
+	/// Up to 0.78 this was GFX_SetTitle, which DOSBox called whenever it
+	/// rewrote its window title. 0.83 moved that into gui/titlebar.cpp, which
+	/// Boxer does not compile, so the hook is bound to the TITLEBAR_* entry
+	/// points Boxer supplies instead -- see BXGFXBridge.mm.
 	void boxer_handleDOSBoxTitleChange(int32_t cycles, int frameskip, bool paused);
 	
 	/// Called from dosbox.cpp to allow control over the emulation loop.
 	void boxer_runLoopWillStartWithContextInfo(void **contextInfo);
 	void boxer_runLoopDidFinishWithContextInfo(void *contextInfo);
 	bool boxer_runLoopShouldContinue();
+	/// The body of GFX_PollAndHandleEvents(); see BXGFXBridge.mm.
 	bool boxer_processEvents();
-    bool boxer_MaybeProcessEvents();
     
 #pragma mark - Input
     

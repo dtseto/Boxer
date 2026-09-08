@@ -15,9 +15,12 @@
 #import "dosbox_config.h"
 #import "misc/video.h"
 
-// GFX_CallBack_t used to come from video.h. At 0.83 the frontend types moved
-// into gui/private/common.h, which consumers cannot include, so BXCoalface.h
-// carries a provisional stand-in until the RenderBackend work replaces this.
+// GFX_Callback_t used to come from video.h; at 0.83 it lives in
+// gui/private/common.h alongside the rest of the frontend interface. That
+// header is "private" only in the sense that upstream's own frontend is its
+// only consumer -- Boxer *is* that frontend now, so it includes it directly
+// rather than mirroring the type.
+#import "gui/private/common.h"
 #import "BXCoalface.h"
 #endif
 
@@ -103,7 +106,7 @@ typedef NS_ENUM(uint8_t, BXCGACompositeMode) {
 	
 #if __cplusplus
 	/// This is a C++ function pointer and should never be seen by Obj-C classes
-	GFX_CallBack_t _callback;
+	GFX_Callback_t _callback;
 #endif
 }
 
@@ -161,20 +164,29 @@ typedef NS_ENUM(uint8_t, BXCGACompositeMode) {
 /// Called by BXEmulator to prepare the renderer for shutdown.
 - (void) shutdown;
 
-/// Called by DOSBox to set the DOSBox renderer's scaling strategy.
+/// Recomputes the filter Boxer applies to the DOS output, and syncs the
+/// Hercules/CGA colour settings. Named for what it used to do to DOSBox's
+/// scalers; at 0.83 there are none left to configure, so it only drives
+/// Boxer's own shader selection.
 - (void) applyRenderingStrategy;
 
-/// Called by DOSBox to convert an RGB value into a BGRA palette entry.
+/// Converts an RGB value into a BGRA palette entry. Called from
+/// BoxerRenderBackend::MakePixel().
 - (NSUInteger) paletteEntryWithRed: (NSUInteger)red
 							 green: (NSUInteger)green
 							  blue: (NSUInteger)blue;
 
+/// Called from BoxerRenderBackend::NotifyRenderSizeChanged(). The scale
+/// argument the 0.78 hook carried is gone: DOSBox's own scalers went with it,
+/// and Boxer never read it.
 - (void) prepareForOutputSize: (NSSize)outputSize
-					  atScale: (NSSize)scale
-				 withCallback: (GFX_CallBack_t)newCallback;
+				 withCallback: (GFX_Callback_t)newCallback;
 
 - (BOOL) startFrameWithBuffer: (void **)frameBuffer pitch: (int *)pitch;
-- (void) finishFrameWithChanges: (const uint16_t *)dirtyBlocks;
+
+/// Called from BoxerRenderBackend::EndFrame(). 0.83 removed dirty-rectangle
+/// tracking from the render pipeline, so every frame is now published whole.
+- (void) finishFrame;
 
 @end
 

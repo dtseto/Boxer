@@ -26,57 +26,6 @@ bool boxer_processEvents()
     return !DOSBOX_IsShutdownRequested() || !boxer_runLoopShouldContinue();
 }
 
-/*
- static void UpdateFramePeriod()
- {
-     assert(sdl.window);
-     SDL_DisplayMode display_mode;
-     SDL_GetWindowDisplayMode(sdl.window, &display_mode);
-     const int refresh_rate = display_mode.refresh_rate > 0
-                                      ? display_mode.refresh_rate
-                                      : 60;
-     frame_period = std::chrono::nanoseconds(1'000'000'000 / refresh_rate);
- }
-
- */
-
-//TODO: move to BXEmulator
-//! The frame-period holds the current duration for which a single host
-//! video-frame is displayed. This is kept up-to-date when the video mode is set.
-//! A sane starting value is used, which is based on a 60-Hz monitor.
-auto frame_period = std::chrono::nanoseconds(1'000'000'000 / 60);
-bool boxer_MaybeProcessEvents()
-{
-    // Process SDL's event queue at 200 Hz
-    constexpr auto ps2_poll_period = std::chrono::nanoseconds(1'000'000'000 / 200);
-
-    // SDL maintainers recommend processing the SDL's event queue before
-    // each frame. For now, simply ensure that the PS/2 polling period is
-    // quicker than the video frame period. If a time comes when common
-    // displays update faster than 200 Hz, then update this code to pick the
-    // quicker of the two.
-    assert(ps2_poll_period <= frame_period);
-
-    static auto next_process_at = std::chrono::steady_clock::now() + ps2_poll_period;
-    const auto checked_at = std::chrono::steady_clock::now();
-    if (checked_at < next_process_at)
-        return true;
-
-    const bool process_result = boxer_processEvents();
-
-#if defined(REPORT_EVENT_LAG)
-    const auto host_lag = std::chrono::steady_clock::now() - checked_at;
-    if (host_lag > std::chrono::milliseconds(3)) {
-        const std::chrono::duration<double, std::milli> lag_ms = host_lag;
-        LOG_MSG("SDL: Processing SDL's event queue took %5.2f ms",
-                lag_ms.count());
-    }
-#endif
-
-    next_process_at = checked_at + ps2_poll_period;
-    return process_result;
-}
-
 /// Called at the start and end of every iteration of DOSBOX_RunMachine.
 void boxer_runLoopWillStartWithContextInfo(void **contextInfo)
 {
@@ -100,56 +49,6 @@ void boxer_handleDOSBoxTitleChange(int32_t newCycles, int newFrameskip, bool new
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
 	[emulator _didChangeEmulationState];
-}
-
-
-#pragma mark - Rendering functions
-
-void boxer_applyRenderingStrategy()
-{
-	BXEmulator *emulator = [BXEmulator currentEmulator];
-	[[emulator videoHandler] applyRenderingStrategy];
-}
-
-void boxer_setShader(const char* src) {
-    //TODO: implement!
-}
-
-Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double scalex, double scaley, GFX_CallBack_t callback, double pixel_aspect)
-{
-	BXEmulator *emulator = [BXEmulator currentEmulator];
-	
-	NSSize outputSize	= NSMakeSize((CGFloat)width, (CGFloat)height);
-	NSSize scale		= NSMakeSize((CGFloat)scalex, (CGFloat)scaley);
-	[[emulator videoHandler] prepareForOutputSize: outputSize atScale: scale withCallback: callback];
-	
-	return GFX_CAN_32 | GFX_SCALING;
-}
-
-Bitu boxer_idealOutputMode(Bitu flags)
-{
-	//Originally this tested various bit depths to find the most appropriate mode for the chosen scaler.
-	//Because OS X always uses a 32bpp context and Boxer always uses RGBA-capable scalers, we ignore the
-	//original function's behaviour altogether and just return something that will keep DOSBox happy.
-	return GFX_CAN_32 | GFX_SCALING;
-}
-
-bool boxer_startFrame(uint8_t * &frameBuffer, int & pitch)
-{
-	BXEmulator *emulator = [BXEmulator currentEmulator];
-	return [[emulator videoHandler] startFrameWithBuffer: (void **)&frameBuffer pitch: &pitch];
-}
-
-void boxer_finishFrame(const uint16_t *dirtyBlocks)
-{
-	BXEmulator *emulator = [BXEmulator currentEmulator];
-	[[emulator videoHandler] finishFrameWithChanges: dirtyBlocks];	
-}
-
-Bitu boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue)
-{
-	BXEmulator *emulator = [BXEmulator currentEmulator];
-	return [[emulator videoHandler] paletteEntryWithRed: red green: green blue: blue];
 }
 
 

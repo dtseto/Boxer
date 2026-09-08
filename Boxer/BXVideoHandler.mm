@@ -224,9 +224,9 @@
         }
         else
         {
-            if (_frameInProgress) [self finishFrameWithChanges: NULL];
+            if (_frameInProgress) [self finishFrame];
             
-            if (_callback) _callback(Boxer_GFX_CallbackReset);
+            if (_callback) _callback(GFX_CallbackReset);
             //CPU_Reset_AutoAdjust();
         }
 	}
@@ -234,8 +234,8 @@
 
 - (void) shutdown
 {
-	[self finishFrameWithChanges: 0];
-	if (_callback) _callback(Boxer_GFX_CallbackStop);
+	[self finishFrame];
+	if (_callback) _callback(GFX_CallbackStop);
 }
 
 
@@ -243,8 +243,7 @@
 #pragma mark DOSBox callbacks
 
 - (void) prepareForOutputSize: (NSSize)outputSize
-                      atScale: (NSSize)scale
-                 withCallback: (GFX_CallBack_t)newCallback
+                 withCallback: (GFX_Callback_t)newCallback
 {
 	//Synchronise our record of the current video mode with the new video mode
 	BOOL wasTextMode = self.isInTextMode;
@@ -306,32 +305,18 @@
 	return YES;
 }
 
-- (void) finishFrameWithChanges: (const uint16_t *)dirtyBlocks
+- (void) finishFrame
 {
 	if (self.currentFrame)
 	{
-        if (dirtyBlocks)
-        {
-            //Convert DOSBox's array of dirty blocks into a set of ranges
-            NSUInteger i=0, currentOffset = 0, maxOffset = self.currentFrame.size.height;
-            while (currentOffset < maxOffset && i < MAX_DIRTY_REGIONS)
-            {
-                NSUInteger regionLength = dirtyBlocks[i];
-                
-                //Odd-numbered indices represent blocks of lines that are dirty;
-                //Even-numbered indices represent clean regions that should be skipped.
-                BOOL isDirtyBlock = (i % 2 != 0);
-                
-                if (isDirtyBlock)
-                {
-                    [self.currentFrame setNeedsDisplayInRegion: NSMakeRange(currentOffset, regionLength)];
-                }
-                
-                currentOffset += regionLength;
-                i++;
-            }
-        }
-        
+        // Up to 0.78 DOSBox handed us an array of alternating clean/dirty line
+        // counts here, which we turned into dirty regions on the frame. 0.83's
+        // render pipeline no longer tracks which lines changed -- RENDER_EndUpdate
+        // calls GFX_EndUpdate() with no arguments -- so every frame is published
+        // whole.
+        //
+        // Nothing consumed BXVideoFrame's dirty regions anyway: Boxer's renderer
+        // has always uploaded the entire frame. See D21 in FINDINGS.md.
         self.currentFrame.timestamp = CFAbsoluteTimeGetCurrent();
         [self.emulator _didFinishFrame: self.currentFrame];
 	}

@@ -198,8 +198,8 @@
     {
         NSMutableSet *bindings = [NSMutableSet setWithCapacity: 2];
         //Try with directions either side of the binding.
-        ADBHIDPOVSwitchDirection cw  = (direction + 4500) % 36000;
-        ADBHIDPOVSwitchDirection ccw = (direction - 4500) % 36000;
+        ADBHIDPOVSwitchDirection cw  = (ADBHIDPOVSwitchDirection)((direction + 4500) % 36000);
+        ADBHIDPOVSwitchDirection ccw = (ADBHIDPOVSwitchDirection)((direction - 4500) % 36000);
         
         id <BXOutputBinding> cwBinding = [self bindingForDirection: cw];
         id <BXOutputBinding> ccwBinding = [self bindingForDirection: ccw];

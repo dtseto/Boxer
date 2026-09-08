@@ -13,10 +13,10 @@
 #import "ADBFilesystem.h"
 #import "NSURL+ADBFilesystemHelpers.h"
 
-#import "dos_inc.h"
-#import "dos_system.h"
-#import "drives.h"
-#import "cdrom.h"
+#import "dos/dos.h"
+#import "dos/dos_system.h"
+#import "dos/drives.h"
+#import "dos/cdrom.h"
 
 
 #pragma mark - Private constants

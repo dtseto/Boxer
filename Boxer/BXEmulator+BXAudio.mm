@@ -14,7 +14,7 @@
 #import "BXDrive.h"
 
 #import <SDL2/SDL.h>
-#import "mixer.h"
+#import "audio/mixer.h"
 
 
 static const char *BXMIDIChannelName = "MIDI";

@@ -8,9 +8,9 @@
 
 #import "BXEmulatedMouse.h"
 
-#import "config.h"
-#import "video.h"
-#import "mouse.h"
+#import "dosbox_config.h"
+#import "misc/video.h"
+#import "hardware/input/mouse.h"
 
 
 #pragma mark -

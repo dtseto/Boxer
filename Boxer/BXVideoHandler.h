@@ -12,8 +12,13 @@
 #import <Foundation/Foundation.h>
 
 #if __cplusplus
-#import "config.h"
-#import "video.h"
+#import "dosbox_config.h"
+#import "misc/video.h"
+
+// GFX_CallBack_t used to come from video.h. At 0.83 the frontend types moved
+// into gui/private/common.h, which consumers cannot include, so BXCoalface.h
+// carries a provisional stand-in until the RenderBackend work replaces this.
+#import "BXCoalface.h"
 #endif
 
 /// These constants are for reference and correspond directly to constants defined in DOSBox's render_scalers.h

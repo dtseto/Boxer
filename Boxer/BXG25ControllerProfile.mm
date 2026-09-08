@@ -118,7 +118,8 @@ enum {
     NSUInteger numEmulatedButtons = [self.emulatedJoystick.class numButtons];
     if (emulatedButton != BXEmulatedJoystickUnknownButton && emulatedButton <= numEmulatedButtons)
     {
-        binding = [self bindingFromButtonElement: element toButton: emulatedButton];
+        binding = [self bindingFromButtonElement: element
+                                        toButton: (BXEmulatedJoystickButton)emulatedButton];
     }
 	
 	return binding;

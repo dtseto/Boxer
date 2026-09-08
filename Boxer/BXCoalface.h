@@ -14,8 +14,8 @@
 #ifndef BOXER
 #define BOXER
 
-#import "config.h"
-#import "video.h"
+#import "dosbox_config.h"
+#import "misc/video.h"
 #include <stdio.h>
 
 #if __cplusplus
@@ -43,24 +43,45 @@ extern "C" {
     class DOS_Shell;
 	
 #pragma mark - Rendering
+
+// NOTE (0.83 migration): this whole block is provisional and currently unused.
+//
+// Upstream rewrote the frontend: GFX_StartUpdate() now hands back a uint32_t*
+// (32bpp only), GFX_EndUpdate() takes no dirty-rectangle list, GFX_GetBestMode()
+// is gone entirely, and shaders moved behind RenderBackend::SetShader(). The
+// #define remapping below therefore no longer lines up, and BXCoalface.h is
+// deliberately NOT pulled in from dosbox.h yet -- the fork did that to make the
+// remapping global, and re-doing it now would break gui/render/render.cpp.
+//
+// These declarations are kept only so Boxer's existing implementations keep
+// compiling. They get replaced by a BoxerRenderBackend : RenderBackend.
+
+// Mirrors gui/private/common.h, which is not installed for consumers.
+typedef enum {
+    Boxer_GFX_CallbackReset,
+    Boxer_GFX_CallbackStop,
+    Boxer_GFX_CallbackRedraw
+} Boxer_GFX_CallbackFunctions_t;
+typedef void (*GFX_CallBack_t)(Boxer_GFX_CallbackFunctions_t function);
+
 	Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double scalex, double scaley, GFX_CallBack_t callback, double pixel_aspect);
-	bool boxer_startFrame(Bit8u * & frameBuffer, int &pitch);
+	bool boxer_startFrame(uint8_t * & frameBuffer, int &pitch);
 	void boxer_finishFrame(const uint16_t *dirtyBlocks);
 	Bitu boxer_idealOutputMode(Bitu flags);
 	
 	void boxer_applyRenderingStrategy(void);
-	Bitu boxer_getRGBPaletteEntry(Bit8u red, Bit8u green, Bit8u blue);
+	Bitu boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue);
     void boxer_setShader(const char* src);
 	
     /// Defined in vga_other.cpp to give Boxer access to Hercules and CGA graphics mode options.
-    Bit8u boxer_herculesTintMode(void);
-    void boxer_setHerculesTintMode(Bit8u tint);
+    uint8_t boxer_herculesTintMode(void);
+    void boxer_setHerculesTintMode(uint8_t tint);
     
     double boxer_CGACompositeHueOffset(void);
     void boxer_setCGACompositeHueOffset(double hue);
     
-    Bit8u boxer_CGAComponentMode(void);
-    void boxer_setCGAComponentMode(Bit8u newCGA);
+    uint8_t boxer_CGAComponentMode(void);
+    void boxer_setCGAComponentMode(uint8_t newCGA);
 
     int boxer_GetDisplayRefreshRate(void);
     
@@ -80,8 +101,8 @@ extern "C" {
 	bool boxer_shellShouldRunCommand(DOS_Shell *shell, char* cmd, char* args);
     
     /// Called from shell_misc.cpp to let Boxer know the shell is waiting for command input.
-    void boxer_shellWillReadCommandInputFromHandle(DOS_Shell *shell, Bit16u handle);
-    void boxer_shellDidReadCommandInputFromHandle(DOS_Shell *shell, Bit16u handle);
+    void boxer_shellWillReadCommandInputFromHandle(DOS_Shell *shell, uint16_t handle);
+    void boxer_shellDidReadCommandInputFromHandle(DOS_Shell *shell, uint16_t handle);
     
 	/// Called from shell_misc.cpp to let Boxer rewrite or interrupt the shell's input processing.
     /// Returns true if Boxer has modified any of the parameters passed by reference.
@@ -118,31 +139,21 @@ extern "C" {
 	bool boxer_shouldAllowWriteAccessToPath(const char *filePath, DOS_Drive *dosboxDrive);
 	
 	/// Called from dos_programs.cpp et al: informs Boxer of drive mount/unmount events.
-	void boxer_driveDidMount(Bit8u driveIndex);
-	void boxer_driveDidUnmount(Bit8u driveIndex);
+	void boxer_driveDidMount(uint8_t driveIndex);
+	void boxer_driveDidUnmount(uint8_t driveIndex);
 	
 	/// Called from drive_local.cpp to notify Boxer when DOSBox has created or deleted a local file.
 	void boxer_didCreateLocalFile(const char *path, DOS_Drive *dosboxDrive);
 	void boxer_didRemoveLocalFile(const char *path, DOS_Drive *dosboxDrive);
 	
-    /// Called from drive_local.cpp to wrap local file access.
-    FILE * boxer_openLocalFile(const char *path, DOS_Drive *drive, const char *mode);
-    bool boxer_removeLocalFile(const char *path, DOS_Drive *drive);
-    bool boxer_moveLocalFile(const char *fromPath, const char *toPath, DOS_Drive *drive);
+    /// Called from drive_local.cpp when Boxer creates the directory itself.
     bool boxer_createLocalDir(const char *path, DOS_Drive *drive);
-    bool boxer_removeLocalDir(const char *path, DOS_Drive *drive);
-    bool boxer_getLocalPathStats(const char *path, DOS_Drive *drive, struct stat *outStatus);
-    bool boxer_localDirectoryExists(const char *path, DOS_Drive *drive);
-    bool boxer_localFileExists(const char *path, DOS_Drive *drive);
     
-    void * boxer_openLocalDirectory(const char *path, DOS_Drive *drive);
-    void boxer_closeLocalDirectory(void *handle);
-    bool boxer_getNextDirectoryEntry(void *handle, char *outName, bool &isDirectory);
 	
     
 #pragma mark - Runloop and event loop handling
     
-	void boxer_handleDOSBoxTitleChange(Bit32s cycles, int frameskip, bool paused);
+	void boxer_handleDOSBoxTitleChange(int32_t cycles, int frameskip, bool paused);
 	
 	/// Called from dosbox.cpp to allow control over the emulation loop.
 	void boxer_runLoopWillStartWithContextInfo(void **contextInfo);
@@ -184,7 +195,7 @@ extern "C" {
     ///
     /// Returns true if a key code was retrieved, or false otherwise.
     /// If consumeKey is true, the key will be removed from the buffer as it is read.
-    bool boxer_getNextKeyCodeInPasteBuffer(Bit16u *outKeyCode, bool consumeKey);
+    bool boxer_getNextKeyCodeInPasteBuffer(uint16_t *outKeyCode, bool consumeKey);
     
     
 #pragma mark - Printer support

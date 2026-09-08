@@ -338,7 +338,7 @@ static NSMutableArray *_profileClasses = nil;
 	//Wrap controller buttons so that they'll fit within the number of emulated buttons
 	if (realButton <= maxButtons)
 	{
-		BXEmulatedJoystickButton emulatedButton = ((realButton - 1) % numEmulatedButtons) + 1;
+		BXEmulatedJoystickButton emulatedButton = (BXEmulatedJoystickButton)(((realButton - 1) % numEmulatedButtons) + 1);
         
         return [self bindingFromButtonElement: element toButton: emulatedButton];
 	}

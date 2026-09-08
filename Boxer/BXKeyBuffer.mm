@@ -8,8 +8,8 @@
 #import "BXKeyBuffer.h"
 #import "BXCoalface.h"
 #import "dosbox.h"
-#import "bios.h"
-#import "pic.h"
+#import "ints/bios.h"
+#import "hardware/pic.h"
 
 //For unicode constants
 #import <Cocoa/Cocoa.h>

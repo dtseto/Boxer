@@ -14,7 +14,7 @@
 //MIDI message lengths indexed by status code.
 //Copypasta from midi.cpp, modified with fixes of our own:
 //only undefined status codes are marked as having a length of 0.
-Bit8u BXMIDIMessageLength[256] = {
+uint8_t BXMIDIMessageLength[256] = {
     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x00
     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x10
     0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,  // 0x20
@@ -93,10 +93,10 @@ bool boxer_MIDIAvailable()
     return YES;
 }
 
-void boxer_sendMIDIMessage(Bit8u *msg)
+void boxer_sendMIDIMessage(uint8_t *msg)
 {
     //Look up how long the total message is expected to be, based on the status code.
-    Bit8u status = msg[0];
+    uint8_t status = msg[0];
     NSUInteger len = (NSUInteger)BXMIDIMessageLength[status];
     
     if (len)
@@ -114,7 +114,7 @@ void boxer_sendMIDIMessage(Bit8u *msg)
 #endif
 }
 
-void boxer_sendMIDISysex(Bit8u *msg, Bitu len)
+void boxer_sendMIDISysex(uint8_t *msg, Bitu len)
 {
     [[BXEmulator currentEmulator] sendMIDISysex: [NSData dataWithBytesNoCopy: msg length: len freeWhenDone: NO]];
 }

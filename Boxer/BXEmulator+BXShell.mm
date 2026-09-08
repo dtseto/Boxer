@@ -12,9 +12,9 @@
 #import "BXBaseAppController.h"
 #import "BXEmulatedMT32.h"
 
-#import "shell.h"
+#import "shell/shell.h"
 #import "regs.h"
-#import "callback.h"
+#import "cpu/callback.h"
 
 
 //Lookup table of BXEmulator+BXShell selectors and the shell commands that call them

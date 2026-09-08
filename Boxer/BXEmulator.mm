@@ -9,11 +9,11 @@
 #import "NSObject+ADBPerformExtensions.h"
 
 #import <SDL2/SDL.h>
-#import "cpu.h"
-#import "control.h"
-#import "shell.h"
-#import "mapper.h"
-#import "joystick.h"
+#import "cpu/cpu.h"
+#import "config/config.h"
+#import "shell/shell.h"
+#import "gui/mapper.h"
+#import "hardware/input/joystick.h"
 
 
 #pragma mark - Constants

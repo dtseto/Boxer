@@ -9,9 +9,9 @@
 
 #import "BXEmulatedJoystick.h"
 #import "ADBHIDEvent.h"
-#import "config.h"
-#import "types.h"
-#import "joystick.h"
+#import "dosbox_config.h"
+#import "misc/types.h"
+#import "hardware/input/joystick.h"
 
 
 enum

@@ -12,8 +12,8 @@
 #import "ADBGeometry.h"
 #import "BXFilterDefinitions.h"
 
-#import "render.h"
-#import "vga.h"
+#import "gui/render/render.h"
+#import "hardware/video/vga.h"
 
 
 #pragma mark -
@@ -99,7 +99,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        return (machine == MCH_HERC);
+        return (is_machine_hercules());
     }
     else
     {
@@ -115,18 +115,24 @@
 - (BOOL) isInCGAMode
 {
     if (self.emulator.isInitialized)
-        return (machine == MCH_CGA);
+        return (is_machine_cga());
     else return NO;
 }
 
 - (NSUInteger) frameskip
 {
-	return (NSUInteger)render.frameskip.max;
+    // DOSBox Staging removed frameskip in 0.83: gui/render/render.cpp now only
+    // keeps a Deprecated 'frameskip' setting that prints a notice. There is
+    // nothing left to read, so this reports 0 (no frames skipped).
+    //
+    // TODO: Boxer still exposes a frameskip control in its UI. That control no
+    // longer does anything and should be removed.
+    return 0;
 }
 
 - (void) setFrameskip: (NSUInteger)frameskip
 {
-	render.frameskip.max = (Bitu)frameskip;
+    // No-op: see -frameskip above.
 }
 
 //Chooses the specified filter, and resets the renderer to apply the change immediately.
@@ -165,7 +171,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_setHerculesTintMode((Bit8u)self.herculesTint);
+        boxer_setHerculesTintMode((uint8_t)self.herculesTint);
     }
 }
 
@@ -181,7 +187,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_setCGAComponentMode((Bit8u)self.CGAComposite);
+        boxer_setCGAComponentMode((uint8_t)self.CGAComposite);
     }
 }
 

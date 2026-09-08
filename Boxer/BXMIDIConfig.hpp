@@ -9,9 +9,9 @@
 #ifndef BXMIDIConfig_hpp
 #define BXMIDIConfig_hpp
 
-#include "control.h"
-#include "midi.h"
+#include "config/config.h"
+#include "midi/midi.h"
 
-extern void BXMIDIMT32_AddConfigSection(const config_ptr_t &conf);
+extern void BXMIDIMT32_AddConfigSection(const ConfigPtr& conf);
 
 #endif /* BXMIDIConfig_hpp */

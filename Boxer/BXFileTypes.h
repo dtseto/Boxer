@@ -59,6 +59,9 @@ extern NSString * const BXBatchProgramType;     //!< .bat
 /// All mountable UTIs supported by Boxer
 @property (class, readonly, copy) NSSet<NSString*> *mountableTypes;
 
+/// Converts Boxer file type identifiers to values that are safe for NSOpenPanel.allowedFileTypes.
++ (NSArray<NSString *> *) filePanelTypesForTypes: (NSSet<NSString *> *)types;
+
 /// Document filetypes that Boxer will treat as game documentation.
 @property (class, readonly, copy) NSSet<NSString*> *documentationTypes;
 

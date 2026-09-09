@@ -136,6 +136,23 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
     return types;
 }
 
++ (NSArray<NSString *> *) filePanelTypesForTypes: (NSSet<NSString *> *)types
+{
+    NSMutableArray<NSString *> *filePanelTypes = [NSMutableArray arrayWithCapacity: types.count];
+    for (NSString *type in types)
+    {
+        if ([type isEqualToString: BXNDIFImageType])
+        {
+            [filePanelTypes addObject: @"img"];
+        }
+        else
+        {
+            [filePanelTypes addObject: type];
+        }
+    }
+    return filePanelTypes;
+}
+
 + (NSSet *) executableTypes
 {
     static NSSet *types;

@@ -250,6 +250,18 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(entitlements.contains("com.apple.security.cs.allow-unsigned-executable-memory"))
     }
 
+    func testOpenPanelsDoNotReceiveInvalidLegacyUTIs() throws {
+        // Legacy NDIF images use .img, but the old identifier no longer bridges to UTType.
+        let fileTypes = try source(at: projectRoot.appendingPathComponent("Boxer/BXFileTypes.m"))
+        let importDropzone = try source(at: projectRoot.appendingPathComponent("Boxer/BXImportDropzonePanelController.m"))
+        let mountPanel = try source(at: projectRoot.appendingPathComponent("Boxer/BXMountPanelController.m"))
+
+        XCTAssertTrue(fileTypes.contains(#"if ([type isEqualToString: BXNDIFImageType])"#))
+        XCTAssertTrue(fileTypes.contains(#"[filePanelTypes addObject: @"img"]"#))
+        XCTAssertTrue(importDropzone.contains("[BXFileTypes filePanelTypesForTypes: [BXImportSession acceptedSourceTypes]]"))
+        XCTAssertTrue(mountPanel.contains("[BXFileTypes filePanelTypesForTypes: [BXFileTypes mountableTypes]]"))
+    }
+
     func testGameboxDriveAndMediaContracts() throws {
         // Protects BOXER markers: drive-system-path, initialize-drive-system-path, retrieve-drive-system-path, fat-drive-system-path, iso-drive-system-path, local-drive-system-path, drive-cache-filter-bridge, hide-host-metadata, file-create-write-policy, file-open-write-policy, file-open-write-policy-end, file-delete-write-policy, local-dir-create-policy, local-file-created, local-file-removed, local-open-file-removed, imgmount-drive-mounted, mount-drive-mounted, drive-unmounted, invalid-fat-image-fails-construction, invalid-fat-bootsector-fails-construction, suppress-cdrom-image-error-text, file-unavailable-notification, local-file-unavailable-notification, local-file-unavailable, unavailable-file-read, unavailable-file-write, unavailable-file-seek, unavailable-file-timestamp
         try requireAnnotated079Migration()

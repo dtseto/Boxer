@@ -262,6 +262,19 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(mountPanel.contains("[BXFileTypes filePanelTypesForTypes: [BXFileTypes mountableTypes]]"))
     }
 
+    func testApplicationLifecycleAndSecondaryLaunchContracts() throws {
+        let controller = try source(at: projectRoot.appendingPathComponent("Boxer/Application Delegate/BXAppController.m"))
+        let mainMenu = try source(at: projectRoot.appendingPathComponent("Resources/Base.lproj/MainMenu.xib"))
+
+        XCTAssertTrue(controller.contains("self.documents.count == 0"))
+        XCTAssertFalse(controller.contains("self.documents == 0"))
+        XCTAssertTrue(controller.contains("launchApplicationAtURL: bundleURL"))
+        XCTAssertTrue(controller.contains("NSWorkspaceLaunchNewInstance"))
+        XCTAssertFalse(controller.contains("launchedTaskWithLaunchPath:"))
+        XCTAssertTrue(mainMenu.contains(#"<outlet property="mainMenu" destination="29" id="BX-mainMenu-connection"/>"#))
+        XCTAssertFalse(mainMenu.contains(#"keyPath="currentSession.emulator.gameportTimingMode""#))
+    }
+
     func testGameboxDriveAndMediaContracts() throws {
         // Protects BOXER markers: drive-system-path, initialize-drive-system-path, retrieve-drive-system-path, fat-drive-system-path, iso-drive-system-path, local-drive-system-path, drive-cache-filter-bridge, hide-host-metadata, file-create-write-policy, file-open-write-policy, file-open-write-policy-end, file-delete-write-policy, local-dir-create-policy, local-file-created, local-file-removed, local-open-file-removed, imgmount-drive-mounted, mount-drive-mounted, drive-unmounted, invalid-fat-image-fails-construction, invalid-fat-bootsector-fails-construction, suppress-cdrom-image-error-text, file-unavailable-notification, local-file-unavailable-notification, local-file-unavailable, unavailable-file-read, unavailable-file-write, unavailable-file-seek, unavailable-file-timestamp
         try requireAnnotated079Migration()

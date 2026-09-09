@@ -45,6 +45,7 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 - (void) _launchProcessWithUntitledDocumentAndExtraArguments: (NSArray *)extraArgs;
 - (void) _launchProcessWithImportPanelAndExtraArguments: (NSArray *)extraArgs;
 - (void) _launchProcessWithExtraArguments: (NSArray *)extraArgs;
+- (void) _launchApplicationWithArguments: (NSArray *)arguments;
 
 //Whether it's safe to open a new session
 - (BOOL) _canOpenDocumentOfClass: (Class)documentClass;
@@ -93,7 +94,7 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-	if (self.documents == 0) {
+	if (self.documents.count == 0) {
 		return NSTerminateNow;
 	}
 	//Tell any remaining documents to close on exit so they can clean up properly and save their state.
@@ -465,38 +466,49 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 
 - (void) _launchProcessWithDocumentAtURL: (NSURL *)URL extraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
-	NSArray *params				= @[ URL.path, BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	NSArray *params = @[ URL.path, BXActivateOnLaunchParam ];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
 }
 
 - (void) _launchProcessWithUntitledDocumentAndExtraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
-	NSArray *params				= @[ BXNewSessionParam, BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	NSArray *params = @[ BXNewSessionParam, BXActivateOnLaunchParam ];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
 }
 
 - (void) _launchProcessWithImportPanelAndExtraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
-	NSArray *params				= @[ BXShowImportPanelParam, BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	NSArray *params = @[ BXShowImportPanelParam, BXActivateOnLaunchParam ];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
 }
 
 - (void) _launchProcessWithImportSessionAtURL: (NSURL *)URL extraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
 	NSString *URLParam			= [BXImportURLParam stringByAppendingString: URL.path];
 	NSArray *params				= @[ URLParam, BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
 }
 
 - (void) _launchProcessWithExtraArguments: (NSArray *)extraArgs
 {
-	NSString *executablePath	= [[NSBundle mainBundle] executablePath];
-	NSArray *params				= @[ BXActivateOnLaunchParam ];
-	[NSTask launchedTaskWithLaunchPath: executablePath arguments: [params arrayByAddingObjectsFromArray: extraArgs]];
+	NSArray *params = @[ BXActivateOnLaunchParam ];
+	[self _launchApplicationWithArguments: [params arrayByAddingObjectsFromArray: extraArgs ?: @[]]];
+}
+
+- (void) _launchApplicationWithArguments: (NSArray *)arguments
+{
+	NSURL *bundleURL = [NSBundle mainBundle].bundleURL;
+	NSDictionary *configuration = @{NSWorkspaceLaunchConfigurationArguments: arguments ?: @[]};
+	NSWorkspaceLaunchOptions options = NSWorkspaceLaunchAsync | NSWorkspaceLaunchNewInstance;
+	NSError *launchError = nil;
+
+	if (![[NSWorkspace sharedWorkspace] launchApplicationAtURL: bundleURL
+											   options: options
+										 configuration: configuration
+												 error: &launchError])
+	{
+		NSLog(@"Could not launch another Boxer instance: %@", launchError);
+	}
 }
 
 - (NSError *) _cancelOpening

@@ -41,9 +41,11 @@ extern "C" {
 //   Mouse_AutoLock                     -> gone; MOUSE_* drives GFX_SetMouseCapture()
 //   MIDI_Available, OpenCaptureFile    -> gone (MIDI_IsAvailable, the CAPTURE_* module)
 //
-// GFX_ShowMsg is the one survivor: it is still declared in misc/logging.h and
-// still means "show this message to the user", so Boxer still supplies it --
-// but as a definition of GFX_ShowMsg itself, not a rename of it.
+// GFX_ShowMsg went too, despite still being declared in misc/logging.h:
+// upstream defines it in main.cpp, which Boxer does not compile, and nothing
+// Boxer compiles references it -- 0.83 logs through loguru instead. So
+// boxer_log() below is now dead code (and is #ifdef BOXER_DEBUG anyway).
+// DOSBox's log reaches stderr via loguru; run the binary directly to see it.
 
 #define E_Exit(format,...) boxer_die(__PRETTY_FUNCTION__, __FILE__, __LINE__, format, ##__VA_ARGS__)
 	class DOS_Drive;

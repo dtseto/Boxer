@@ -14,6 +14,7 @@
 #import "shell/shell.h"
 #import "gui/mapper.h"
 #import "hardware/input/joystick.h"
+#import "misc/cross.h"       // init_config_dir()
 
 
 #pragma mark - Constants
@@ -1019,11 +1020,38 @@ static BOOL _hasStartedEmulator = NO;
             control.reset(new Config(commandLine));
             configuration = control.get();
             
-            //Sets up the vast swathes of DOSBox configuration file parameters,
-            //and registers the shell to start up when we finish initializing.
-            DOSBOX_Init();
+            //Work out where DOSBox's config directory is. This has to happen
+            //before the config sections are declared: several of their path
+            //properties resolve their default value against it, so
+            //add_dosbox_config_section() asserts without it.
+            //
+            //On macOS this creates ~/Library/Preferences/DOSBox if it does not
+            //exist. Boxer never had a DOSBox config directory before, and this
+            //is upstream's location rather than one under Boxer's own
+            //Application Support folder -- see D34 in FINDINGS.md.
+            init_config_dir();
+
+            //Sets up the vast swathes of DOSBox configuration file parameters
+            //and registers every module's messages.
+            //
+            //Up to 0.78 this was DOSBOX_Init(), which both declared the config
+            //sections and initialised the modules. 0.83 split that in three, and
+            //DOSBOX_Init() is now the *last* part: DOSBOX_InitModules() calls it
+            //as its own first statement, and it opens with
+            //get_section("dosbox"), which asserts if the sections do not exist
+            //yet. Calling DOSBOX_Init() here aborted before Boxer got anywhere.
+            //
+            //Boxer deliberately does not call upstream's fourth registrar,
+            //GFX_AddConfigSection(): it lives in the sdl_gui.cpp frontend Boxer
+            //replaces and declares the [sdl] section plus the title-bar
+            //settings, none of which anything Boxer compiles reads. The
+            //TITLEBAR_* message strings go missing with it, which costs a
+            //"Message not found" warning for a title Boxer never displays.
+            DOSBOX_InitModuleConfigsAndMessages();
 
             //Ask our delegate for the configuration files we should be loading today.
+            //This has to happen after the sections above are declared: parsing a
+            //config file means assigning to properties that must already exist.
             NSArray *configURLs = [self.delegate configurationURLsForEmulator: self];
             for (NSURL *configURL in configURLs)
             {
@@ -1032,6 +1060,7 @@ static BOOL _hasStartedEmulator = NO;
             }
 
             //Initialise each DOSBox module based on the loaded configuration.
+            //Calls DOSBOX_Init() itself, first.
             DOSBOX_InitModules();
             
             [self _didInitialize];

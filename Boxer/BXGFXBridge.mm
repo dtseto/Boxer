@@ -285,6 +285,19 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
     backend.NotifyRenderSizeChanged(render_width_px, render_height_px);
 
     _drawActive = true;
+
+    // Upstream logs the display properties from maybe_log_display_properties()
+    // on every mode change, which is the single most useful line in the log when
+    // something is wrong with the picture. That lives in sdl_gui.cpp, so Boxer
+    // lost it; this is the part of it Boxer can answer.
+    LOG_MSG("DISPLAY: DOS video mode %dx%d, rendering %dx%d (PAR %s)%s%s",
+            video_mode.width,
+            video_mode.height,
+            render_width_px,
+            render_height_px,
+            render_pixel_aspect_ratio.ToString().c_str(),
+            double_width ? ", pixel-doubled" : "",
+            double_height ? ", scan-doubled" : "");
 }
 
 bool GFX_StartUpdate(uint32_t*& pixels, int& pitch)

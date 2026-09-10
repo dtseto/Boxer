@@ -258,6 +258,12 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
         XCTAssertTrue(fileTypes.contains(#"if ([type isEqualToString: BXNDIFImageType])"#))
         XCTAssertTrue(fileTypes.contains(#"[filePanelTypes addObject: @"img"]"#))
+        XCTAssertTrue(fileTypes.contains(#"if ([type isEqualToString: BXCuesheetImageType])"#))
+        XCTAssertTrue(fileTypes.contains(#"[filePanelTypes addObjectsFromArray: @[@"cue", @"inst"]]"#))
+        XCTAssertTrue(fileTypes.contains(#"if ([type isEqualToString: BXRawFloppyImageType])"#))
+        XCTAssertTrue(fileTypes.contains(#"[filePanelTypes addObject: @"ima"]"#))
+        XCTAssertTrue(fileTypes.contains(#"if ([type isEqualToString: BXVirtualPCImageType])"#))
+        XCTAssertTrue(fileTypes.contains(#"[filePanelTypes addObject: @"vfd"]"#))
         XCTAssertTrue(importDropzone.contains("[BXFileTypes filePanelTypesForTypes: [BXImportSession acceptedSourceTypes]]"))
         XCTAssertTrue(mountPanel.contains("[BXFileTypes filePanelTypesForTypes: [BXFileTypes mountableTypes]]"))
     }
@@ -271,8 +277,35 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(controller.contains("launchApplicationAtURL: bundleURL"))
         XCTAssertTrue(controller.contains("NSWorkspaceLaunchNewInstance"))
         XCTAssertFalse(controller.contains("launchedTaskWithLaunchPath:"))
+        XCTAssertTrue(controller.contains("applicationSupportsSecureRestorableState:"))
+        XCTAssertTrue(controller.contains("applicationShouldSaveApplicationState:"))
+        XCTAssertTrue(controller.contains("applicationShouldRestoreApplicationState:"))
+        let saveStatePolicy = try sourceRegion(
+            in: controller,
+            beginningWith: "- (BOOL) applicationShouldSaveApplicationState:",
+            endingBefore: "- (BOOL) applicationShouldRestoreApplicationState:"
+        )
+        let restoreStatePolicy = try sourceRegion(
+            in: controller,
+            beginningWith: "- (BOOL) applicationShouldRestoreApplicationState:",
+            endingBefore: "//If no other window was opened during startup"
+        )
+        XCTAssertTrue(saveStatePolicy.contains("return NO;"))
+        XCTAssertTrue(restoreStatePolicy.contains("return NO;"))
         XCTAssertTrue(mainMenu.contains(#"<outlet property="mainMenu" destination="29" id="BX-mainMenu-connection"/>"#))
         XCTAssertFalse(mainMenu.contains(#"keyPath="currentSession.emulator.gameportTimingMode""#))
+    }
+
+    func testDiskImageDropsFinishBeforeMountingAndDoNotExecuteMedia() throws {
+        let windowController = try source(at: projectRoot.appendingPathComponent("Boxer/DOS window/BXDOSWindowController.m"))
+        let dragDrop = try source(at: projectRoot.appendingPathComponent("Boxer/BXSession+BXDragDrop.m"))
+
+        XCTAssertTrue(windowController.contains("dispatch_after(dispatch_time(DISPATCH_TIME_NOW"))
+        XCTAssertTrue(windowController.contains("0.5 * NSEC_PER_SEC"))
+        XCTAssertTrue(windowController.contains("[self.document handleDraggedURLs: URLsToHandle launchImmediately: YES]"))
+        XCTAssertTrue(windowController.contains("return YES;"))
+        XCTAssertTrue(dragDrop.contains("[BXFileTypes matchingTypeForURL: URL inTypes: [BXFileTypes mountableImageTypes]]"))
+        XCTAssertTrue(dragDrop.contains("if (launch && !isMountableImage)"))
     }
 
     func testGameboxDriveAndMediaContracts() throws {

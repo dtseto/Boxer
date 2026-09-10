@@ -152,6 +152,21 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 	}
 }
 
+- (BOOL) applicationSupportsSecureRestorableState: (NSApplication *)app
+{
+	return YES;
+}
+
+- (BOOL) applicationShouldSaveApplicationState: (NSApplication *)sender
+{
+	return NO;
+}
+
+- (BOOL) applicationShouldRestoreApplicationState: (NSApplication *)sender
+{
+	return NO;
+}
+
 //If no other window was opened during startup, show our startup window.
 //Note that this is only called at startup, not when re-focusing the application;
 //that functionality is overridden below in applicationShouldHandleReopen:hasVisibleWindows:  

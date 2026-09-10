@@ -292,14 +292,22 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
     // on every mode change, which is the single most useful line in the log when
     // something is wrong with the picture. That lives in sdl_gui.cpp, so Boxer
     // lost it; this is the part of it Boxer can answer.
-    LOG_MSG("DISPLAY: DOS video mode %dx%d, rendering %dx%d (PAR %s)%s%s",
+    // The viewport is Boxer's own answer (the delegate's viewportSizeForEmulator:),
+    // logged alongside the mode because a viewport that does not match the window
+    // is what a mis-sized DOS view looks like from this side.
+    const DosBox::Rect viewport = _boxerRenderBackend().GetCanvasSizeInPixels();
+
+    LOG_MSG("DISPLAY: DOS video mode %dx%d, rendering %dx%d (PAR %s)%s%s"
+            " | Boxer viewport %gx%g px",
             video_mode.width,
             video_mode.height,
             render_width_px,
             render_height_px,
             render_pixel_aspect_ratio.ToString().c_str(),
             double_width ? ", pixel-doubled" : "",
-            double_height ? ", scan-doubled" : "");
+            double_height ? ", scan-doubled" : "",
+            (double)viewport.w,
+            (double)viewport.h);
 }
 
 bool GFX_StartUpdate(uint32_t*& pixels, int& pitch)

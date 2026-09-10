@@ -125,25 +125,58 @@ NSString * const BXDriveBundleErrorDomain = @"BXDriveBundleErrorDomain";
     
 	if (self.isCancelled) return;
     
-    //Work out what to do with the related file paths we've parsed from the cue file
-    NSURL *baseURL = sourceURL.URLByDeletingLastPathComponent;
-    NSMutableDictionary *revisedPaths = [NSMutableDictionary dictionaryWithCapacity: numRelatedPaths];
-    
-    for (NSString *fromPath in relatedPaths)
+    NSArray *resourceURLs = [ADBBinCueImage validatedResourceURLsInCueAtURL: sourceURL error: &readError];
+    if (!resourceURLs)
     {
-        //Rewrite Windows-style paths
+        self.error = readError;
+        return;
+    }
+
+    //Work out what to do with the related file paths we've parsed from the cue file.
+    //Safe relative layouts remain intact; external/absolute paths are relocated under
+    //a controlled subdirectory and all collisions are resolved deterministically.
+    NSMutableArray *revisedPaths = [NSMutableArray arrayWithCapacity: numRelatedPaths];
+    NSMutableDictionary *destinationsBySource = [NSMutableDictionary dictionaryWithCapacity: numRelatedPaths];
+    NSMutableSet *claimedDestinationPaths = [NSMutableSet setWithCapacity: numRelatedPaths];
+    
+    for (NSUInteger index = 0; index < numRelatedPaths; index++)
+    {
+        NSString *fromPath = [relatedPaths objectAtIndex: index];
+        NSURL *fromURL = [resourceURLs objectAtIndex: index];
         NSString *sanitisedFromPath = [fromPath stringByReplacingOccurrencesOfString: @"\\" withString: @"/"];
-        
-        NSURL *fromURL      = [baseURL URLByAppendingPathComponent: sanitisedFromPath];
-        NSString *fromName	= fromURL.lastPathComponent;
-        NSURL *toURL        = [destinationURL URLByAppendingPathComponent: fromName];
-        
+        BOOL isWindowsAbsolutePath = [sanitisedFromPath rangeOfString: @"^[A-Za-z]:/"
+                                                               options: NSRegularExpressionSearch].location != NSNotFound;
+        BOOL safeRelativePath = !sanitisedFromPath.isAbsolutePath && !isWindowsAbsolutePath &&
+                                ![sanitisedFromPath.pathComponents containsObject: @".."];
+        NSString *relativeDestinationPath = safeRelativePath ? sanitisedFromPath :
+                                            [@"External Tracks" stringByAppendingPathComponent: fromURL.lastPathComponent];
+        relativeDestinationPath = relativeDestinationPath.stringByStandardizingPath;
+
+        NSString *sourceKey = fromURL.URLByStandardizingPath.path;
+        NSString *existingDestination = [destinationsBySource objectForKey: sourceKey];
+        if (existingDestination)
+        {
+            [revisedPaths addObject: existingDestination];
+            continue;
+        }
+
+        NSString *candidate = relativeDestinationPath;
+        NSString *candidateKey = candidate.lowercaseString;
+        NSUInteger suffix = 2;
+        while ([claimedDestinationPaths containsObject: candidateKey])
+        {
+            NSString *extension = relativeDestinationPath.pathExtension;
+            NSString *stem = relativeDestinationPath.stringByDeletingPathExtension;
+            candidate = [NSString stringWithFormat: @"%@ (%lu)%@%@", stem, (unsigned long)suffix,
+                         extension.length ? @"." : @"", extension];
+            candidateKey = candidate.lowercaseString;
+            suffix++;
+        }
+        [claimedDestinationPaths addObject: candidateKey];
+        [destinationsBySource setObject: candidate forKey: sourceKey];
+        [revisedPaths addObject: candidate];
+        NSURL *toURL = [destinationURL URLByAppendingPathComponent: candidate];
         [self addTransferFromPath: fromURL.path toPath: toURL.path];
-        
-        //Make a note of the path if it needs to be changed when we rewrite the CUE file
-        //(e.g. if it's in a subdirectory that will no longer exist when the files are imported)
-        if (![fromPath isEqualToString: fromName])
-            [revisedPaths setObject: fromName forKey: fromPath];
     }
     
     if (self.isCancelled) return;
@@ -155,18 +188,15 @@ NSString * const BXDriveBundleErrorDomain = @"BXDriveBundleErrorDomain";
     
     if (!self.error)
     {
-        //Once the transfer's finished, generate a revised cue file and write it to the new bundle
-        NSMutableString *revisedCue = [cueContents mutableCopy];
-        for (NSString *oldPath in revisedPaths.keyEnumerator)
+        //Once the transfer's finished, rewrite only the parsed FILE operands.
+        NSString *revisedCue = [ADBBinCueImage cueContents: cueContents
+                           byReplacingReferencedPathsWith: revisedPaths
+                                                    error: &readError];
+        if (!revisedCue)
         {
-            NSString *newPath = [revisedPaths objectForKey: oldPath];
-            //FIXME: this could break the CUE file if an old filename is exactly
-            //the same as a standard CUE keyword. Which is never going to happen,
-            //but we really should track the ranges of each path as well.
-            [revisedCue replaceOccurrencesOfString: oldPath
-                                        withString: newPath
-                                           options: NSLiteralSearch
-                                             range: NSMakeRange(0, revisedCue.length)];
+            self.error = readError;
+            [self undoTransfer];
+            return;
         }
         
         NSURL *finalCueURL = [destinationURL URLByAppendingPathComponent: @"tracks.cue"];
@@ -191,7 +221,7 @@ NSString * const BXDriveBundleErrorDomain = @"BXDriveBundleErrorDomain";
     
     //If the import failed for any reason (including cancellation),
     //then clean up the partial files.
-    if (self.error)
+    if (self.error || self.isCancelled)
         [self undoTransfer];
 }
 
@@ -199,7 +229,7 @@ NSString * const BXDriveBundleErrorDomain = @"BXDriveBundleErrorDomain";
 - (BOOL) undoTransfer
 {
 	BOOL undid = [super undoTransfer];
-	if (self.copyFiles && self.destinationURL && self.hasWrittenFiles)
+	if (self.copyFiles && self.destinationURL && (self.hasWrittenFiles || self.isCancelled))
 	{
 		undid = [[NSFileManager defaultManager] removeItemAtURL: self.destinationURL error: NULL];
 	}

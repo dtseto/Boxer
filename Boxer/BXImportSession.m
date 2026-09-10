@@ -35,6 +35,7 @@
 
 #import "ADBFileTransferSet.h"
 #import "ADBSingleFileTransfer.h"
+#import "ADBBinCueImage.h"
 #import "BXDriveImport.h"
 #import "BXBinCueImageImport.h"
 
@@ -81,6 +82,8 @@
 
 //Return the path to which the current gamebox will be moved if renamed with the specified name.
 - (NSURL *) _destinationURLForGameboxName: (NSString *)newName;
+- (void) _startInstallerSessionWithTargetURL: (nullable NSURL *)URL;
+- (void) cueSourceImportDidFinish: (NSNotification *)notification;
 
 @end
 
@@ -140,6 +143,43 @@
 	NSAssert(self.importStage <= BXImportSessionWaitingForInstaller, @"Cannot call readFromURL:ofType:error: after game import has already started.");
 	
 	_didMountSourceVolume = NO;
+
+    BOOL isCue = ([BXFileTypes matchingTypeForURL: absoluteURL
+                                          inTypes: [NSSet setWithObject: BXCuesheetImageType]] != nil);
+    if (isCue)
+    {
+        NSError *cueError = nil;
+        if (![ADBBinCueImage validatedResourceURLsInCueAtURL: absoluteURL error: &cueError])
+        {
+            if (outError) *outError = cueError;
+            return NO;
+        }
+
+        self.sourceURL = absoluteURL;
+        NSError *generationError = nil;
+        if (![self _generateGameboxWithError: &generationError])
+        {
+            if (outError) *outError = generationError;
+            return NO;
+        }
+
+        BXDrive *cueDrive = [BXDrive driveWithContentsOfURL: absoluteURL letter: @"D" type: BXDriveCDROM];
+        ADBOperation <BXDriveImport> *cueImport = [self importOperationForDrive: cueDrive startImmediately: NO];
+        if (!cueImport)
+        {
+            [[NSFileManager defaultManager] removeItemAtURL: self.gamebox.bundleURL error: NULL];
+            self.gamebox = nil;
+            if (outError) *outError = [NSError errorWithDomain: ADBCueErrorDomain
+                                                          code: ADBCueErrorMalformed
+                                                      userInfo: @{NSLocalizedDescriptionKey: NSLocalizedString(@"The CUE image could not be prepared for import.", @"CUE import setup error")}];
+            return NO;
+        }
+        cueImport.delegate = self;
+        cueImport.didFinishSelector = @selector(cueSourceImportDidFinish:);
+        [self.scanQueue addOperation: cueImport];
+        self.importStage = BXImportSessionLoadingSource;
+        return YES;
+    }
 	
 	NSURL *preferredURL = [self.class preferredSourceURLForURL: absoluteURL];
 	if (!preferredURL)
@@ -165,6 +205,40 @@
     self.importStage = BXImportSessionLoadingSource;
 		
     return YES;
+}
+
+- (void) cueSourceImportDidFinish: (NSNotification *)notification
+{
+    ADBOperation <BXDriveImport> *operation = notification.object;
+    if (operation.succeeded && !operation.isCancelled)
+    {
+        // BXDrive's .cdmedia compatibility path is tracks.cue. Point the live import
+        // session at that copied CUE so DOSBox Staging mounts the complete media unit.
+        NSURL *copiedCueURL = [operation.destinationURL URLByAppendingPathComponent: @"tracks.cue"];
+        self.sourceURL = copiedCueURL;
+        self.fileURL = self.gamebox.bundleURL;
+        self.installerURLs = nil;
+        // Manual CUE imports intentionally have no target executable yet. Seed the
+        // generic profile so BXSession does not try to detect a profile from nil targetURL
+        // while preparing the emulator configuration.
+        if (!self.gameProfile)
+            self.gameProfile = [BXGameProfile genericProfile];
+        [self _startInstallerSessionWithTargetURL: nil];
+        return;
+    }
+
+    NSError *error = operation.error;
+    NSURL *gameboxURL = self.gamebox.bundleURL;
+    if (gameboxURL) [[NSFileManager defaultManager] removeItemAtURL: gameboxURL error: NULL];
+    self.sourceURL = nil;
+    self.fileURL = nil;
+    self.gamebox = nil;
+    self.rootDriveURL = nil;
+    self.importStage = BXImportSessionWaitingForSource;
+    if (error && !error.isUserCancelledError)
+    {
+        [self presentError: error modalForWindow: self.windowForSheet delegate: nil didPresentSelector: NULL contextInfo: NULL];
+    }
 }
 
 - (void) installerScanDidFinish: (NSNotification *)notification
@@ -396,16 +470,17 @@
 {
 	static NSSet *types = nil;
     
-    //A subset of our usual mountable types: we only accept regular folders and disk image
-    //formats which can be mounted by hdiutil (so that we can inspect their filesystems)
-	if (!types) types = [[[BXFileTypes OSXMountableImageTypes] setByAddingObject: @"public.folder"] retain];
+    //A subset of our usual mountable types: regular folders and images inspectable by
+    //hdiutil, plus CUE media which is validated/copied and mounted only by DOSBox Staging.
+	if (!types) types = [[[[BXFileTypes OSXMountableImageTypes] setByAddingObject: BXCuesheetImageType]
+                      setByAddingObject: @"public.folder"] retain];
     
     return types;
 }
 
 + (BOOL) canImportFromSourceURL: (NSURL *)URL
 {
-    return ([URL matchingFileType: self.acceptedSourceTypes] != nil);
+    return ([BXFileTypes matchingTypeForURL: URL inTypes: self.acceptedSourceTypes] != nil);
 }
 
 - (BOOL) isRunningInstaller
@@ -625,7 +700,11 @@
     
     if (readSucceeded)
     {
-		self.fileURL = self.sourceURL;
+        // CUE preflight creates the destination gamebox before returning. Keep the
+        // document attached to that gamebox instead of reattaching it to the source
+        // CUE, which causes NSDocument to repeatedly reopen the import source.
+        if (!self.gamebox)
+            self.fileURL = self.sourceURL;
     }
     else
     {
@@ -678,11 +757,18 @@
 	NSAssert(URL != nil, @"No URL specified.");
 	NSAssert(self.sourceURL != nil, @"No source URL for the import has been chosen.");
 	
-	//Generate a new gamebox for us to import into.
-    NSError *generationError;
-    BOOL createdGamebox = [self _generateGameboxWithError: &generationError];
-    NSAssert(createdGamebox, @"Gamebox creation failed with error: %@", generationError);
-	
+	[self _startInstallerSessionWithTargetURL: URL];
+}
+
+- (void) _startInstallerSessionWithTargetURL: (NSURL *)URL
+{
+    if (!self.gamebox)
+    {
+        NSError *generationError;
+        BOOL createdGamebox = [self _generateGameboxWithError: &generationError];
+        NSAssert(createdGamebox, @"Gamebox creation failed with error: %@", generationError);
+    }
+
 	self.importStage = BXImportSessionRunningInstaller;
 	
 	self.importWindowController.shouldCloseDocument = NO;

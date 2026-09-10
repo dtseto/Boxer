@@ -382,6 +382,37 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertEqual(occurrences(of: "letter: @\"C\"", in: String(bundledDrives)), 1)
     }
 
+    func testCueImportWorkflowContracts() throws {
+        let session = try source(at: projectRoot.appendingPathComponent("Boxer/BXImportSession.m"))
+        let bundleImport = try source(at: projectRoot.appendingPathComponent("Boxer/BXDriveBundleImport.m"))
+        let dropzone = try source(at: projectRoot.appendingPathComponent("Boxer/BXImportDropzonePanelController.m"))
+        let fileTypes = try source(at: projectRoot.appendingPathComponent("Boxer/BXFileTypes.m"))
+
+        XCTAssertTrue(session.contains("setByAddingObject: BXCuesheetImageType"), "The import picker must accept CUE media")
+        XCTAssertTrue(session.contains("matchingTypeForURL: URL inTypes: self.acceptedSourceTypes"), "Drag validation and picker validation must share extension-safe acceptance")
+        XCTAssertTrue(dropzone.contains("canImportFromSourceURL"), "Import drops must use the shared acceptance policy")
+        XCTAssertTrue(fileTypes.contains("[filePanelTypes addObjectsFromArray: @[\"cue\", @\"inst\"]]"))
+
+        let cueBranch = try sourceRegion(in: session,
+                                        beginningWith: "BOOL isCue =",
+                                        endingBefore: "NSURL *preferredURL")
+        XCTAssertTrue(cueBranch.contains("validatedResourceURLsInCueAtURL"))
+        XCTAssertTrue(cueBranch.contains("cueSourceImportDidFinish"))
+        XCTAssertFalse(cueBranch.contains("BXInstallerScan"), "CUE media must not be host-scanned")
+        XCTAssertFalse(cueBranch.contains("hdiutil"), "CUE media must never be handed to hdiutil")
+
+        let completion = try sourceRegion(in: session,
+                                          beginningWith: "- (void) cueSourceImportDidFinish:",
+                                          endingBefore: "- (void) installerScanDidFinish:")
+        XCTAssertTrue(completion.contains("tracks.cue"), "The copied CUE must remain the live source")
+        XCTAssertTrue(completion.contains("_startInstallerSessionWithTargetURL: nil"), "CUE imports must enter the normal manual DOS browser")
+        XCTAssertTrue(bundleImport.contains("External Tracks"))
+        XCTAssertTrue(bundleImport.contains("self.error || self.isCancelled"), "Cancellation must clean partial media")
+
+        XCTAssertTrue(session.contains("BXFileTypes OSXMountableImageTypes"), "Existing hdiutil-backed ISO import acceptance must remain intact")
+        XCTAssertTrue(session.contains("BXInstallerScan *scan = [BXInstallerScan scanWithBasePath:"), "Non-CUE sources must retain the existing scanner path")
+    }
+
     func testShellLifecycleContracts() throws {
         // Protects BOXER markers: current-shell-export, active-shell-global, shell-run-lifecycle, shell-misc-bridge, shell-input-injection, shell-command-filter, batch-lifecycle-bridge, batch-file-ended, program-launch-lifecycle
         try requireAnnotated079Migration()

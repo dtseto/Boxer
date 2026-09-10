@@ -29,6 +29,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSErrorDomain const ADBCueErrorDomain;
+
+typedef NS_ERROR_ENUM(ADBCueErrorDomain, ADBCueErrorCode) {
+    ADBCueErrorMalformed = 1,
+    ADBCueErrorUnsafePath,
+    ADBCueErrorMissingTrack,
+    ADBCueErrorUnreadableTrack
+};
+
 /// @c ADBBinCueImage is an @c ADBISOImage subclass for handling the minor format variations
 /// from CDRWin BIN/CUE binary images, as well as processing their accompanying cue sheets.
 @interface ADBBinCueImage : ADBISOImage
@@ -40,6 +49,12 @@ NS_ASSUME_NONNULL_BEGIN
 /// as absolute OS X filesystem URLs resolved relative to the CUE's location.
 + (nullable NSArray<NSURL*> *) resourceURLsInCueAtURL: (NSURL *)cueURL error: (out NSError **)outError;
 
+/// Parses and validates a CUE and all of its FILE references. Relative paths are resolved
+/// case-insensitively where possible. Parent-directory traversal is rejected; absolute paths
+/// are permitted so callers can relocate them into a controlled destination.
++ (nullable NSArray<NSURL*> *) validatedResourceURLsInCueAtURL: (NSURL *)cueURL
+                                                         error: (out NSError **)outError;
+
 /// Returns the location of the binary image for the specified CUE file,
 /// as an absolute OS X filesystem URL resolved relative to the CUE's location.
 /// Returns @c nil if the binary image path could not be determined.
@@ -48,6 +63,11 @@ NS_ASSUME_NONNULL_BEGIN
 /// Given a string representing the contents of a cue file, returns the raw paths in the exact
 /// form they are written.
 + (NSArray<NSString*> *) rawPathsInCueContents: (NSString *)cueContents;
+
+/// Rewrites each FILE path in order while preserving the rest of the CUE verbatim.
++ (nullable NSString *) cueContents: (NSString *)cueContents
+      byReplacingReferencedPathsWith: (NSArray<NSString*> *)replacementPaths
+                               error: (out NSError **)outError;
 
 /// Returns @c YES if the specified path contains a parseable cue file, @c NO otherwise.
 /// Populates @c outError if there is a problem accessing the file.

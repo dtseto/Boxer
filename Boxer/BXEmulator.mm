@@ -1062,6 +1062,12 @@ static BOOL _hasStartedEmulator = NO;
             //Initialise each DOSBox module based on the loaded configuration.
             //Calls DOSBOX_Init() itself, first.
             DOSBOX_InitModules();
+
+            //Tell 0.83's mouse subsystem that the frontend is up. Without this
+            //it never starts, and its startup is what installs the INT 33h DOS
+            //mouse driver -- so every DOS program reports that no mouse driver
+            //is present. Upstream says this from GFX_InitAndStartGui().
+            boxer_notifyMouseReady();
             
             [self _didInitialize];
         }

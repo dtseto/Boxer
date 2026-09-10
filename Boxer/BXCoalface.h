@@ -53,6 +53,30 @@ extern "C" {
 	
 #pragma mark - Rendering
 
+// Boxer-internal, not DOSBox hooks: defined in BXGFXBridge.mm, which is where
+// Boxer implements 0.83's frontend interface.
+//
+// 0.83's mouse subsystem has to be told three things by the frontend before it
+// will do anything at all, and upstream says them from sdl_gui.cpp. Boxer has to
+// say them itself:
+//
+//   * that the GFX layer is ready. This is the one that matters most:
+//     MOUSE_StartupIfReady() will not run until it has been told, and its last
+//     act is MOUSEDOS_Init() -- so until then there is no INT 33h driver and
+//     every DOS program correctly reports "no mouse driver installed".
+//
+//   * the screen geometry. The mouse subsystem decides whether the pointer is
+//     inside the emulated screen by testing it against this rectangle, and
+//     drops movement events when it is outside. Left unset it is empty, so
+//     every position is "outside" and no movement reaches DOS.
+//
+    void boxer_notifyMouseReady(void);
+    void boxer_notifyMouseScreenParams(const float canvas_width,
+                                       const float canvas_height,
+                                       const float cursor_x,
+                                       const float cursor_y);
+
+
 // The rendering hooks that used to live here are gone. 0.83's frontend is an
 // abstract RenderBackend plus a handful of free GFX_* functions, so Boxer
 // implements that interface in BXGFXBridge.mm instead of injecting callbacks

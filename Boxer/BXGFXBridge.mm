@@ -32,9 +32,11 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreGraphics/CoreGraphics.h>
+#import <ImageIO/ImageIO.h>
 
 #import "BXEmulatorPrivate.h"
 #import "BXVideoHandler.h"
+#import "BXVideoFrame.h"
 
 #import "gui/common.h"
 #import "gui/private/common.h"
@@ -319,13 +321,85 @@ bool GFX_StartUpdate(uint32_t*& pixels, int& pitch)
     return true;
 }
 
+/// Writes the frame Boxer is about to publish to a PNG, when BOXER_DUMP_FRAMES
+/// names a directory.
+///
+/// This exists because the emulation is headless as far as any test harness is
+/// concerned: the only way to check that the picture is *right* -- geometry,
+/// pitch, palette, channel order -- is to look at the pixels Boxer actually
+/// received. A screenshot cannot do that; it shows the result after Boxer's own
+/// scaling and shaders, and it needs a human and a screen-recording permission.
+///
+/// BOXER_DUMP_FRAMES=<dir> dumps the first 45 published frames;
+/// BOXER_DUMP_FRAMES=<dir>:<n> dumps only frame <n>. Costs one getenv() per
+/// session when unset.
+static void _maybeDumpPublishedFrame(const unsigned long published)
+{
+    static const char *spec = getenv("BOXER_DUMP_FRAMES");
+    if (!spec)
+        return;
+
+    static NSString *dir = nil;
+    static unsigned long only = 0;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSString *raw = @(spec);
+        const NSRange colon = [raw rangeOfString: @":" options: NSBackwardsSearch];
+        if (colon.location != NSNotFound) {
+            only = (unsigned long)[raw substringFromIndex: NSMaxRange(colon)].integerValue;
+            dir  = [raw substringToIndex: colon.location];
+        } else {
+            dir = raw;
+        }
+    });
+
+    if (only ? (published != only) : (published > 45))
+        return;
+
+    BXVideoFrame *frame = _currentVideoHandler().currentFrame;
+    if (!frame)
+        return;
+
+    const size_t w = (size_t)frame.size.width;
+    const size_t h = (size_t)frame.size.height;
+
+    CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
+    // The frame is BGRX32_ByteArray, which is what MakePixel() produces: a
+    // 0xFFRRGGBB uint32, i.e. B,G,R,X in memory on a little-endian host.
+    CGContextRef ctx = CGBitmapContextCreate(frame.mutableBytes, w, h, 8,
+            frame.pitch, cs,
+            kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+    CGImageRef img = ctx ? CGBitmapContextCreateImage(ctx) : NULL;
+
+    if (img) {
+        NSString *path = [dir stringByAppendingPathComponent:
+                [NSString stringWithFormat: @"frame-%lu-%zux%zu.png", published, w, h]];
+        CFURLRef url = (__bridge_retained CFURLRef)[NSURL fileURLWithPath: path];
+        CGImageDestinationRef dest = CGImageDestinationCreateWithURL(url,
+                (CFStringRef)@"public.png", 1, NULL);
+        if (dest) {
+            CGImageDestinationAddImage(dest, img, NULL);
+            CGImageDestinationFinalize(dest);
+            CFRelease(dest);
+            LOG_MSG("DISPLAY: wrote %s", path.UTF8String);
+        }
+        CFRelease(url);
+        CGImageRelease(img);
+    }
+    if (ctx) CGContextRelease(ctx);
+    CGColorSpaceRelease(cs);
+}
+
 void GFX_EndUpdate()
 {
     // Called at the end of every emulated frame, changed or not; only the
     // changed ones were opened with GFX_StartUpdate() and have anything to
     // publish.
-    if (_updatingFramebuffer)
+    if (_updatingFramebuffer) {
+        static unsigned long published = 0;
+        _maybeDumpPublishedFrame(++published);
         _boxerRenderBackend().EndFrame();
+    }
 
     _updatingFramebuffer = false;
 }
@@ -497,3 +571,51 @@ void TITLEBAR_NotifyBooting() {}
 void TITLEBAR_NotifyAudioCaptureStatus(const bool /*is_capturing*/) {}
 void TITLEBAR_NotifyVideoCaptureStatus(const bool /*is_capturing*/) {}
 void TITLEBAR_NotifyAudioMutedStatus(const bool /*is_muted*/) {}
+
+
+#pragma mark - Telling the mouse subsystem what it needs to know
+//
+// The counterpart to the inert calls above: these are the things 0.83's mouse
+// subsystem needs *from* the frontend, which upstream says from sdl_gui.cpp and
+// Boxer therefore has to say here.
+
+void boxer_notifyMouseReady()
+{
+    // MOUSE_StartupIfReady() gates on three flags -- ready_init, ready_config
+    // and ready_gfx -- and only the first two are set during module init.
+    // ready_gfx is the frontend's to set, and until it is set the mouse
+    // subsystem never starts: no IRQ12 vector, no mouse interfaces, and no
+    // MOUSEDOS_Init(), which is what installs the INT 33h driver. Upstream says
+    // this from GFX_InitAndStartGui(); Boxer says it once the modules are up.
+    MOUSE_NotifyReadyGFX();
+
+    // Boxer's own input controller decides when mouse input should reach DOS at
+    // all (BXEmulatedMouse.active, and whether the window is key), so as far as
+    // the mouse subsystem is concerned Boxer's window is always the active one.
+    // Consistent with D22: capture and cursor policy stay Boxer's.
+    MOUSE_NotifyWindowActive(true);
+}
+
+void boxer_notifyMouseScreenParams(const float canvas_width,
+                                   const float canvas_height,
+                                   const float cursor_x,
+                                   const float cursor_y)
+{
+    MouseScreenParams params = {};
+
+    // Logical units, not pixels -- upstream divides its pixel draw rect by the
+    // DPI scale before getting here. Boxer's canvas is already in points, which
+    // is the same thing, and the absolute cursor position below is in the same
+    // space, which is what matters: the subsystem compares the two.
+    params.draw_rect = {canvas_width, canvas_height};
+
+    params.x_abs = cursor_x;
+    params.y_abs = cursor_y;
+
+    // Both of these only feed capture and multi-display policy, which Boxer
+    // keeps for itself (D22), so neither is reported.
+    params.is_fullscreen    = false;
+    params.is_multi_display = false;
+
+    MOUSE_NewScreenParams(params);
+}

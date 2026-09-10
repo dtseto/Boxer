@@ -11,6 +11,7 @@
 #import "dosbox_config.h"
 #import "misc/video.h"
 #import "hardware/input/mouse.h"
+#import "BXCoalface.h"   // boxer_notifyMouseScreenParams()
 
 
 #pragma mark -
@@ -31,6 +32,10 @@
 @implementation BXEmulatedMouse
 {
 	NSTimeInterval _lastButtonDown[BXMouseButtonMax];
+
+	/// The canvas size last reported to DOSBox's mouse subsystem, so that a
+	/// resize is passed on but an unchanged canvas is not re-sent on every move.
+	NSSize _lastReportedCanvasSize;
 }
 
 - (id) init
@@ -77,19 +82,40 @@
 {
 	if (self.isActive)
 	{
-		//In DOSBox land, absolute position is from 0.0 to 1.0 but delta is in raw pixels,
-		//for some silly reason.
-		//TODO: try making this relative to the DOS driver's max mouse position instead.
+		//Boxer reports both the position and the delta normalised to the canvas;
+		//DOSBox wants them in canvas coordinates.
 		NSPoint canvasDelta = NSMakePoint(delta.x * canvas.size.width,
 										  delta.y * canvas.size.height);
-		
+
+		//The absolute position has to be in the same coordinate space as the
+		//draw rectangle handed to MOUSE_NewScreenParams(), i.e. canvas points.
+		//Up to 0.78 DOSBox took a 0.0-to-1.0 position here and scaled it
+		//itself; 0.83 does not, and passing a normalised value made every
+		//position clamp to the top-left corner -- which
+		//update_cursor_absolute_position() reads as "the cursor is outside the
+		//window", so the DOS cursor never moved.
+		NSPoint canvasPoint = NSMakePoint(point.x * canvas.size.width,
+										  point.y * canvas.size.height);
+
+		//Keep the mouse subsystem's idea of the canvas up to date: it is where
+		//the DOS driver's maximum cursor position comes from, and the window
+		//can be resized at any time. Cheap, and idempotent when unchanged.
+		if (!NSEqualSizes(canvas.size, _lastReportedCanvasSize))
+		{
+			_lastReportedCanvasSize = canvas.size;
+			boxer_notifyMouseScreenParams((float)canvas.size.width,
+			                              (float)canvas.size.height,
+			                              (float)canvasPoint.x,
+			                              (float)canvasPoint.y);
+		}
+
         // 0.83 renamed this and dropped the trailing 'locked' argument: whether
         // the pointer is captured is now tracked by the mouse subsystem itself
         // (GFX_SetMouseCapture), not passed in per event.
         MOUSE_EventMoved(canvasDelta.x,
                          canvasDelta.y,
-                         point.x,
-                         point.y);
+                         canvasPoint.x,
+                         canvasPoint.y);
 	}
 }
 

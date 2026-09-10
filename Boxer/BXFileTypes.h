@@ -77,6 +77,11 @@ extern NSString * const BXBatchProgramType;     //!< .bat
 /// when custom UTIs are not properly registered in the Launch Services database.
 @property (class, readonly, copy) NSDictionary<NSString*,NSString*> *extensionToTypeMapping;
 
+/// Returns the first requested type matched by the URL, preferring Boxer's
+/// extension mapping over potentially generic macOS type identification.
++ (nullable NSString *) matchingTypeForURL: (NSURL *)URL
+                                   inTypes: (NSSet<NSString *> *)types;
+
 /// Returns a specific bundle identifier that we want to use to open the specified URL,
 /// or `nil` if OS X's default handler should be used. This uses `fileHandlerOverrides` to
 /// selectively override the default for files with particular extensions.

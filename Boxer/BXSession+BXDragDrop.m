@@ -124,7 +124,7 @@
 - (NSDragOperation) _responseToDraggedURL: (NSURL *)URL
 {
 	//We wouldn't accept any files that aren't on our accepted formats list.
-	if ([URL matchingFileType: self.droppableFileTypes] == nil)
+	if ([BXFileTypes matchingTypeForURL: URL inTypes: self.droppableFileTypes] == nil)
     {
         return NSDragOperationNone;
 	}
@@ -132,7 +132,7 @@
     BOOL canOpenURLs = self.canOpenURLs;
     
 	//We wouldn't accept any executables if the emulator is running a process already.
-	if (!canOpenURLs && [URL matchingFileType: [BXFileTypes executableTypes]] != nil)
+	if (!canOpenURLs && [BXFileTypes matchingTypeForURL: URL inTypes: [BXFileTypes executableTypes]] != nil)
     {
         return NSDragOperationNone;
 	}
@@ -180,8 +180,12 @@
 		performedAction = YES;
 	}
 	
-	//Launch the URL in the emulator
-	if (launch)
+	//Disk images are mount targets, not DOS programs. Their CUE/ISO metadata
+	//must remain the entry point for the mounted drive instead of being executed.
+	BOOL isMountableImage = ([BXFileTypes matchingTypeForURL: URL inTypes: [BXFileTypes mountableImageTypes]] != nil);
+
+	//Launch regular files and folders in the emulator after mounting as needed.
+	if (launch && !isMountableImage)
     {
         NSError *launchError = nil;
         BOOL launched = [self openURLInDOS: URL

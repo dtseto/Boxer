@@ -70,7 +70,7 @@ NSString * const BXGameStateEmulatorVersionKey = @"BXEmulatorVersion";
 	NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
 	
 	//If the URL points to a disk image, use that as the mount point.
-    if ([URL matchingFileType: [BXFileTypes mountableImageTypes]] != nil)
+    if ([BXFileTypes matchingTypeForURL: URL inTypes: [BXFileTypes mountableImageTypes]] != nil)
         return URL;
     
 	//If the URL is (itself or inside) a gamebox or mountable folder, use that as the mount point.

@@ -105,10 +105,12 @@
                         options: BXDefaultDriveMountOptions
                           error: outError];
     
-    //Switch to the new mount after adding it
+    //Switch to the new mount after adding it. Image source URLs (such as
+    //.cue files) represent the container itself, not a host directory that
+    //can be mapped back to a DOS path, so switch by the mounted drive letter.
     if (drive)
     {
-        return [session openURLInDOS: drive.sourceURL error: outError];
+        return [session.emulator changeToDriveLetter: drive.letter];
     }
     else
     {

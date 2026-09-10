@@ -1623,7 +1623,15 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
                                                  options: @{ NSPasteboardURLReadingFileURLsOnlyKey : @(YES) }];
     if (draggedURLs.count)
     {
-		return [self.document handleDraggedURLs: draggedURLs launchImmediately: YES];
+		//Finish the AppKit drag transaction before mounting. A next-turn dispatch is
+		//not sufficient for large images because AppKit is still completing its own
+		//drag deferral; wait briefly, as the import dropzone does, before mounting.
+		NSArray *URLsToHandle = [draggedURLs copy];
+		dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
+					   dispatch_get_main_queue(), ^{
+			[self.document handleDraggedURLs: URLsToHandle launchImmediately: YES];
+		});
+		return YES;
     }
     
     NSArray *draggedStrings = [pboard readObjectsForClasses: @[[NSString class]] options: nil];

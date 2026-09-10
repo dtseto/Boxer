@@ -141,9 +141,21 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
     NSMutableArray<NSString *> *filePanelTypes = [NSMutableArray arrayWithCapacity: types.count];
     for (NSString *type in types)
     {
-        if ([type isEqualToString: BXNDIFImageType])
+        if ([type isEqualToString: BXCuesheetImageType])
+        {
+            [filePanelTypes addObjectsFromArray: @[@"cue", @"inst"]];
+        }
+        else if ([type isEqualToString: BXNDIFImageType])
         {
             [filePanelTypes addObject: @"img"];
+        }
+        else if ([type isEqualToString: BXRawFloppyImageType])
+        {
+            [filePanelTypes addObject: @"ima"];
+        }
+        else if ([type isEqualToString: BXVirtualPCImageType])
+        {
+            [filePanelTypes addObject: @"vfd"];
         }
         else
         {
@@ -238,6 +250,16 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
         };
     });
     return mapping;
+}
+
++ (NSString *) matchingTypeForURL: (NSURL *)URL inTypes: (NSSet<NSString *> *)types
+{
+    NSString *extension = URL.pathExtension.lowercaseString;
+    NSString *mappedType = self.extensionToTypeMapping[extension];
+    if (mappedType && [types containsObject: mappedType])
+        return mappedType;
+
+    return [URL matchingFileType: types];
 }
 
 + (NSString *) bundleIdentifierForApplicationToOpenURL: (NSURL *)URL

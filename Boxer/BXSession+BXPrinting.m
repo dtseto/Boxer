@@ -203,6 +203,34 @@
     self.printStatusController.numPages = 0;
     self.printStatusController.inProgress = NO;
     
+    //Diagnostic: BOXER_DUMP_PRINT=<dir> writes the finished session to a PDF and
+    //stops here, instead of opening the print dialog. Printing is otherwise
+    //untestable without a person: a finished session pops a *modal* print
+    //operation, which blocks any scripted run forever. See "Testing printing"
+    //in FINDINGS.md.
+    const char *printDumpDir = getenv("BOXER_DUMP_PRINT");
+    if (printDumpDir != NULL)
+    {
+        static NSUInteger dumpCount = 0;
+        NSString *path = [[NSString stringWithUTF8String: printDumpDir]
+                          stringByAppendingPathComponent:
+                          [NSString stringWithFormat: @"print-%lu-%lupp.pdf",
+                           (unsigned long)++dumpCount,
+                           (unsigned long)session.numPages]];
+
+        NSError *error = nil;
+        if ([session.PDFData writeToFile: path options: NSDataWritingAtomic error: &error])
+            NSLog(@"[BXPrinting] wrote %@ (%lu page(s), %lu bytes)",
+                  path, (unsigned long)session.numPages,
+                  (unsigned long)session.PDFData.length);
+        else
+            NSLog(@"[BXPrinting] could not write %@: %@", path, error);
+
+        ADBUserNotificationDispatcher *earlyDispatcher = [ADBUserNotificationDispatcher dispatcher];
+        [earlyDispatcher removeAllNotificationsOfType: BXPagesReadyNotificationType fromSender: self];
+        return;
+    }
+
     //Convert the data into a new PDFDocument instance and call Apple's sneaky hidden API to print it.
     PDFDocument *PDF = [[PDFDocument alloc] initWithData: session.PDFData];
     if (PDF)

@@ -80,7 +80,7 @@ extern "C" {
 // The rendering hooks that used to live here are gone. 0.83's frontend is an
 // abstract RenderBackend plus a handful of free GFX_* functions, so Boxer
 // implements that interface in BXGFXBridge.mm instead of injecting callbacks
-// into DOSBox. See "Register" entries D20-D2x in FINDINGS.md.
+// into DOSBox. See "Register" entries D20-D23 and D26-D27 in FINDINGS.md.
 //
 // Retired outright, not ported:
 //   boxer_idealOutputMode        -- no mode negotiation exists; output is 32bpp

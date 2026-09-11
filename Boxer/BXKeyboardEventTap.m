@@ -301,7 +301,29 @@ static CGEventRef _handleEventFromTap(CGEventTapProxy proxy, CGEventType type, C
         {
             //The thread will clean itself up
             [self.tapThread cancel];
-            [self.tapThread waitUntilFinished];
+
+            //IMPLEMENTATION NOTE: we deliberately do not use -waitUntilFinished
+            //here, which waits forever. The tap thread calls the delegate for
+            //every key event, and the delegate answers by dispatch_sync-ing to
+            //the main queue (see -eventTap:shouldCaptureKeyEvent: in
+            //BXBaseAppController+BXHotKeys). -waitUntilFinished spin-sleeps
+            //without servicing the main queue, so if a key event is in flight
+            //when we cancel, the tap thread is waiting on the main thread and
+            //the main thread is waiting on the tap thread: both wait forever.
+            //On quit that hangs the app outright, with no window left to
+            //explain why. See D46 in FINDINGS.md.
+            //
+            //Waiting at all is only a courtesy -- the thread retains itself
+            //until it exits, and the system removes the tap with the process --
+            //so give up after a moment and carry on. The real fix is for the
+            //delegate not to need the main thread from that callback.
+            NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow: 0.5];
+            while (self.tapThread.isExecuting && deadline.timeIntervalSinceNow > 0)
+                [NSThread sleepForTimeInterval: 0.001];
+
+            if (self.tapThread.isExecuting)
+                NSLog(@"Keyboard event tap thread did not stop when asked; abandoning it.");
+
             self.tapThread = nil;
         }
         else

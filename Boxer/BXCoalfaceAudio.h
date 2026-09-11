@@ -6,14 +6,16 @@
  */
 
 #import "BXCoalface.h"
-#include <string>
 
-/// Tell BXEmulator the preferred MIDI handler according to the DOSBox configuration.
-void boxer_suggestMIDIHandler(std::string const &handlerName, const char *configParams);
-
-/// Tells DOSBox whether MIDI is currently available or not.
-bool boxer_MIDIAvailable(void);
-
-/// Dispatch MIDI messages sent from DOSBox's MPU-401 emulation.
-void boxer_sendMIDIMessage(uint8_t *msg);
-void boxer_sendMIDISysex(uint8_t *msg, Bitu len);
+// Boxer's MIDI output is no longer a set of hooks patched into DOSBox's
+// midi.cpp: 0.83 has an abstract MidiDevice, and Boxer implements one.
+// BXCoalfaceAudio.mm defines `BoxerMidiDevice` and the factory midi.cpp calls
+// to build it (`BOXER_CreateMidiDevice()`, declared in DOSBox's
+// src/midi/private/midi_device.h). Nothing in Boxer needs to see either, so
+// this header no longer declares anything -- it is kept because
+// BXEmulatorPrivate.h imports it and because the audio coalface is where the
+// next audio-side hook will go.
+//
+// The four hooks it used to declare -- boxer_suggestMIDIHandler,
+// boxer_MIDIAvailable, boxer_sendMIDIMessage and boxer_sendMIDISysex -- are
+// retired; see FINDINGS.md, "Retired hooks".

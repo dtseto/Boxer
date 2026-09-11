@@ -80,6 +80,13 @@ NSString * const BXMIDIExternalDeviceNeedsMT32SysexDelaysKey = @"Needs MT-32 Sys
     {
         self.activeMIDIDevice = device;
         self.activeMIDIDevice.volume = self.masterVolume;
+        
+        //Say which device Boxer actually chose. DOSBox logs the `mididevice`
+        //setting it opened ("MIDI: Opened device 'mt32'"), but that is only the
+        //name of Boxer's bridge device: which synth or hardware port is behind
+        //it is Boxer's decision, and it can change mid-session when MT-32
+        //autodetection kicks in. Without this line the swap is invisible.
+        NSLog(@"MIDI: Boxer attached %@", NSStringFromClass([device class]));
     }
     return device;
 }

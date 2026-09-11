@@ -19,8 +19,8 @@
 // patching the sites -- the same move BXGFXBridge.mm makes for rendering.
 //
 // midi.cpp builds this device for the `mididevice` values Boxer claims -- 'auto',
-// 'generalmidi' and 'mt32' -- and keeps its own devices for 'port', 'coremidi'
-// and 'coreaudio'. See FINDINGS.md, D1 and D38.
+// 'default', 'generalmidi', 'mt32' and 'coremidi' -- and keeps its own devices
+// for 'port' and 'coreaudio'. See FINDINGS.md, D1, D38 and D50.
 
 #import <Foundation/Foundation.h>
 #import "BXEmulatorPrivate.h"
@@ -30,6 +30,8 @@
 #import "midi/midi.h"
 #import "midi/private/midi_device.h"
 
+#include <cctype>
+#include <cstdlib>
 #include <memory>
 #include <string>
 
@@ -83,28 +85,62 @@ static int _midiLogLevel(void)
 
 #pragma mark - Device description
 
-/// Translate the `mididevice` value DOSBox was configured with into the device
-/// description Boxer's delegate answers with an actual MIDI device.
+/// Translate the `mididevice` and `midiconfig` values DOSBox was configured with
+/// into the device description Boxer's delegate answers with an actual MIDI
+/// device.
 ///
 /// This is what boxer_suggestMIDIHandler() used to do from inside midi.cpp's
-/// constructor. The names have changed with D38: 'coremidi' and 'coreaudio' now
-/// belong to upstream's own devices and never reach here, so the external-device
-/// keys they used to fill in (BXMIDIPreferExternalKey and friends) are no longer
-/// set by any configuration -- see the register row for D48.
-static NSDictionary *_descriptionForMidiDeviceName(const std::string &deviceName)
+/// constructor, and it keeps that function's reading of `midiconfig` for
+/// 'coremidi' (D50). What has changed with D38 is only the names: 'auto' and
+/// 'default' mean the same as they always did, 'generalmidi' replaces the
+/// 'coreaudio' spelling (which is now upstream's own CoreAudio synth), and
+/// 'port' never reaches here at all.
+static NSDictionary *_descriptionForMidiDeviceName(const std::string &deviceName,
+                                                   const std::string &config)
 {
     NSString *name = [[NSString stringWithCString: deviceName.c_str()
                                          encoding: BXDirectStringEncoding]
                       lowercaseString];
     
+    NSMutableDictionary *description = [NSMutableDictionary dictionaryWithCapacity: 4];
     BXMIDIMusicType musicType = BXMIDIMusicAutodetect;
     
     if ([name isEqualToString: @"mt32"])
+    {
         musicType = BXMIDIMusicMT32;
+    }
     else if ([name isEqualToString: @"generalmidi"])
+    {
         musicType = BXMIDIMusicGeneralMIDI;
+    }
+    else if ([name isEqualToString: @"coremidi"])
+    {
+        //Send to a MIDI device attached to the Mac. The music type is left as
+        //autodetect deliberately, as it was in the 0.78 hook: whatever is
+        //plugged in is assumed to suit whatever the game plays.
+        description[BXMIDIPreferExternalKey] = @YES;
+        
+        //If the parameter string starts with a number, that is the destination
+        //index. (0.78 matched this with a regex; the leading-digits rule is the
+        //same, and upstream's own device reads the same field the same way.)
+        const char *params = config.c_str();
+        while (*params == ' ' || *params == '\t') params++;
+        
+        if (isdigit((unsigned char)*params))
+            description[BXMIDIExternalDeviceIndexKey] = @(strtol(params, NULL, 10));
+        
+        //'delaysysex' means the device needs the SysEx spacing an older MT-32
+        //requires. Note DOSBox has a `delaysysex` implementation of its own,
+        //which midi.cpp deliberately leaves switched off when Boxer owns the
+        //device: Boxer does the spacing in BXExternalMT32 instead, and DOSBox's
+        //version blocks the emulation thread with Delay().
+        if (config.find("delaysysex") != std::string::npos)
+            description[BXMIDIExternalDeviceNeedsMT32SysexDelaysKey] = @YES;
+    }
     
-    return @{ BXMIDIMusicTypeKey: @(musicType) };
+    description[BXMIDIMusicTypeKey] = @(musicType);
+    
+    return description;
 }
 
 
@@ -115,11 +151,11 @@ static NSDictionary *_descriptionForMidiDeviceName(const std::string &deviceName
 /// autodetection, sysex delays and volume.
 class BoxerMidiDevice final : public MidiDevice {
 public:
-    explicit BoxerMidiDevice(const std::string &name)
+    BoxerMidiDevice(const std::string &name, const std::string &config)
         : _name(name)
     {
         BXEmulator *emulator = [BXEmulator currentEmulator];
-        NSDictionary *description = _descriptionForMidiDeviceName(name);
+        NSDictionary *description = _descriptionForMidiDeviceName(name, config);
         
         //Tell Boxer what kind of music this configuration expects. Boxer
         //attaches the actual device lazily, the first time a message arrives,
@@ -209,14 +245,15 @@ private:
 std::unique_ptr<MidiDevice> BOXER_CreateMidiDevice(const std::string &name,
                                                    const std::string &config)
 {
-    //'midiconfig' addressed a host MIDI port or a soundfont: both belong to
-    //upstream's devices, which Boxer's own device selection has no use for.
-    (void)config;
-    
     using namespace MidiDeviceName;
-    if (name == BoxerAuto || name == BoxerDefault ||
-        name == BoxerGeneralMidi || name == Mt32)
-        return std::make_unique<BoxerMidiDevice>(name);
+    
+    //CoreMidi is here because a literal `mididevice = coremidi` means Boxer's
+    //own external-MIDI support; `mididevice = port`, which resolves to the same
+    //device name inside DOSBox, does not and never reaches this function. See
+    //midi.cpp's constructor, and D50.
+    if (name == BoxerAuto || name == BoxerDefault || name == BoxerGeneralMidi ||
+        name == Mt32 || name == CoreMidi)
+        return std::make_unique<BoxerMidiDevice>(name, config);
     
     return {};
 }

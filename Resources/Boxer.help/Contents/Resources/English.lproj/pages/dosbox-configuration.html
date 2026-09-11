@@ -235,8 +235,12 @@
 						<td><strong>The default.</strong> Automatically selects the best device for the music being played: <code class="configuration">coreaudio</code> for General MIDI music, and <code class="configuration">mt32</code> for MT-32 music.</td>
 					</tr>
 					
+					<tr><th><code class="configuration">[midi]<br/>mididevice=generalmidi</code></th>
+						<td>Plays MIDI music through Boxer’s General MIDI synth, and does not switch to the MT-32 even if the game turns out to play MT-32 music. Use this for games that are misdetected as supporting the MT-32.</td>
+					</tr>
+					
 					<tr><th><code class="configuration">[midi]<br/>mididevice=coreaudio</code></th>
-						<td>Plays MIDI music through OS X’s built-in General MIDI synth.</td>
+						<td>Plays MIDI music through DOSBox’s own connection to OS X’s built-in General MIDI synth, bypassing Boxer’s music handling. <code class="configuration">midiconfig</code> can name a SoundFont file to use. In most cases <code class="configuration">generalmidi</code> above is what you want instead.</td>
 					</tr>
 					
 					<tr><th><code class="configuration">[midi]<br/>mididevice=mt32</code></th>
@@ -246,7 +250,11 @@
 					<tr><th><code class="configuration">[midi]<br/>mididevice=coremidi<br/>midiconfig=0</code></th>
 						<td><p>Sends MIDI music to a physical MIDI device connected to your Mac.</p>
 						
-						<p><code class="configuration">midiconfig</code> determines which MIDI device Boxer should talk to. This should be 0, unless you have multiple devices connected.</p></td>
+						<p><code class="configuration">midiconfig</code> determines which MIDI device Boxer should talk to. This should be 0, unless you have multiple devices connected. Add <code class="configuration">delaysysex</code> after the number — <code class="configuration">midiconfig=0 delaysysex</code> — if you are using an original Roland MT-32, which needs messages spaced further apart than later models.</p></td>
+					</tr>
+					
+					<tr><th><code class="configuration">[midi]<br/>mididevice=port</code></th>
+						<td>Sends MIDI music to a device connected to your Mac using DOSBox’s own MIDI output rather than Boxer’s, bypassing Boxer’s volume control and MT-32 support. Use <code class="configuration">coremidi</code> above unless you have a reason not to.</td>
 					</tr>
 				</table>
 			</section>

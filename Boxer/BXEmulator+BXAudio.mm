@@ -149,14 +149,17 @@ NSString * const BXMIDIExternalDeviceNeedsMT32SysexDelaysKey = @"Needs MT-32 Sys
 
 - (void) _suspendAudio
 {
-    SDL_PauseAudio(YES);
+    // DOSBox Staging opens a specific SDL audio device and coordinates its
+    // tick handler through the mixer state. The legacy global SDL pause API
+    // does not control that device and leaves the mixer lifecycle out of sync.
+    MIXER_SetState(MixerState::Mute);
 
     [self.activeMIDIDevice pause];
 }
 
 - (void) _resumeAudio
 {
-    SDL_PauseAudio(NO);
+    MIXER_SetState(MixerState::On);
 
     [self.activeMIDIDevice resume];
 }

@@ -216,6 +216,8 @@
                                                        mipmapped:NO];
         _texture = [_device newTextureWithDescriptor:td];
         [_filterChain setSourceTexture:_texture];
+
+        [self _logGeometry: @"new frame"];
     }
     
     [_texture replaceRegion:MTLRegionMake2D(0, 0, sourceRect.size.width, sourceRect.size.height)
@@ -275,6 +277,72 @@
     }
 }
 
+
+#pragma mark - Geometry diagnostics
+
+/// Logs the whole chain of rectangles that decides how large the DOS image is
+/// drawn, and where. Enabled by setting BOXER_LOG_GEOMETRY in the environment.
+///
+/// There are four places the picture can lose size between the window and the
+/// screen -- the view's frame within the window, the drawable's size within the
+/// view, the aspect-fitted output rect within the drawable, and the viewport
+/// rect Boxer reports back to DOSBox -- and only the last of them is visible
+/// from the DOSBox side. This prints all four at once so they can be compared
+/// against the window. See D43 in FINDINGS.md.
+- (void) _logGeometry: (NSString *)reason
+{
+    static const char *enabled = NULL;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ enabled = getenv("BOXER_LOG_GEOMETRY"); });
+    if (!enabled)
+        return;
+
+    BXVideoFrame *frame = self.currentFrame;
+    const NSRect backing = [self convertRectToBacking: self.bounds];
+
+    // The rect OEFilterChain will actually draw into: frame.scaledSize fitted
+    // into the drawable, centred. Recomputed here rather than read back,
+    // because the filter chain does not expose it.
+    NSRect fitted = NSZeroRect;
+    if (frame)
+    {
+        const CGSize drawable = _videoLayer.drawableSize;
+        const CGFloat wantAspect = frame.scaledSize.width / frame.scaledSize.height;
+        const CGFloat haveAspect = drawable.width / drawable.height;
+        if (haveAspect >= wantAspect)
+            fitted.size = NSMakeSize(drawable.width * (wantAspect / haveAspect), drawable.height);
+        else
+            fitted.size = NSMakeSize(drawable.width, drawable.height * (haveAspect / wantAspect));
+        fitted.origin = NSMakePoint((drawable.width  - fitted.size.width)  / 2,
+                                    (drawable.height - fitted.size.height) / 2);
+    }
+
+    NSMutableString *chain = [NSMutableString string];
+    for (NSView *view = self; view != nil; view = view.superview)
+        [chain appendFormat: @" <- %@ %@", view.className, NSStringFromRect(view.frame)];
+
+    NSLog(@"GEOMETRY CHAIN [%@]:%@", reason, chain);
+
+    NSLog(@"GEOMETRY [%@]: window content %@ | view frame %@ bounds %@ (superview %@) "
+          @"| backing %@ drawable %@ | frame size %@ base %@ scaled %@ scaledRes %@ "
+          @"| fitted draw rect %@ | viewportRect %@ | managesViewport %@ maxViewport %@",
+          reason,
+          NSStringFromSize(self.window.contentView.bounds.size),
+          NSStringFromRect(self.frame),
+          NSStringFromRect(self.bounds),
+          NSStringFromSize(self.superview.bounds.size),
+          NSStringFromSize(backing.size),
+          NSStringFromSize(NSSizeFromCGSize(_videoLayer.drawableSize)),
+          frame ? NSStringFromSize(frame.size) : @"-",
+          frame ? NSStringFromSize(frame.baseResolution) : @"-",
+          frame ? NSStringFromSize(frame.scaledSize) : @"-",
+          frame ? NSStringFromSize(frame.scaledResolution) : @"-",
+          NSStringFromRect(fitted),
+          NSStringFromRect(self.viewportRect),
+          self.managesViewport ? @"YES" : @"NO",
+          NSStringFromSize(self.maxViewportSize));
+}
+
 #pragma mark - Viewport / Bounds
 
 - (void)updateRenderState {
@@ -285,6 +353,7 @@
     if (self.currentFrame) {
         [self setViewportRect:[self viewportForFrame:self.currentFrame] animated:NO];
     }
+    [self _logGeometry: @"render state"];
 }
 
 - (void)setFrameSize:(NSSize)newSize {

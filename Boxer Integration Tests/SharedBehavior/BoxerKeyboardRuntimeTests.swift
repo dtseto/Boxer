@@ -392,7 +392,8 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
         DOS_Block dos = {};
         DOS_Drive *Drives[DOS_DRIVES] = {};
         std::vector<VideoModeBlock>::const_iterator CurMode = {};
-        uint8_t MemBase[1024 * 1024] = {};
+        uint8_t memory[1024 * 1024] = {};
+        HostPt MemBase = memory;
         CPU_Regs cpu_regs = {};
         Segments Segs = {};
         uint32_t cpu_direction = 1;
@@ -598,7 +599,8 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
         #include "mem.h"
         #include "regs.h"
 
-        uint8_t MemBase[1024 * 1024] = {};
+        uint8_t memory[1024 * 1024] = {};
+        HostPt MemBase = memory;
         CPU_Regs cpu_regs = {};
         Segments Segs = {};
         uint32_t cpu_direction = 1;
@@ -656,7 +658,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
         #include "\(sourcePath)"
 
         static void reset_bios_buffer() {
-            std::memset(MemBase, 0, sizeof(MemBase));
+            std::memset(MemBase, 0, sizeof(memory));
             mem_writew(BIOS_KEYBOARD_BUFFER_START, 0x1e);
             mem_writew(BIOS_KEYBOARD_BUFFER_END, 0x3e);
             mem_writew(BIOS_KEYBOARD_BUFFER_HEAD, 0x1e);

@@ -52,6 +52,9 @@ enum BoxerRuntimeProcessRunner {
         process.arguments = arguments
         process.standardOutput = pipe
         process.standardError = pipe
+        process.environment = ProcessInfo.processInfo.environment.filter {
+            !$0.key.hasPrefix("DYLD_")
+        }
 
         do {
             try process.run()

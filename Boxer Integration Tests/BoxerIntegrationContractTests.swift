@@ -106,7 +106,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "boxer_masterVolume(BXLeftChannel)")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "boxer_masterVolume(BXRightChannel)")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "void boxer_updateVolumes()")
-        try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "it.second->UpdateVolume();")
+        try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "channel->RecalcCombinedVolume();")
         try expect("src/hardware/mixer.cpp", contains: "const AudioFrame boxer_master_volume")
         try expect("src/hardware/mixer.cpp", contains: "show_channel(convert_ansi_markup(master_channel_string)")
     }
@@ -120,7 +120,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/hardware/vga_other.cpp", marker: "display-mode-controls", contains: "boxer_setCGAComponentMode")
         try expectBlock("src/hardware/vga_other.cpp", marker: "display-refresh-rate", contains: "int boxer_GetDisplayRefreshRate(void)")
         try expectBlock("src/hardware/hardware.cpp", marker: "capture-file-routing", contains: "#if 0")
-        try expect("src/dos/dos_execute.cpp", contains: "GFX_SetTitle(-1,-1,false);")
+        try expect("src/dos/dos_execute.cpp", contains: "GFX_SetTitle(-1, false);")
     }
 
     func testKeyboardContracts() throws {
@@ -313,7 +313,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try requireAnnotated079Migration()
         try expectBlock("include/dos_system.h", marker: "drive-system-path", contains: "systempath")
         try expect("src/dos/drives.cpp", contains: "DOS_Drive::DOS_Drive()")
-        try expect("src/dos/drives.cpp", contains: "char * DOS_Drive::getSystemPath(void)")
+        try expect("src/dos/drives.cpp", contains: "char *DOS_Drive::getSystemPath()")
         try expect("src/dos/drive_cache.cpp", contains: "boxer_shouldShowFileWithName(name)")
         try expect("src/dos/drive_local.cpp", contains: "boxer_shouldAllowWriteAccessToPath")
         try expect("src/dos/drive_local.cpp", contains: "boxer_didCreateLocalFile")
@@ -391,7 +391,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(session.contains("setByAddingObject: BXCuesheetImageType"), "The import picker must accept CUE media")
         XCTAssertTrue(session.contains("matchingTypeForURL: URL inTypes: self.acceptedSourceTypes"), "Drag validation and picker validation must share extension-safe acceptance")
         XCTAssertTrue(dropzone.contains("canImportFromSourceURL"), "Import drops must use the shared acceptance policy")
-        XCTAssertTrue(fileTypes.contains("[filePanelTypes addObjectsFromArray: @[\"cue\", @\"inst\"]]"))
+        XCTAssertTrue(fileTypes.contains(#"[filePanelTypes addObjectsFromArray: @[@"cue", @"inst"]]"#))
 
         let cueBranch = try sourceRegion(in: session,
                                         beginningWith: "BOOL isCue =",
@@ -782,8 +782,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
         {
             test_channel = std::make_shared<MixerChannel>(TestHandler, "boxer-test", channel_features_t{});
             test_channel->SetSampleRate(1000);
-            test_channel->SetVolumeScale(1.0);
-            test_channel->SetVolume(1.0f, 1.0f);
+            test_channel->Set0dbScalar(1.0f);
+            test_channel->SetUserVolume(1.0f, 1.0f);
             test_channel->ChangeChannelMap(LEFT, RIGHT);
             test_channel->Enable(false);
             mixer.channels["boxer-test"] = test_channel;

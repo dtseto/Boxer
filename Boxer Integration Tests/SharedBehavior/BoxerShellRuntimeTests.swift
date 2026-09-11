@@ -446,6 +446,14 @@ final class BoxerShellRuntimeTests: XCTestCase {
             void Run();
         };
 
+        // v0.80 routes long shell help through MORE. The pager is an unrelated
+        // dependency of the extracted Run method, so keep it as a no-op fake.
+        struct MoreOutputStrings {
+            explicit MoreOutputStrings(DOS_Shell &) {}
+            void AddString(const char *, ...) {}
+            void Display() {}
+        };
+
         static const char *MSG_Get(const char *) { return ""; }
         static const char *DOSBOX_GetDetailedVersion() { return ""; }
         static void safe_strcpy(char *destination, const char *source) { std::strcpy(destination, source); }

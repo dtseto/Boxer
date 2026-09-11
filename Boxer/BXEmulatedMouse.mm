@@ -120,7 +120,7 @@ extern bool mouse_is_captured;
 	{
 		if (pressed)
 		{
-			MOUSE_EventPressed(button);
+			MOUSE_EventButton(button, true);
             self.pressedButtons |= buttonMask;
             
             _lastButtonDown[button] = [NSDate timeIntervalSinceReferenceDate];
@@ -147,7 +147,7 @@ extern bool mouse_is_captured;
             }
             else
             {
-				MOUSE_EventReleased(button);
+				MOUSE_EventButton(button, false);
                 self.pressedButtons &= ~buttonMask;
                 
                 _lastButtonDown[button] = 0;

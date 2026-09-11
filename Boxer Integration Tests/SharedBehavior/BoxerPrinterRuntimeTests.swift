@@ -724,7 +724,8 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         #include "regs.h"
         #include "serialport.h"
 
-        uint8_t MemBase[1024 * 1024] = {};
+        uint8_t memory[1024 * 1024] = {};
+        HostPt MemBase = memory;
         CPU_Regs cpu_regs = {};
         Segments Segs = {};
         uint32_t cpu_direction = 1;
@@ -796,7 +797,7 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         };
 
         static int run_cycle() {
-            std::memset(MemBase, 0, sizeof(MemBase));
+            std::memset(MemBase, 0, sizeof(memory));
             cpu_regs = {};
             Segs = {};
             RecordingParallel first(0);
@@ -841,7 +842,8 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         #include "bios.h"
         #include "mem.h"
 
-        uint8_t MemBase[1024 * 1024] = {};
+        uint8_t memory[1024 * 1024] = {};
+        HostPt MemBase = memory;
         uint8_t mem_readb(PhysPt address) { return MemBase[address]; }
         uint16_t mem_readw(PhysPt address) {
             return static_cast<uint16_t>(MemBase[address] | (MemBase[address + 1] << 8));
@@ -862,7 +864,7 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         \(function)
 
         static int run_cycle() {
-            std::memset(MemBase, 0, sizeof(MemBase));
+            std::memset(MemBase, 0, sizeof(memory));
             mem_writew(BIOS_CONFIGURATION, 0x1234);
 
             BIOS_SetLPTPort(0, 0x378);
@@ -914,7 +916,8 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         #include "parport.h"
         #include "setup.h"
 
-        uint8_t MemBase[1024 * 1024] = {};
+        uint8_t memory[1024 * 1024] = {};
+        HostPt MemBase = memory;
         static std::vector<int> created_ports;
         static std::vector<int> destroyed_ports;
         static SectionFunction registered_destroy = nullptr;

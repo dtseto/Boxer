@@ -29,6 +29,11 @@ extern "C" {
 #define GFX_EndUpdate boxer_finishFrame
 #define Mouse_AutoLock boxer_setMouseActive
 #define GFX_SetTitle boxer_handleDOSBoxTitleChange
+#define GFX_RefreshTitle boxer_refreshDOSBoxTitle
+#define GFX_SetMouseHint boxer_setMouseHint
+#define GFX_SetMouseCapture boxer_setMouseCapture
+#define GFX_SetMouseRawInput boxer_setMouseRawInput
+#define GFX_SetMouseVisibility boxer_setMouseVisibility
 #define GFX_GetDisplayRefreshRate boxer_GetDisplayRefreshRate
 #define GFX_SetSize boxer_prepareForFrameSize
 #define GFX_GetRGB boxer_getRGBPaletteEntry
@@ -38,6 +43,7 @@ extern "C" {
 #define GFX_ShowMsg boxer_log
 #define MIDI_Available boxer_MIDIAvailable
 #define OpenCaptureFile boxer_openCaptureFile
+FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtension);
 
 #define E_Exit(format,...) boxer_die(__PRETTY_FUNCTION__, __FILE__, __LINE__, format, ##__VA_ARGS__)
 	class DOS_Drive;
@@ -143,7 +149,12 @@ extern "C" {
     
 #pragma mark - Runloop and event loop handling
     
-	void boxer_handleDOSBoxTitleChange(int32_t cycles, int frameskip, bool paused);
+	void boxer_handleDOSBoxTitleChange(int32_t cycles, bool paused);
+    void boxer_refreshDOSBoxTitle(void);
+    void boxer_setMouseHint(MouseHint hint);
+    void boxer_setMouseCapture(bool captured);
+    void boxer_setMouseRawInput(bool rawInput);
+    void boxer_setMouseVisibility(bool visible);
 	
 	/// Called from dosbox.cpp to allow control over the emulation loop.
 	void boxer_runLoopWillStartWithContextInfo(void **contextInfo);

@@ -121,12 +121,12 @@
 
 - (NSUInteger) frameskip
 {
-	return (NSUInteger)render.frameskip.max;
+	return 0;
 }
 
 - (void) setFrameskip: (NSUInteger)frameskip
 {
-	render.frameskip.max = (Bitu)frameskip;
+	(void)frameskip;
 }
 
 //Chooses the specified filter, and resets the renderer to apply the change immediately.
@@ -147,7 +147,7 @@
 	BOOL isActive = NO;
 	if (self.emulator.isInitialized)
 	{
-		isActive = (self.filterType == (NSUInteger)render.scale.op);
+        isActive = (self.filterType == BXFilterNormal);
 	}
 	return isActive;
 }
@@ -378,9 +378,7 @@
 	
 	//Finally, apply the values to DOSBox
 	render.aspect		= NO; //We apply our own aspect correction separately
-	render.scale.forced	= YES;
-	render.scale.size	= (Bitu)filterScale;
-	render.scale.op		= (scalerOperation_t)activeType;
+    render.scale.size = (Bitu)filterScale;
     
     
     //While we're here, sync up the CGA and hercules color modes if appropriate

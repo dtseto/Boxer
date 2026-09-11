@@ -94,10 +94,37 @@ bool boxer_runLoopShouldContinue()
 }
 
 /// Notifies Boxer of changes to title and speed settings
-void boxer_handleDOSBoxTitleChange(int32_t newCycles, int newFrameskip, bool newPaused)
+void boxer_handleDOSBoxTitleChange(int32_t newCycles, bool newPaused)
 {
-	BXEmulator *emulator = [BXEmulator currentEmulator];
-	[emulator _didChangeEmulationState];
+    (void)newCycles;
+    (void)newPaused;
+    BXEmulator *emulator = [BXEmulator currentEmulator];
+    [emulator _didChangeEmulationState];
+}
+
+void boxer_refreshDOSBoxTitle(void)
+{
+    boxer_handleDOSBoxTitleChange(-1, false);
+}
+
+void boxer_setMouseHint(MouseHint hint)
+{
+    (void)hint;
+}
+
+void boxer_setMouseCapture(bool captured)
+{
+    boxer_setMouseActive(captured);
+}
+
+void boxer_setMouseRawInput(bool rawInput)
+{
+    (void)rawInput;
+}
+
+void boxer_setMouseVisibility(bool visible)
+{
+    (void)visible;
 }
 
 
@@ -121,7 +148,7 @@ Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double s
 	NSSize scale		= NSMakeSize((CGFloat)scalex, (CGFloat)scaley);
 	[[emulator videoHandler] prepareForOutputSize: outputSize atScale: scale withCallback: callback];
 	
-	return GFX_CAN_32 | GFX_SCALING;
+	return GFX_CAN_32;
 }
 
 Bitu boxer_idealOutputMode(Bitu flags)
@@ -129,7 +156,7 @@ Bitu boxer_idealOutputMode(Bitu flags)
 	//Originally this tested various bit depths to find the most appropriate mode for the chosen scaler.
 	//Because OS X always uses a 32bpp context and Boxer always uses RGBA-capable scalers, we ignore the
 	//original function's behaviour altogether and just return something that will keep DOSBox happy.
-	return GFX_CAN_32 | GFX_SCALING;
+	return GFX_CAN_32;
 }
 
 bool boxer_startFrame(uint8_t * &frameBuffer, int & pitch)

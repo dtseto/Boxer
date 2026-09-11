@@ -136,7 +136,20 @@ public:
         BXEmulator *emulator = [BXEmulator currentEmulator];
         const NSSize size = [emulator.delegate viewportSizeForEmulator: emulator];
 
-        return {(float)size.width, (float)size.height};
+        // DOSBox sets its first video mode before Boxer's DOS window exists, so
+        // the first call of every session asks a viewport that is still 0x0
+        // (D44). Upstream's canvas comes from a window that is always there, so
+        // 0.83 does not expect a degenerate rectangle: the one place in the code
+        // Boxer compiles that consumes it, vga_draw.cpp's Stretch aspect-ratio
+        // correction, builds a Fraction from it and would divide by zero.
+        // Nothing Boxer ships selects Stretch, but a user's own config could.
+        //
+        // So report the last real viewport instead, or the size Boxer opens its
+        // DOS window at if there has not been one yet.
+        if (size.width > 0 && size.height > 0)
+            _lastCanvasSize = size;
+
+        return {(float)_lastCanvasSize.width, (float)_lastCanvasSize.height};
     }
 
     void NotifyVideoModeChanged(const VideoMode& video_mode) override
@@ -209,6 +222,7 @@ public:
     void SetFrameCallback(GFX_Callback_t callback) { _callback = callback; }
 
 private:
+    NSSize _lastCanvasSize   = NSMakeSize(640, 480);
     GFX_Callback_t _callback = nullptr;
     VideoMode _videoMode     = {};
     std::string _symbolicShaderDescriptor = {};

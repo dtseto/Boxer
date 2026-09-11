@@ -34,6 +34,8 @@ extern "C" {
 #define GFX_SetMouseCapture boxer_setMouseCapture
 #define GFX_SetMouseRawInput boxer_setMouseRawInput
 #define GFX_SetMouseVisibility boxer_setMouseVisibility
+#define GFX_HaveDesktopEnvironment boxer_hasDesktopEnvironment
+#define GFX_CenterMouse boxer_centerMouse
 #define GFX_GetDisplayRefreshRate boxer_GetDisplayRefreshRate
 #define GFX_SetSize boxer_prepareForFrameSize
 #define GFX_GetRGB boxer_getRGBPaletteEntry
@@ -155,6 +157,8 @@ FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtensi
     void boxer_setMouseCapture(bool captured);
     void boxer_setMouseRawInput(bool rawInput);
     void boxer_setMouseVisibility(bool visible);
+    bool boxer_hasDesktopEnvironment(void);
+    void boxer_centerMouse(void);
 	
 	/// Called from dosbox.cpp to allow control over the emulation loop.
 	void boxer_runLoopWillStartWithContextInfo(void **contextInfo);

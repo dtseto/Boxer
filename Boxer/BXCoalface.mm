@@ -114,7 +114,10 @@ void boxer_setMouseHint(MouseHint hint)
 
 void boxer_setMouseCapture(bool captured)
 {
-    boxer_setMouseActive(captured);
+    // DOSBox's capture state controls the host cursor, not whether the current
+    // DOS program should receive mouse input. Boxer owns cursor locking and
+    // detects program activity through its shell lifecycle.
+    (void)captured;
 }
 
 void boxer_setMouseRawInput(bool rawInput)
@@ -125,6 +128,16 @@ void boxer_setMouseRawInput(bool rawInput)
 void boxer_setMouseVisibility(bool visible)
 {
     (void)visible;
+}
+
+bool boxer_hasDesktopEnvironment(void)
+{
+    return true;
+}
+
+void boxer_centerMouse(void)
+{
+    // Boxer synchronizes the host cursor when its input controller unlocks it.
 }
 
 

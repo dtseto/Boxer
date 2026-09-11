@@ -50,11 +50,24 @@ final class BoxerIntegrationContractTests: XCTestCase {
                       "#define GFX_StartUpdate boxer_startFrame",
                       "#define GFX_EndUpdate boxer_finishFrame",
                       "#define Mouse_AutoLock boxer_setMouseActive",
+                      "#define GFX_HaveDesktopEnvironment boxer_hasDesktopEnvironment",
+                      "#define GFX_CenterMouse boxer_centerMouse",
                       "#define MIDI_Available boxer_MIDIAvailable",
                       "#define OpenCaptureFile boxer_openCaptureFile",
                       "#define E_Exit"] {
             try expect(projectRoot.appendingPathComponent("Boxer/BXCoalface.h"), contains: remap)
         }
+
+        let coalface = try source(at: projectRoot.appendingPathComponent("Boxer/BXCoalface.mm"))
+        let captureBridge = try sourceRegion(
+            in: coalface,
+            beginningWith: "void boxer_setMouseCapture(bool captured)",
+            endingBefore: "void boxer_setMouseRawInput"
+        )
+        XCTAssertTrue(captureBridge.contains("(void)captured;"))
+        XCTAssertFalse(captureBridge.contains("boxer_setMouseActive(captured);"))
+        XCTAssertTrue(coalface.contains("bool boxer_hasDesktopEnvironment(void)"))
+        XCTAssertTrue(coalface.contains("return true;"))
     }
 
     func testRunLoopAndShutdownContracts() throws {

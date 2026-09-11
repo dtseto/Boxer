@@ -21,7 +21,7 @@
 
 /// BXDOSWindowControllerPrivate defines the private interface and constants
 /// for BXDOSWindowController and its subclasses.
-@interface BXDOSWindowController ()
+@interface BXDOSWindowController () <NSAnimationDelegate>
 
 /// A backup of the window's frame name, stored while we're in fullscreen mode
 /// (which clears the window's frame name temporarily so that the fullscreen frame isn't saved.)
@@ -90,6 +90,12 @@
 
 /// Performs the slide animation used to toggle the status bar and program panel on or off
 - (void) _slideView: (NSView *)view shown: (BOOL)show animate: (BOOL)animate;
+
+/// Resizes each of the window's panels to fill the view they sit in.
+///
+/// The panels are normally kept at that size by autoresizing, but the crossfade
+/// in `switchToPanel:animate:` overrides it: see the implementation.
+- (void) _resizePanelsToFitWrapper;
 
 /// Whether aspect-ratio correction should be applied to the specified frame.
 /// Will return `NO` for text-only frames, `YES` otherwise.

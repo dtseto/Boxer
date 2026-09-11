@@ -41,6 +41,23 @@
 //%@ is the frame autosave name of the window
 NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
 
+
+/// Diagnostic breadcrumbs for the window-sizing path; enabled by
+/// BOXER_LOG_GEOMETRY. See D43 in FINDINGS.md.
+static void BXLogGeometryEvent(NSString *format, ...)
+{
+    static const char *enabled = NULL;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ enabled = getenv("BOXER_LOG_GEOMETRY"); });
+    if (!enabled)
+        return;
+
+    va_list args;
+    va_start(args, format);
+    NSLogv([@"GEOMETRY EVENT: " stringByAppendingString: format], args);
+    va_end(args);
+}
+
 @implementation BXDOSWindowController
 {
 	NSSize _renderingViewSizeBeforeFullScreen;
@@ -1114,6 +1131,11 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
     
     NSView *viewForNewPanel = [self _viewForPanel: newPanel];
     NSView *viewForOldPanel = [self _viewForPanel: oldPanel];
+
+    BXLogGeometryEvent(@"switchToPanel: %ld -> %ld animate: %@ | inputView %@ | wrapper %@",
+                       (long)oldPanel, (long)newPanel, animate ? @"YES" : @"NO",
+                       NSStringFromRect(self.inputView.frame),
+                       NSStringFromRect(self.inputView.superview.frame));
     
     //If we're switching to the launcher panel, let it know so it can (re-)populate its program list.
     if (newPanel == BXDOSWindowLaunchPanel)
@@ -1256,6 +1278,11 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
             animation.animationBlockingMode = NSAnimationNonblocking;
             animation.animationCurve = NSAnimationEaseIn;
             
+            //Restore the panels to the size of the window once the crossfade
+            //finishes: it will have put them back to the size they were when it
+            //started. See -_resizePanelsToFitWrapper.
+            animation.delegate = self;
+            
             if (involvesRenderingView && [self.renderingView respondsToSelector: @selector(viewAnimationWillStart:)])
                 [self.renderingView viewAnimationWillStart: animation];
             
@@ -1268,6 +1295,12 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
         [[NSNotificationCenter defaultCenter] postNotificationName: BXDidFinishInterruptionNotification object: self];
     }
     
+    [self _resizePanelsToFitWrapper];
+
+    BXLogGeometryEvent(@"switchToPanel: done | inputView %@ | wrapper %@",
+                       NSStringFromRect(self.inputView.frame),
+                       NSStringFromRect(self.inputView.superview.frame));
+
     _currentPanel = newPanel;
     viewForNewPanel.hidden = NO;
     viewForOldPanel.hidden = YES;
@@ -1676,6 +1709,12 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
 	
 	NSSize viewSize			= self.windowedRenderingViewSize;
 	BOOL needsResize		= NO;
+
+    BXLogGeometryEvent(@"_resizeToAccommodateFrame: scaled %@ scaledRes %@ | windowedRenderingViewSize %@ "
+                       @"| previous scaled %@",
+                       NSStringFromSize(scaledSize), NSStringFromSize(scaledResolution),
+                       NSStringFromSize(viewSize), NSStringFromSize(_currentScaledSize));
+
 	BOOL needsNewMinSize	= NO;
 	
 	//Only resize the window if the frame size is different from its previous size
@@ -1722,6 +1761,10 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
 - (void) resizeWindowToRenderingViewSize: (NSSize)newSize
                                  animate: (BOOL)performAnimation
 {
+    BXLogGeometryEvent(@"resizeWindowToRenderingViewSize: %@ animate: %@ (main thread: %@)",
+                       NSStringFromSize(newSize), performAnimation ? @"YES" : @"NO",
+                       NSThread.isMainThread ? @"YES" : @"NO");
+
     //If we're in fullscreen mode, we'll set the requested size later when we come out of fullscreen.
     //(We don't want to resize the window itself during fullscreen.)
     if ([(BXDOSWindow *)self.window isFullScreen])
@@ -1794,6 +1837,43 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
 	viewSize = constrainToFitSize(viewSize, maxViewSize);
 	
 	return viewSize;
+}
+
+//Puts each panel back to the size of the view it sits in.
+//
+//IMPLEMENTATION NOTE: the panels are laid out by autoresizing, but the crossfade
+//in -switchToPanel:animate: overrides that. NSViewAnimation animates frames as
+//well as effects: given only a fade effect, it records each view's frame when the
+//animation starts and sets that same frame again when it ends. If the window is
+//resized while the crossfade is running, the animation finishes by putting the
+//panels back to their pre-resize size, and autoresizing never corrects them
+//again -- so the DOS view sits in the bottom-left corner of a larger window,
+//with the window's background showing above and to the right of it.
+//
+//That race is now hit on every session start. DOSBox Staging 0.83 renders the
+//initial DOS text mode at 720x400 where Boxer's 0.78 fork reported 640x400, so
+//the first frame no longer matches the window Boxer opened at and always
+//triggers a resize -- which lands squarely inside the launcher-to-DOS crossfade.
+//See D43 in FINDINGS.md.
+- (void) _resizePanelsToFitWrapper
+{
+    //arrayWithObjects: stops at the first nil, which is what we want: the panels
+    //are nib outlets and any of them may not be loaded yet.
+    NSArray *panels = [NSArray arrayWithObjects: self.loadingPanel, self.launchPanel, self.inputView, nil];
+
+    for (NSView *panel in panels)
+    {
+        NSView *wrapper = panel.superview;
+        if (wrapper && !NSEqualRects(panel.frame, wrapper.bounds))
+            panel.frame = wrapper.bounds;
+    }
+}
+
+//Sent by the crossfade animation in -switchToPanel:animate:, which runs
+//asynchronously and so finishes long after that method has returned.
+- (void) animationDidEnd: (NSAnimation *)animation
+{
+    [self _resizePanelsToFitWrapper];
 }
 
 //Resizes the window if necessary to accomodate the specified view sliding in

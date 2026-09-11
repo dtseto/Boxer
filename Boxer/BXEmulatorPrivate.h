@@ -178,6 +178,12 @@ typedef NS_ERROR_ENUM(BXDOSBoxMountErrorDomain, BXDOSBoxMountErrors) {
 /// initializes every DOSBox module, and finally starts up the DOSBox machine.
 - (void) _startDOSBox;
 
+/// Shuts DOSBox down: the counterpart to the initialisation in \c _startDOSBox.
+/// Called from the emulation thread once DOSBox's shell has returned, and from
+/// its error paths. See D45 in FINDINGS.md for why the modules have to be
+/// destroyed rather than simply abandoned.
+- (void) _tearDownDOSBox;
+
 /// The current innermost shell instance.
 /// This is either the current process or the shell that spawned the current process.
 - (DOS_Shell *) _currentShell;

@@ -1000,6 +1000,26 @@ static BOOL _hasStartedEmulator = NO;
 
 //This is a cut-down and mashed-up version of DOSBox's old main and GUI_StartUp functions,
 //chopping out all the stuff that Boxer doesn't need or want.
+/// Serialises DOSBox's process-wide setup and teardown against each other.
+///
+/// Boxer normally runs one session per process, but -[BXSession
+/// restartShowingLaunchPanel:] closes the session and immediately opens a new
+/// one in *this* process, without waiting for the old emulation thread. Since
+/// DOSBox's modules -- and `control` itself -- are file-scope globals, the new
+/// session's setup and the old session's teardown would otherwise run at the
+/// same time on two threads and fight over the same objects. Holding this while
+/// each of them runs makes the new session wait for the old one instead.
+///
+/// Teardown only became long enough for that to matter when it started
+/// destroying DOSBox's modules properly; see -_tearDownDOSBox and D45.
+static NSObject *_DOSBoxLifecycleLock(void)
+{
+    static NSObject *lock;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ lock = [[NSObject alloc] init]; });
+    return lock;
+}
+
 - (void) _startDOSBox
 {
 	//Initialize the SDL modules that DOSBox will need.
@@ -1013,6 +1033,11 @@ static BOOL _hasStartedEmulator = NO;
         //emulator startup sequence in an autorelease block, so that at least those objects
         //will get released before we begin emulating in earnest.
         @autoreleasepool {
+        
+        //See _DOSBoxLifecycleLock(): a previous session in this process may
+        //still be tearing DOSBox down on its own thread, and everything below
+        //touches the same process-wide globals it is destroying.
+        @synchronized (_DOSBoxLifecycleLock()) {
         
             //Create a new configuration instance and feed it an empty set of parameters.
             char const *argv[0];
@@ -1071,6 +1096,7 @@ static BOOL _hasStartedEmulator = NO;
             
             [self _didInitialize];
         }
+        }
         
 		//Start up the main machine. Up to 0.78 this was control->StartUp(),
 		//which invoked the registered start function; 0.83 starts the shell
@@ -1083,12 +1109,7 @@ static BOOL _hasStartedEmulator = NO;
 
         // ObjC exceptions don't trigger C++ stack unwinding, so we must
         // clean up DOSBox state explicitly before raising.
-        SDL_Quit();
-        [self.videoHandler shutdown];
-        control.reset();
-        configuration = NULL;
-        delete commandLine;
-        commandLine = NULL;
+        [self _tearDownDOSBox];
 
         NSString *reason = [NSString stringWithCString: errMessage encoding: BXDirectStringEncoding];
         [NSException raise: BXEmulatorUnrecoverableException
@@ -1100,12 +1121,7 @@ static BOOL _hasStartedEmulator = NO;
 
         // ObjC exceptions don't trigger C++ stack unwinding, so we must
         // clean up DOSBox state explicitly before raising.
-        SDL_Quit();
-        [self.videoHandler shutdown];
-        control.reset();
-        configuration = NULL;
-        delete commandLine;
-        commandLine = NULL;
+        [self _tearDownDOSBox];
 
         NSException *exception = [BXEmulatorException exceptionWithName: BXEmulatorUnrecoverableException
                                                       originalException: &e];
@@ -1118,12 +1134,44 @@ static BOOL _hasStartedEmulator = NO;
 	//Any other exception is a genuine fuckup and needs to be thrown all the way up.
 	
 	//Clean up after DOSBox finishes.
-    SDL_Quit();
-	[self.videoHandler shutdown];
-    control.reset();
-    configuration = NULL;
-    delete commandLine;
-    commandLine = NULL;
+    [self _tearDownDOSBox];
+}
+
+//The counterpart to the initialisation in -_startDOSBox above: shuts down
+//DOSBox, in the order upstream shuts it down in.
+//
+//IMPLEMENTATION NOTE: DOSBOX_DestroyModules() is new here. Up to 0.78 Boxer
+//dropped the Config and left it at that, and 0.83 made that a crash: DOSBox's
+//modules now own objects in file-scope statics that log from their destructors,
+//so leaving them alive means they are destroyed during C++ static teardown at
+//exit() -- by which time loguru's own function-local static mutex may already
+//be gone. That is exactly what happened on every quit (D45): port.cpp's
+//`static std::unique_ptr<IO> io_module` outlived the session, ~IO() called
+//LOG_DEBUG from static teardown, and the app aborted with
+//"recursive_mutex lock failed" instead of exiting.
+//
+//DOSBOX_DestroyModules() is upstream's own teardown, called from main.cpp right
+//after SHELL_InitAndRun() returns -- the same place Boxer reaches here -- and it
+//ends by resetting `control` itself, which is why the Config is no longer reset
+//separately.
+//
+//Order matters in two places. The video handler is shut down first, while the
+//render pipeline it calls into still exists; and SDL is quit last, because
+//MIXER_Destroy() closes the audio device SDL owns.
+- (void) _tearDownDOSBox
+{
+    @synchronized (_DOSBoxLifecycleLock())
+    {
+        [self.videoHandler shutdown];
+
+        DOSBOX_DestroyModules();
+        configuration = NULL;
+
+        SDL_Quit();
+
+        delete commandLine;
+        commandLine = NULL;
+    }
 }
 
 @end

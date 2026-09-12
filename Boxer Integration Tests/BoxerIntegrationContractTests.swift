@@ -125,6 +125,22 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertFalse(callback.contains("MIXER_FindChannel(BXMIDIChannelName)"))
     }
 
+    func testMouseBridgeInitializesAndOwnsInputPolicy() throws {
+        let coalface = try source(at: projectRoot.appendingPathComponent("Boxer/BXCoalface.mm"))
+        let mouse = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatedMouse.mm"))
+        let frameSetup = try sourceRegion(
+            in: coalface,
+            beginningWith: "Bitu boxer_prepareForFrameSize",
+            endingBefore: "Bitu boxer_idealOutputMode"
+        )
+
+        XCTAssertTrue(frameSetup.contains("MOUSE_NotifyReadyGFX();"))
+        XCTAssertTrue(frameSetup.contains("MOUSE_NotifyHasFocus(true);"))
+        XCTAssertTrue(coalface.contains("bool boxer_hasDesktopEnvironment(void)"))
+        XCTAssertTrue(coalface.contains("return false;"))
+        XCTAssertFalse(mouse.contains("mouse_is_captured"))
+    }
+
     func testMixerVolumeBridgeContracts() throws {
         // Protects BOXER marker: mixer-volume-bridge
         try requireAnnotated079Migration()

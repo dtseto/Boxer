@@ -10,6 +10,7 @@
 #import "BXEmulatorPrivate.h"
 #import "setup.h"
 #import "mapper.h"
+#import "mouse.h"
 #import "cross.h"
 #import "shell.h"
 #import "ADBFilesystem.h"
@@ -132,7 +133,10 @@ void boxer_setMouseVisibility(bool visible)
 
 bool boxer_hasDesktopEnvironment(void)
 {
-    return true;
+    // Boxer performs its own cursor locking and decides which mouse events to
+    // forward. Treat its bridge as an always-captured host from DOSBox's point
+    // of view so the core does not discard Boxer's already-filtered events.
+    return false;
 }
 
 void boxer_centerMouse(void)
@@ -156,7 +160,12 @@ void boxer_setShader(const char* src) {
 Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double scalex, double scaley, GFX_CallBack_t callback, double pixel_aspect)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
-	
+
+    // The SDL frontend normally sends these notifications during startup and
+    // focus changes. Boxer replaces that frontend and gates input itself.
+    MOUSE_NotifyReadyGFX();
+    MOUSE_NotifyHasFocus(true);
+
 	NSSize outputSize	= NSMakeSize((CGFloat)width, (CGFloat)height);
 	NSSize scale		= NSMakeSize((CGFloat)scalex, (CGFloat)scaley);
 	[[emulator videoHandler] prepareForOutputSize: outputSize atScale: scale withCallback: callback];

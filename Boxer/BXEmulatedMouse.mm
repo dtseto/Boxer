@@ -14,9 +14,6 @@
 
 #include <algorithm>
 
-extern bool mouse_is_captured;
-
-
 #pragma mark -
 #pragma mark Private method declarations
 
@@ -91,9 +88,6 @@ extern bool mouse_is_captured;
 		const auto absoluteY = static_cast<uint16_t>(std::clamp(
 			point.y * canvas.size.height, 0.0, static_cast<double>(UINT16_MAX)));
 
-		// Boxer owns capture state; keep v0.79's mouse core synchronized so it
-		// chooses relative or absolute DOS-driver behavior consistently.
-		mouse_is_captured = locked;
 		MOUSE_EventMoved(canvasDelta.x, canvasDelta.y, absoluteX, absoluteY);
 	}
 }

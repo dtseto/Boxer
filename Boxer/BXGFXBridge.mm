@@ -171,9 +171,9 @@ public:
 
     // MARK: Inert: Boxer renders through OpenEmuShaders, not DOSBox's pipeline.
     //
-    // Boxer picks and applies its own shaders (see BXShadersModel and
-    // BXVideoHandler's applyRenderingStrategy), so upstream's shader manager,
-    // colour management and image adjustments are all bypassed. SetShader()
+    // Boxer picks and applies its own shaders (see BXShadersModel, which is the
+    // only authority on this since D23), so upstream's shader manager, colour
+    // management and image adjustments are all bypassed. SetShader()
     // must still report success: render.cpp treats a shader failure as fatal
     // and would fall back or exit.
 

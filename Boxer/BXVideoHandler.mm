@@ -10,7 +10,6 @@
 #import "BXEmulatorPrivate.h"
 #import "BXVideoFrame.h"
 #import "ADBGeometry.h"
-#import "BXFilterDefinitions.h"
 
 #import "gui/render/render.h"
 #import "hardware/video/vga.h"
@@ -20,20 +19,6 @@
 #pragma mark Really genuinely private functions
 
 @interface BXVideoHandler ()
-
-- (const BXFilterDefinition *) _paramsForFilterType: (BXFilterType)filterType;
-
-- (BOOL) _shouldApplyFilterType: (BXFilterType)type
-				 fromResolution: (NSSize)resolution
-					 toViewport: (NSSize)viewportSize 
-					 isTextMode: (BOOL)isTextMode;
-
-- (NSUInteger) _filterScaleForType: (BXFilterType)type
-                    fromResolution: (NSSize)resolution
-                        toViewport: (NSSize)viewportSize
-                        isTextMode: (BOOL)isTextMode;
-
-- (NSUInteger) _maxFilterScaleForResolution: (NSSize)resolution;
 
 - (void) _syncHerculesTint;
 - (void) _syncCGAHueAdjustment;
@@ -45,7 +30,6 @@
 @implementation BXVideoHandler
 @synthesize currentFrame = _currentFrame;
 @synthesize emulator = _emulator;
-@synthesize filterType = _filterType;
 @synthesize herculesTint = _herculesTint;
 @synthesize CGAHueAdjustment = _CGAHueAdjustment;
 
@@ -117,32 +101,6 @@
     if (self.emulator.isInitialized)
         return (is_machine_cga());
     else return NO;
-}
-
-//Chooses the specified filter, and resets the renderer to apply the change immediately.
-- (void) setFilterType: (BXFilterType)type
-{
-	if (type != _filterType)
-	{
-		NSAssert1(type <= BXMaxFilters, @"Invalid filter type provided to setFilterType: %li", (unsigned long)type);
-				
-		_filterType = type;
-		[self reset];
-	}
-}
-
-//Returns whether the chosen filter is actually being rendered.
-- (BOOL) filterIsActive
-{
-    // Up to 0.78 this asked DOSBox which scaler it had actually settled on,
-    // because DOSBox could decline the requested one. 0.83 removed the built-in
-    // scalers entirely in favour of the shader pipeline, so there is nothing to
-    // disagree with: Boxer applies its own filtering through OpenEmuShaders and
-    // its selection is authoritative.
-    //
-    // TODO: fold this into BXShadersModel once the render backend lands, and
-    // drop the notion of a filter that can be requested but not applied.
-    return self.emulator.isInitialized;
 }
 
 - (void) setHerculesTint: (BXHerculesTintMode)tint
@@ -282,8 +240,6 @@
 	
 	*buffer	= self.currentFrame.mutableBytes;
     *pitch	= (int)self.currentFrame.pitch;
-    
-    [self.currentFrame clearDirtyRegions];
 	
 	_frameInProgress = YES;
 	return YES;
@@ -294,13 +250,11 @@
 	if (self.currentFrame)
 	{
         // Up to 0.78 DOSBox handed us an array of alternating clean/dirty line
-        // counts here, which we turned into dirty regions on the frame. 0.83's
-        // render pipeline no longer tracks which lines changed -- RENDER_EndUpdate
-        // calls GFX_EndUpdate() with no arguments -- so every frame is published
-        // whole.
-        //
-        // Nothing consumed BXVideoFrame's dirty regions anyway: Boxer's renderer
-        // has always uploaded the entire frame. See D21 in FINDINGS.md.
+        // counts here. 0.83's render pipeline no longer tracks which lines
+        // changed -- RENDER_EndUpdate calls GFX_EndUpdate() with no arguments --
+        // so every frame is published whole. Nothing ever consumed the dirty
+        // regions anyway: Boxer's renderer has always uploaded the entire frame,
+        // and BXVideoFrame's dirty-region API has now been deleted. See D21.
         self.currentFrame.timestamp = CFAbsoluteTimeGetCurrent();
         [self.emulator _didFinishFrame: self.currentFrame];
 	}
@@ -316,125 +270,5 @@
 	return ((blue << 0) | (green << 8) | (red << 16)) | (255U << 24);
 }
 
-
-#pragma mark -
-#pragma mark Rendering strategy
-
-- (void) applyRenderingStrategy
-{
-	//Work out how much we will need to scale the resolution to fit the viewport
-	NSSize resolution			= self.resolution;	
-	NSSize viewportSize			= [self.emulator.delegate viewportSizeForEmulator: self.emulator];
-	
-	BOOL isTextMode				= self.isInTextMode;
-	NSUInteger maxFilterScale	= [self _maxFilterScaleForResolution: resolution];
-	
-	
-	//Start off with a passthrough filter as the default
-	BXFilterType activeType		= BXFilterNormal;
-	NSUInteger filterScale		= 1;
-	BXFilterType desiredType	= self.filterType;
-	
-	//Decide if we can use our selected filter at this scale, and if so at what scale
-	if (desiredType != BXFilterNormal &&
-		[self _shouldApplyFilterType: desiredType
-					  fromResolution: resolution
-						  toViewport: viewportSize
-						  isTextMode: isTextMode])
-	{
-		activeType = desiredType;
-		//Now decide on what operation size the scaler should use
-		filterScale = [self _filterScaleForType: activeType
-								 fromResolution: resolution
-									 toViewport: viewportSize
-									 isTextMode: isTextMode];
-	}
-	
-	//Make sure we don't go over the maximum size imposed by the OpenGL hardware
-	filterScale = MIN(filterScale, maxFilterScale);
-	
-	
-    // Up to 0.78 the chosen filter was pushed into DOSBox's own scaler
-    // (render.scale.op / .size / .forced) and aspect correction was disabled
-    // there so Boxer could do its own. None of those fields exist at 0.83:
-    // the scalers were replaced by the shader pipeline, which a render backend
-    // drives through RenderBackend::SetShader().
-    //
-    // Boxer already does its own filtering and aspect correction via
-    // OpenEmuShaders, so the computed filterScale is currently unused here.
-    //
-    // TODO: when BoxerRenderBackend lands, map the selected BXFilterType onto a
-    // symbolic shader descriptor and call SetShader() instead of this comment.
-    (void)filterScale;
-    (void)activeType;
-
-    
-    //While we're here, sync up the CGA and hercules color modes if appropriate
-    [self _syncHerculesTint];
-    [self _syncCGAHueAdjustment];
-}
-
-- (const BXFilterDefinition *) _paramsForFilterType: (BXFilterType)type
-{
-	NSAssert1(type <= BXMaxFilters, @"Invalid filter type provided to paramsForFilterType: %li", (long)type);
-	
-    return BXFilters[type];
-}
-
-
-//Return the appropriate filter size to scale the given resolution up to the specified viewport.
-//This is usually the viewport height divided by the resolution height and rounded up, to ensure
-//we're always rendering larger than we need so that the graphics are crisper when scaled down.
-//However we finesse this for some filters that look like shit when scaled down too much.
-//(We base this on height rather than width, so that we'll use the larger filter size for
-//aspect-ratio corrected surfaces.)
-- (NSUInteger) _filterScaleForType: (BXFilterType)type
-                    fromResolution: (NSSize)resolution
-                        toViewport: (NSSize)viewportSize
-                        isTextMode: (BOOL) isTextMode
-{
-	const BXFilterDefinition *params = [self _paramsForFilterType: type];
-	
-	NSSize scale = NSMakeSize(viewportSize.width / resolution.width,
-							  viewportSize.height / resolution.height);
-	
-	NSUInteger filterScale = (NSUInteger)ceilf(scale.height - params->outputScaleBias);
-	if (filterScale < params->minFilterScale) filterScale = params->minFilterScale;
-	if (filterScale > params->maxFilterScale) filterScale = params->maxFilterScale;
-	
-	return filterScale;
-}
-
-//Returns whether our selected filter should be applied for the specified transformation.
-- (BOOL) _shouldApplyFilterType: (BXFilterType)type
-				 fromResolution: (NSSize)resolution
-					 toViewport: (NSSize)viewportSize
-					 isTextMode: (BOOL)isTextMode
-{
-	const BXFilterDefinition *params = [self _paramsForFilterType: type];
-	
-	//Disable scalers for high-resolution graphics modes
-	//(We leave them available for text modes)
-	if (!isTextMode && !sizeFitsWithinSize(resolution, params->maxResolution)) return NO;
-	
-	NSSize scale = NSMakeSize(viewportSize.width / resolution.width,
-							  viewportSize.height / resolution.height);
-	
-	//Scale is too small for filter to be applied
-	if (scale.height < params->minOutputScale) return NO;
-	
-	//If we got this far, go for it!
-	return YES;
-}
-
-- (NSUInteger) _maxFilterScaleForResolution: (NSSize)resolution
-{
-	NSSize maxFrameSize	= [self.emulator.delegate maxFrameSizeForEmulator: self.emulator];
-	//Work out how big a filter operation size we can use, given the maximum output size
-	NSUInteger maxScale	= floor(MIN(maxFrameSize.width / resolution.width,
-                                    maxFrameSize.height / resolution.height));
-	
-	return maxScale;
-}
 
 @end

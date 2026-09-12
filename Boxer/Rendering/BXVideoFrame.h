@@ -16,7 +16,6 @@ extern const CGFloat BX4by3AspectRatio;
 
 /// The maximum number of regions that can be flagged as dirty.
 /// This is set to the maximum vertical resolution expected from a DOS game.
-#define MAX_DIRTY_REGIONS 1024
 
 /// @brief BXVideoFrame is a renderer-agnostic framebuffer for DOSBox to draw frames into.
 ///
@@ -30,9 +29,6 @@ extern const CGFloat BX4by3AspectRatio;
 	NSUInteger _bytesPerPixel;
 	NSSize _intendedScale;
     BOOL _containsText;
-    
-    NSRange _dirtyRegions[MAX_DIRTY_REGIONS];
-    NSUInteger _numDirtyRegions;
     
     NSTimeInterval _timestamp;
 }
@@ -82,11 +78,6 @@ extern const CGFloat BX4by3AspectRatio;
 @property (readonly) const void *bytes NS_RETURNS_INNER_POINTER;
 @property (readonly) void *mutableBytes NS_RETURNS_INNER_POINTER;
 
-/// The number of ranges of dirty lines. Incremented by setNeedsDisplayInRegion:
-/// and reset to 0 by clearDirtyRegions. See the dirty region functions below.
-@property (readonly, assign) NSUInteger numDirtyRegions;
-
-
 #pragma mark -
 #pragma mark Class helpers
 
@@ -111,13 +102,5 @@ extern const CGFloat BX4by3AspectRatio;
 /// Resets the aspect ratio of the frame to use unscaled square pixels.
 - (void) useSquarePixels;
 
-
-#pragma mark -
-#pragma mark Flagging scanlines of the frame as dirty.
-
-- (void) setNeedsDisplayInRegion: (NSRange)range;
-- (void) clearDirtyRegions;
-
-- (NSRange) dirtyRegionAtIndex: (NSUInteger)region;
 
 @end

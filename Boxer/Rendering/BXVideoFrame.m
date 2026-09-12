@@ -11,17 +11,12 @@
 
 const CGFloat BX4by3AspectRatio = (CGFloat)320.0 / (CGFloat)240.0;
 
-@interface BXVideoFrame ()
-@property (readwrite, assign) NSUInteger numDirtyRegions;
-@end
-
 @implementation BXVideoFrame
 @synthesize frameData = _frameData;
 @synthesize size = _size;
 @synthesize baseResolution = _baseResolution;
 @synthesize bytesPerPixel = _bytesPerPixel;
 @synthesize intendedScale = _intendedScale;
-@synthesize numDirtyRegions = _numDirtyRegions;
 @synthesize containsText = _containsText;
 @synthesize timestamp = _timestamp;
 
@@ -118,32 +113,6 @@ const CGFloat BX4by3AspectRatio = (CGFloat)320.0 / (CGFloat)240.0;
 - (void *) mutableBytes
 {
 	return _frameData.mutableBytes;
-}
-
-#pragma mark Region-dirtying
-
-- (void) setNeedsDisplayInRegion: (NSRange)range
-{
-    NSAssert(self.numDirtyRegions < MAX_DIRTY_REGIONS,
-             @"setNeedsDisplayInRegion: called when the list of dirty regions is already full.");
-    
-    NSUInteger nextIndex = self.numDirtyRegions;
-    _dirtyRegions[nextIndex] = range;
-    
-    self.numDirtyRegions = nextIndex + 1;
-}
-
-- (void) clearDirtyRegions
-{
-    self.numDirtyRegions = 0;
-}
-
-- (NSRange) dirtyRegionAtIndex: (NSUInteger)regionIndex
-{
-    NSAssert1(regionIndex < self.numDirtyRegions,
-              @"dirtyRegionAtIndex: called with index out of range: %lu", (unsigned long)regionIndex);
-    
-    return _dirtyRegions[regionIndex];
 }
 
 @end

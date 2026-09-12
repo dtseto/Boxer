@@ -68,14 +68,6 @@
 #pragma mark -
 #pragma mark Methods
 
-/// Called when the active keyboard input source changes in OS X.
-/// Used to sync the DOS keyboard layout accordingly.
-void _inputSourceChanged(CFNotificationCenterRef center,
-                         void *observer,
-                         CFStringRef name,
-                         const void *object,
-                         CFDictionaryRef userInfo);
-
 /// Resynchronises the current simulated mouse button state whenever the current modifier flags change.
 - (void) _syncSimulatedMouseButtons: (NSUInteger)currentModifiers;
 

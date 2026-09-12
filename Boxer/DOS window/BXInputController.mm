@@ -30,6 +30,14 @@
 //For text input services notification names
 #import <Carbon/Carbon.h>
 
+/// Called when the active keyboard input source changes in macOS.
+/// Used to sync the DOS keyboard layout accordingly. Defined below.
+static void _inputSourceChanged(CFNotificationCenterRef center,
+                                void *observer,
+                                CFStringRef name,
+                                const void *object,
+                                CFDictionaryRef userInfo);
+
 
 @implementation BXInputController
 @synthesize mouseLocked = _mouseLocked;
@@ -406,11 +414,17 @@
     [self syncCursor];
 }
 
-void _inputSourceChanged(CFNotificationCenterRef center,
-                         void *observer,
-                         CFStringRef name,
-                         const void *object,
-                         CFDictionaryRef userInfo)
+// Static because this file is Objective-C++ now: as a global it was the only
+// symbol among the fifteen .m -> .mm renames whose C linkage was silently lost
+// to C++ mangling. Nothing outside this file used it -- it is only ever taken
+// as a CFNotificationCallback function pointer, which does not care -- so
+// giving it internal linkage removes the trap rather than papering over it
+// with extern "C". See Remaining item 14 in FINDINGS.md.
+static void _inputSourceChanged(CFNotificationCenterRef center,
+                                void *observer,
+                                CFStringRef name,
+                                const void *object,
+                                CFDictionaryRef userInfo)
 {
     [(__bridge BXInputController *)observer performSelectorOnMainThread: @selector(_syncKeyboardLayout)
                                                     withObject: nil

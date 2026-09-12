@@ -761,34 +761,14 @@ static void BXLogGeometryEvent(NSString *format, ...)
         
         [self didChangeValueForKey:@"renderingStyle"];
         
-        BXSession *session = (BXSession *)self.document;
-        BXVideoHandler *videoHandler = session.emulator.videoHandler;
-        
-        //Work out whether to have the GL view handle the style, or do it in software.
-        if ([self.renderingView supportsRenderingStyle: style])
-        {
-            videoHandler.filterType = BXFilterNormal;
-            self.renderingView.renderingStyle = style;
-        }
-        else
-        {
-            BXFilterType filterType;
-            switch (style)
-            {
-                case BXRenderingStyleSmoothed:
-                    filterType = BXFilterHQx;
-                    break;
-                case BXRenderingStyleCRT:
-                    filterType = BXFilterScanlines;
-                    break;
-                case BXRenderingStyleNormal:
-                default:
-                    filterType = BXFilterNormal;
-            }
-            
-            videoHandler.filterType = filterType;
-            self.renderingView.renderingStyle = BXRenderingStyleNormal;
-        }
+        // Up to 0.78 this chose between two filtering stacks: the GL view's own,
+        // or -- if the view could not do the style -- DOSBox's software scalers,
+        // reached by setting BXVideoHandler.filterType. 0.83 has no scalers left
+        // (see D23 in FINDINGS.md), and the only BXFrameRenderingView Boxer ships
+        // answers YES to every style, so the software branch was unreachable
+        // *and* inert. The rendering view is now the only authority, with
+        // BXShadersModel behind it.
+        self.renderingView.renderingStyle = style;
     }
 }
 

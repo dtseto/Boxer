@@ -18,7 +18,7 @@
 
 // Minimum 5-char long Git hash of the build; can be longer to guarantee
 // uniqueness (e.g., da3c5, c22ef8)
-#define BUILD_GIT_HASH "d33b7ffae"
+#define BUILD_GIT_HASH "57d7bb077"
 
 
 // Operating System
@@ -238,6 +238,20 @@
 // be used as a fallback if the user hasn't populated their
 // XDG_DATA_HOME or XDG_DATA_DIRS.
 #define CUSTOM_DATADIR "/usr/local/share"
+
+
+// Optional features an embedder can drop along with the third-party library
+// each one exists to use. Stock builds enable all three; Boxer turns them off
+// because it can reach none of them -- see its FINDINGS.md, "D25".
+
+// The Opus CD-DA decoder (libopusfile, libopus, libogg)
+#define C_OPUS 0  // Opus-encoded CD-DA tracks are the only thing that needs libopusfile/libopus/libogg -- FLAC, Ogg Vorbis, MP3 and WAV decode through vendored headers; src/libs/decoders/opus.cpp is not compiled
+
+// Screenshot capture (libpng, and zlib through it)
+#define C_CAPTURE_IMAGE 0  // DOSBox's screenshot capture is the only user of libpng (and zlib through it), and Boxer takes screenshots itself; src/capture/image/ is not compiled
+
+// Video capture and the ZMBV codec (zlib-ng)
+#define C_CAPTURE_VIDEO 0  // DOSBox's video capture and the ZMBV codec are the only users of zlib-ng; src/capture/capture_video.cpp and src/libs/zmbv/ are not compiled
 
 
 #endif // DOSBOX_DOSBOX_CONFIG_H

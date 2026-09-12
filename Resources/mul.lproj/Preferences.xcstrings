@@ -1437,6 +1437,18 @@
           }
         }
       }
+    },
+    "CFF-02-Cel.title" : {
+      "comment" : "Class = \"NSButtonCell\"; title = \"Use Caps Lock to toggle fast-forward\"; ObjectID = \"CFF-02-Cel\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Use Caps Lock to toggle fast-forward"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

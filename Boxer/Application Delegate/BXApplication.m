@@ -8,7 +8,9 @@
 #import "BXApplication.h"
 #import "BXBaseAppController.h"
 #import "BXBaseAppController+BXHotKeys.h"
+#import "BXSession+BXUIControls.h"
 #import "BXEmulatorErrors.h"
+#import <Carbon/Carbon.h>
 #import <objc/runtime.h>
 
 static NSString *BXApplicationCrashDumpSafeFilenameComponent(NSString *string)
@@ -172,6 +174,25 @@ static BOOL BXApplicationWriteLocalReportFromLegacyBugReportURL(NSURL *URL)
 
 - (void) sendEvent: (NSEvent *)theEvent
 {
+    // Caps Lock is delivered as a normal flags-changed event, so handling it here works
+    // without requiring Accessibility permission for the global keyboard event tap.
+    if (self.delegate &&
+        theEvent.type == NSEventTypeFlagsChanged &&
+        theEvent.keyCode == kVK_CapsLock &&
+        [[NSUserDefaults standardUserDefaults] boolForKey: @"capsLockFastForward"])
+    {
+        BXSession *session = [(BXBaseAppController *)self.delegate currentSession];
+        if (session.isEmulating)
+        {
+            BOOL isEnabled = (theEvent.modifierFlags & NSEventModifierFlagCapsLock) != 0;
+            if (isEnabled)
+                [session fastForward: self];
+            else
+                [session releaseFastForward: self];
+            return;
+        }
+    }
+
     //Dispatch media key events.
     if (self.delegate && theEvent.type == NSEventTypeSystemDefined && theEvent.subtype == 8)
     {

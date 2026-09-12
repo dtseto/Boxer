@@ -40,6 +40,8 @@
 	<true/>
 	<key>suppressSystemHotkeys</key>
 	<true/>
+	<key>capsLockFastForward</key>
+	<false/>
 	<key>suppressProcessSwitching</key>
 	<false/>
 	<key>muted</key>

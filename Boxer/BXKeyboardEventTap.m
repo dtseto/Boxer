@@ -165,7 +165,9 @@ static CGEventRef _handleEventFromTap(CGEventTapProxy proxy, CGEventType type, C
         //versions, repeatedly attempting a privileged tap can repeatedly trigger TCC prompts.
         if (self.class.canCaptureKeyEvents)
         {
-            eventsToCapture |= CGEventMaskBit(kCGEventKeyUp) | CGEventMaskBit(kCGEventKeyDown);
+            eventsToCapture |= CGEventMaskBit(kCGEventKeyUp) |
+                               CGEventMaskBit(kCGEventKeyDown) |
+                               CGEventMaskBit(kCGEventFlagsChanged);
         }
         
         _tap = CGEventTapCreate(kCGSessionEventTap, 
@@ -325,6 +327,7 @@ static CGEventRef _handleEventFromTap(CGEventTapProxy proxy, CGEventType type, C
     {
         case kCGEventKeyDown:
         case kCGEventKeyUp:
+        case kCGEventFlagsChanged:
         case NX_SYSDEFINED:
         {
             BOOL shouldCapture = NO;

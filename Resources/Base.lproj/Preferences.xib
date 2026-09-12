@@ -423,6 +423,17 @@ MT-32 music, as these are not legal to distribute.</string>
                                                         <binding destination="62" name="value" keyPath="values.suppressSystemHotkeys" id="403"/>
                                                     </connections>
                                                 </button>
+                                                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="CFF-01-Tog">
+                                                    <rect key="frame" x="96" y="166" width="343" height="18"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="check" title="Use Caps Lock to toggle fast-forward" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="CFF-02-Cel">
+                                                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                                        <font key="font" metaFont="system"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <binding destination="62" name="value" keyPath="values.capsLockFastForward" id="CFF-03-Bnd"/>
+                                                    </connections>
+                                                </button>
                                                 <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="368">
                                                     <rect key="frame" x="114" y="105" width="303" height="28"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>

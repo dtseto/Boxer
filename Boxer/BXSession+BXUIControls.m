@@ -301,50 +301,19 @@
 - (IBAction) toggleFastForward: (id)sender
 {
     if (!self.emulating) return;
-    
-    //Check if the menu option was triggered via its key equivalent or via a regular click.
-    NSEvent *currentEvent = [NSApp currentEvent];
-    
-    //If the toggle was triggered by a key event, then trigger the fast-forward until the key is released.
-    if (currentEvent.type == NSEventTypeKeyDown)
+
+    // Menu clicks and the Command-Option-Right Arrow key equivalent both toggle a
+    // persistent state. The previous nested key-release loop could immediately undo
+    // the action (or block event dispatch) on current macOS versions.
+    if (!self.emulator.turboSpeed)
     {
         [self fastForward: sender];
-        
-        if (self.emulator.isConcurrent)
-        {
-            //Keep fast-forwarding until the user lifts the key. Once we receive the key-up,
-            //then discard all the repeated key-down events that occurred before the key-up:
-            //otherwise, the action will trigger again and again for each repeat.
-            NSEvent *keyUp = [NSApp nextEventMatchingMask: NSEventMaskKeyUp
-                                                untilDate: [NSDate distantFuture]
-                                                   inMode: NSEventTrackingRunLoopMode
-                                                  dequeue: NO];
-            [NSApp discardEventsMatchingMask: NSEventMaskKeyDown beforeEvent: keyUp];
-            [self releaseFastForward: sender];
-        }
-        else
-        {
-            //IMPLEMENTATION NOTE: when the emulator is running on the main thread,
-            //an event-tracking loop like the one above would block the emulation:
-            //defeating the purpose of the fast-forward. So instead, we listen for
-            //the key-up within the session's event-dispatch loop: making it a kind
-            //of inverted tracking loop.
-            _waitingForFastForwardRelease = YES;
-        }
     }
-    //If the option was toggled by a regular menu click, then make it 'stick' until toggled again.
     else
     {
-        if (!self.emulator.turboSpeed)
-        {
-            [self fastForward: sender];
-        }
-        else
-        {
-            [self releaseFastForward: sender];
-        }
-        _waitingForFastForwardRelease = NO;
+        [self releaseFastForward: sender];
     }
+    _waitingForFastForwardRelease = NO;
 }
 
 - (IBAction) fastForward: (id)sender

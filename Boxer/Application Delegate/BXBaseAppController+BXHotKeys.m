@@ -42,9 +42,9 @@
 
 - (void) mediaKeyPressed: (NSEvent *)theEvent
 {   
-    //Only respond to media keys if we have an active session, if we're active ourselves,
-    //and if we can be sure other applications (like iTunes) won't also respond to them.
-    if (![NSApp isActive] || !self.currentSession || self.hotkeySuppressionTap.status == BXKeyboardEventTapNotTapping)
+    // Only respond to media keys while Boxer is active and has a session. BXApplication
+    // consumes the event, so handling must not depend on Accessibility event-tap permission.
+    if (![NSApp isActive] || !self.currentSession)
         return;
     
     //Decipher information from the event and decide what to do with the key.
@@ -58,6 +58,9 @@
                 [self.currentSession togglePaused: self];
             break;
             
+        // Modern keyboards report the next-track key as NX_KEYTYPE_NEXT.
+        // NX_KEYTYPE_FAST is retained for older keyboards with a distinct scan-forward key.
+        case NX_KEYTYPE_NEXT:
         case NX_KEYTYPE_FAST:
             if (isPressed)
                 [self.currentSession fastForward: self];
@@ -83,7 +86,7 @@
     if (shouldReturn) {
         return NO;
     }
-    
+
     //Tweak: let Cmd-modified keys fall through, so that key-repeat events
     //for key equivalents are handled properly.
     if ((event.modifierFlags & NSEventModifierFlagCommand) == NSEventModifierFlagCommand)
@@ -146,6 +149,7 @@
     switch (keyCode)
     {
         case NX_KEYTYPE_PLAY:
+        case NX_KEYTYPE_NEXT:
         case NX_KEYTYPE_FAST:
             return YES;
             break;

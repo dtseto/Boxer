@@ -197,7 +197,7 @@ to the DOS prompt instead.</string>
                                                     </connections>
                                                 </button>
                                                 <box autoresizesSubviews="NO" fixedFrame="YES" boxType="custom" borderType="line" title="Box" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="2030">
-                                                    <rect key="frame" x="-1" y="234" width="298" height="86"/>
+                                                    <rect key="frame" x="-1" y="330" width="298" height="86"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="Y99-kE-dZv">
                                                         <rect key="frame" x="1" y="1" width="296" height="84"/>
@@ -230,106 +230,12 @@ to the DOS prompt instead.</string>
                                                     <color key="borderColor" white="0.0" alpha="0.10000000000000001" colorSpace="calibratedWhite"/>
                                                     <color key="fillColor" white="0.0" alpha="0.050000000000000003" colorSpace="calibratedWhite"/>
                                                 </box>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2084">
-                                                    <rect key="frame" x="20" y="378" width="87" height="17"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="CPU speed:" id="2087">
-                                                        <font key="font" metaFont="systemBold"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2085">
-                                                    <rect key="frame" x="109" y="378" width="167" height="14"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingHead" sendsActionOnEndEditing="YES" alignment="right" title="[Current CPU speed]" id="2086">
-                                                        <font key="font" metaFont="smallSystem"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                    <connections>
-                                                        <binding destination="56" name="value" keyPath="selection.speedDescription" id="2089"/>
-                                                    </connections>
-                                                </textField>
-                                                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2057">
-                                                    <rect key="frame" x="20" y="352" width="256" height="17"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <sliderCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="1" doubleValue="1" tickMarkPosition="below" numberOfTickMarks="11" sliderType="linear" id="2058">
-                                                        <connections>
-                                                            <binding destination="56" name="enabled" keyPath="selection.emulating" id="2061"/>
-                                                        </connections>
-                                                    </sliderCell>
-                                                    <connections>
-                                                        <binding destination="56" name="enabled" keyPath="selection.emulating" id="2066"/>
-                                                        <binding destination="56" name="value" keyPath="selection.sliderSpeed" id="2064">
-                                                            <dictionary key="options">
-                                                                <bool key="NSValidatesImmediately" value="YES"/>
-                                                                <string key="NSValueTransformerName">BXSpeedSliderTransformer</string>
-                                                            </dictionary>
-                                                        </binding>
-                                                        <outlet property="nextKeyView" destination="2032" id="2285"/>
-                                                    </connections>
-                                                </slider>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2072">
-                                                    <rect key="frame" x="244" y="338" width="36" height="11"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Max" id="2073">
-                                                        <font key="font" metaFont="miniSystem"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2074">
-                                                    <rect key="frame" x="199" y="338" width="44" height="11"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Pentium" id="2075">
-                                                        <font key="font" metaFont="miniSystem"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2076">
-                                                    <rect key="frame" x="150" y="338" width="44" height="11"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="486" id="2077">
-                                                        <font key="font" metaFont="miniSystem"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2078">
-                                                    <rect key="frame" x="102" y="338" width="44" height="11"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="386" id="2079">
-                                                        <font key="font" metaFont="miniSystem"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2080">
-                                                    <rect key="frame" x="53" y="338" width="44" height="11"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="AT" id="2081">
-                                                        <font key="font" metaFont="miniSystem"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2082">
-                                                    <rect key="frame" x="20" y="338" width="36" height="11"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="XT" id="2083">
-                                                        <font key="font" metaFont="miniSystem"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
                                             </subviews>
                                         </customView>
                                     </subviews>
                                 </view>
                                 <connections>
-                                    <outlet property="initialFirstResponder" destination="2057" id="2071"/>
+                                    <outlet property="initialFirstResponder" destination="2032" id="2071"/>
                                 </connections>
                             </tabViewItem>
                             <tabViewItem label="Mouse Inspector" identifier="2" id="1426" userLabel="Mouse Panel">
@@ -982,8 +888,6 @@ if the joystick drifts or behaves erratically.</string>
                 <string>settings.mouseButtonShortcutRight</string>
                 <string>gameSettings.mouseButtonModifierRight</string>
                 <string>gameSettings.mouseButtonModifierBoth</string>
-                <string>sliderSpeed</string>
-                <string>speedDescription</string>
                 <string>gameSettings.strictGameportTiming</string>
             </declaredKeys>
             <connections>

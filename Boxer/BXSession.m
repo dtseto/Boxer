@@ -816,7 +816,6 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 		BXEmulatorConfiguration *runtimeConf = [BXEmulatorConfiguration configuration];
 		
 		//These are the settings we want to keep in the configuration file
-		NSNumber *CPUSpeed      = [self.gameSettings objectForKey: @"CPUSpeed"];
 		NSNumber *coreMode		= [self.gameSettings objectForKey: @"coreMode"];
 		NSNumber *strictGameportTiming = [self.gameSettings objectForKey: @"strictGameportTiming"];
 		
@@ -832,18 +831,11 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 			[runtimeConf setValue: timingString forKey: @"timed" inSection: @"joystick"];
 		}
 		
-		if (CPUSpeed)
-		{
-            NSInteger speed = CPUSpeed.integerValue;
-            BOOL isAutoSpeed = (speed == BXAutoSpeed);
-			NSString *cyclesString = [BXEmulator configStringForFixedSpeed: speed
-																	isAuto: isAutoSpeed];
-			
-			[runtimeConf setValue: cyclesString forKey: @"cycles" inSection: @"cpu"];
-		}
-		
 		//Strip out these settings once we're done, so we won't preserve them in user defaults and won't re-record them
         //if they haven't changed by the next time the settings are synchronized.
+		//NOTE: "CPUSpeed" is still stripped here even though nothing writes it any
+		//more: a gamebox last opened by an older Boxer can still have one left in
+		//user defaults, and leaving it there would persist it forever.
 		NSArray *confSettings = [NSArray arrayWithObjects: @"CPUSpeed", @"coreMode", @"strictGameportTiming", nil];
 		[self.gameSettings removeObjectsForKeys: confSettings];
 
@@ -1213,9 +1205,6 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 
 - (void) emulatorDidFinish: (NSNotification *)notification
 {
-    //If we were fast-forwarding, clear the bezel now.
-    [self releaseFastForward: self];
-    
     //Hide our documentation and print status panel.
     [self.printStatusController.window orderOut: self];
     
@@ -1608,9 +1597,6 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 - (void) emulatorDidChangeEmulationState: (NSNotification *)notification
 {
 	//These reside in BXEmulatorControls, as should this function, but so be it
-	[self willChangeValueForKey: @"sliderSpeed"];
-	[self didChangeValueForKey: @"sliderSpeed"];
-	
 	[self willChangeValueForKey: @"dynamic"];
 	[self didChangeValueForKey: @"dynamic"];	
 }
@@ -1645,18 +1631,6 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
                                                          inMode: NSDefaultRunLoopMode
                                                         dequeue: YES]))
 	@autoreleasepool {
-        //Listen for key-up events for our fast-forward key and handle them ourselves.
-        //Swallow all key-down events while this is happening.
-        //IMPLEMENTATION NOTE: this is essentially a standard Cocoa event-listening loop
-        //turned inside out, so that the emulation will keep running 'around' our listening.
-        if (_waitingForFastForwardRelease)
-        {
-            if (event.type == NSEventTypeKeyUp)
-                [self releaseFastForward: self];
-            else if (event.type == NSEventTypeKeyDown)
-                event = nil;
-        }
-        
         if (event)
         {
             [NSApp sendEvent: event];

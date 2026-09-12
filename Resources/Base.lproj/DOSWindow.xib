@@ -188,67 +188,15 @@
                             <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                         </box>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="98C1A095-12D7-4DB7-B467-7F426362CCE6" label="CPU Speed" paletteLabel="CPU Speed" tag="-1" sizingBehavior="auto" id="1416">
-                        <nil key="toolTip"/>
-                        <box key="view" autoresizesSubviews="NO" boxType="custom" borderType="none" borderWidth="0.0" titlePosition="noTitle" transparent="YES" id="1417">
-                            <rect key="frame" x="0.0" y="14" width="130" height="22"/>
-                            <autoresizingMask key="autoresizingMask"/>
-                            <view key="contentView" id="hly-7J-Aom">
-                                <rect key="frame" x="0.0" y="0.0" width="130" height="22"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                <subviews>
-                                    <button toolTip="Decrease the CPU speed" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1420">
-                                        <rect key="frame" x="0.0" y="5" width="29" height="17"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                        <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="tortoise.fill" catalog="system" imagePosition="only" alignment="center" controlSize="small" continuous="YES" state="on" borderStyle="border" inset="2" id="1421">
-                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                            <font key="font" metaFont="systemBold" size="12"/>
-                                        </buttonCell>
-                                        <connections>
-                                            <action selector="decrementSpeed:" target="-1" id="1435"/>
-                                        </connections>
-                                    </button>
-                                    <button toolTip="Increase the CPU speed" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1419">
-                                        <rect key="frame" x="101" y="5" width="29" height="17"/>
-                                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                        <buttonCell key="cell" type="recessed" bezelStyle="recessed" image="hare.fill" catalog="system" imagePosition="only" alignment="center" controlSize="small" continuous="YES" state="on" borderStyle="border" inset="2" id="1422">
-                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                                            <font key="font" metaFont="systemBold" size="12"/>
-                                        </buttonCell>
-                                        <connections>
-                                            <action selector="incrementSpeed:" target="-1" id="1434"/>
-                                        </connections>
-                                    </button>
-                                    <slider toolTip="Adjust the emulated CPU speed" focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1418">
-                                        <rect key="frame" x="29" y="5" width="72" height="17"/>
-                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
-                                        <sliderCell key="cell" controlSize="small" continuous="YES" state="on" focusRingType="none" alignment="left" maxValue="1" doubleValue="1" tickMarkPosition="below" numberOfTickMarks="6" sliderType="linear" id="1423"/>
-                                        <connections>
-                                            <binding destination="-2" name="enabled" keyPath="document.emulating" id="1429"/>
-                                            <binding destination="-2" name="value" keyPath="document.sliderSpeed" id="1433">
-                                                <dictionary key="options">
-                                                    <real key="NSNoSelectionPlaceholder" value="1"/>
-                                                    <bool key="NSValidatesImmediately" value="YES"/>
-                                                    <string key="NSValueTransformerName">BXSpeedSliderTransformer</string>
-                                                </dictionary>
-                                            </binding>
-                                        </connections>
-                                    </slider>
-                                </subviews>
-                            </view>
-                            <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                        </box>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="D375FB40-9A93-4A78-8CD9-124F3047BB9B" label="Playback" paletteLabel="Playback" toolTip="Pause, resume or fast-forward the game" sizingBehavior="auto" id="1345">
+                    <toolbarItem implicitItemIdentifier="D375FB40-9A93-4A78-8CD9-124F3047BB9B" label="Playback" paletteLabel="Playback" toolTip="Pause or resume the game" sizingBehavior="auto" id="1345">
                         <segmentedControl key="view" verticalHuggingPriority="750" id="1343">
-                            <rect key="frame" x="0.0" y="14" width="108" height="24"/>
+                            <rect key="frame" x="0.0" y="14" width="72" height="24"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <segmentedCell key="cell" borderStyle="border" alignment="left" style="texturedRounded" trackingMode="selectOne" id="1344">
                                 <font key="font" metaFont="system"/>
                                 <segments>
                                     <segment toolTip="Pause the game" image="pause.fill" catalog="system" width="32"/>
-                                    <segment toolTip="Resume the game at normal speed" image="play.fill" catalog="system" width="32" tag="1"/>
-                                    <segment toolTip="Fast-forward the game" image="forward.fill" catalog="system" width="32" tag="2">
+                                    <segment toolTip="Resume the game" image="play.fill" catalog="system" width="32" tag="1">
                                         <nil key="label"/>
                                     </segment>
                                 </segments>
@@ -355,12 +303,6 @@
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
                         <action selector="resume:" target="-1" id="1394"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Fast Forward" id="1392">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="fastForward:" target="-1" id="1395"/>
                     </connections>
                 </menuItem>
             </items>

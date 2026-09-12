@@ -59,12 +59,6 @@
             break;
             
         case NX_KEYTYPE_FAST:
-            if (isPressed)
-                [self.currentSession fastForward: self];
-            else
-                [self.currentSession releaseFastForward: self];
-            break;
-
         case NX_KEYTYPE_REWIND:
         default:
             break;

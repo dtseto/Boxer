@@ -126,7 +126,6 @@ typedef NS_ENUM(NSInteger, BXSessionProgramCompletionBehavior) {
     BOOL _canOpenURLs;
 	
 	BOOL _userSkippedDefaultProgram;
-    BOOL _waitingForFastForwardRelease;
     
     BXSessionProgramCompletionBehavior _programCompletionBehavior;
 	

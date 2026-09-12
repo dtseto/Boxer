@@ -131,7 +131,6 @@ extern NSStringEncoding BXDirectStringEncoding;
 	BOOL _executing;
 	BOOL _initialized;
 	BOOL _paused;
-    BOOL _wasAutoSpeed;
     
     BOOL _waitingForCommandInput;
     BOOL _clearsScreenBeforeCommandExecution;
@@ -254,8 +253,6 @@ extern NSStringEncoding BXDirectStringEncoding;
 /// Whether we are running at automatic maximum speed.
 @property (assign, getter=isAutoSpeed) BOOL autoSpeed;
 
-/// Whether we are running in turbo mode (emulating as fast as possible.)
-@property (assign, nonatomic, getter=isTurboSpeed) BOOL turboSpeed;
 
 /// The current CPU core mode.
 @property (assign) BXCoreMode coreMode;

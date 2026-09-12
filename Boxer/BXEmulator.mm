@@ -65,9 +65,6 @@ NSStringEncoding BXDirectStringEncoding		= NSUTF8StringEncoding;
 //defined in dos_execute.cpp
 extern const char* RunningProgram;
 
-//defined in dosbox.cpp
-extern bool ticksLocked;
-
 #if (C_DYNAMIC_X86)
 //defined in core_dyn_x86.cpp
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
@@ -443,9 +440,7 @@ static BOOL _hasStartedEmulator = NO;
 	BOOL autoSpeed = NO;
 	if ([self isExecuting])
 	{
-        //While in turbo mode, report the value we had before we entered turbo.
-        if (self.isTurboSpeed) autoSpeed = _wasAutoSpeed;
-        else autoSpeed = (CPU_CycleAutoAdjust == BXSpeedAuto);
+        autoSpeed = (CPU_CycleAutoAdjust == BXSpeedAuto);
 	}
 	return autoSpeed;
 }
@@ -454,61 +449,16 @@ static BOOL _hasStartedEmulator = NO;
 {
 	if (self.isExecuting && self.isAutoSpeed != autoSpeed)
 	{
-        //While we're in turbo, don't change the auto-speed setting directly;
-        //instead, set the value we'll return to when we come out of turbo.
-        if (self.isTurboSpeed)
-        {
-            _wasAutoSpeed = autoSpeed;
-        }
-        else
-        {
-            //Be a good boy and record/restore the old cycles setting
-            if (autoSpeed)	boxer_savedCycleMax = CPU_CycleMax;
-            else			CPU_CycleMax = boxer_savedCycleMax;
-            
-            //Always force the usage percentage to 100
-            CPU_CyclePercUsed = 100;
-            
-            CPU_CycleAutoAdjust = (autoSpeed) ? BXSpeedAuto : BXSpeedFixed;
-        }
+        //Be a good boy and record/restore the old cycles setting
+        if (autoSpeed)	boxer_savedCycleMax = CPU_CycleMax;
+        else			CPU_CycleMax = boxer_savedCycleMax;
+        
+        //Always force the usage percentage to 100
+        CPU_CyclePercUsed = 100;
+        
+        CPU_CycleAutoAdjust = (autoSpeed) ? BXSpeedAuto : BXSpeedFixed;
 	}
 }
-
-@synthesize turboSpeed=ticksLocked;
-
-- (void) setTurboSpeed: (BOOL)turboSpeed
-{
-    if (turboSpeed != self.isTurboSpeed)
-    {
-        if (turboSpeed)
-        {
-            ticksLocked = YES;
-            
-            _wasAutoSpeed = (CPU_CycleAutoAdjust == BXSpeedAuto);
-            //Suppress auto-speed temporarily
-            if (_wasAutoSpeed)
-            {
-                CPU_CycleAutoAdjust = NO;
-                //Hurray, magic numbers!
-                CPU_CycleMax /= 3;
-                if (CPU_CycleMax < 1000) CPU_CycleMax = 1000;
-            }
-        }
-        else
-        {
-            ticksLocked = NO;
-            
-            //Restore the previous auto-speed value.
-            if (_wasAutoSpeed)
-            {
-                _wasAutoSpeed = NO;
-                CPU_CycleAutoAdjust = BXSpeedAuto;
-                //TODO: should we set this using setAutoSpeed:?
-            }
-        }
-    }
-}
-
 
 - (BXCoreMode) coreMode
 {

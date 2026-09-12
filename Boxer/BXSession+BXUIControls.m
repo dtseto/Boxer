@@ -31,7 +31,7 @@
 @implementation BXSession (BXUIControls)
 
 #pragma mark -
-#pragma mark Speed-related helper methods
+#pragma mark Helper methods
 
 + (void) initialize
 {
@@ -41,76 +41,24 @@
         NSDateFormatter *screenshotDateFormatter = [[NSDateFormatter alloc] init];
         screenshotDateFormatter.dateFormat = NSLocalizedString(@"yyyy-MM-dd 'at' h.mm.ss a", @"The date and time format to use for screenshot filenames. Literal strings (such as the 'at') should be enclosed in single quotes. The date order should not be changed when localizing unless really necessary, as this is important to maintain chronological ordering in alphabetical file listings. Note that some characters such as / and : are not permissible in filenames and will be stripped out or replaced.");
         
-        double bands[6] = {
-            BXMinSpeedThreshold,
-            BX286SpeedThreshold,
-            BX386SpeedThreshold,
-            BX486SpeedThreshold,
-            BXPentiumSpeedThreshold,
-            BXMaxSpeedThreshold
-        };
-        NSValueTransformer *speedBanding		= [[BXBandedValueTransformer alloc] initWithThresholds: bands count: 6];
-        NSValueTransformer *screenshotDater     = [[BXDateTransformer alloc] initWithDateFormatter: screenshotDateFormatter];
+        NSValueTransformer *screenshotDater = [[BXDateTransformer alloc] initWithDateFormatter: screenshotDateFormatter];
         
-        
-        [NSValueTransformer setValueTransformer: speedBanding forName: @"BXSpeedSliderTransformer"];
         [NSValueTransformer setValueTransformer: screenshotDater forName: @"BXCaptureDateTransformer"];
     }
 }
 
-
-//We use different increment scales depending on the speed, to give more accuracy to low-speed adjustments
-+ (NSInteger) incrementAmountForSpeed: (NSInteger)speed goingUp: (BOOL) increasing
-{
-	speed += increasing;
-	if (speed > BXPentiumSpeedThreshold)	return BXPentiumSpeedIncrement;
-	if (speed > BX486SpeedThreshold)		return BX486SpeedIncrement;
-	if (speed > BX386SpeedThreshold)		return BX386SpeedIncrement;
-	if (speed > BX286SpeedThreshold)		return BX286SpeedIncrement;
-											return BXMinSpeedIncrement;
-}
-
-+ (NSInteger) snappedSpeed: (NSInteger) rawSpeed
-{
-	NSInteger increment = [self incrementAmountForSpeed: rawSpeed goingUp: YES];
-	return (NSInteger)(round((CGFloat)rawSpeed / increment) * increment);
-}
-
-+ (NSString *) cpuClassFormatForSpeed: (NSInteger)speed
-{
-	if (speed >= BXPentiumSpeedThreshold)	return NSLocalizedString(@"Pentium speed (%u cycles)",	@"Description for Pentium speed class. %u is cycles setting.");
-	if (speed >= BX486SpeedThreshold)		return NSLocalizedString(@"486 speed (%u cycles)",		@"Description for 80486 speed class. %u is cycles setting.");
-	if (speed >= BX386SpeedThreshold)		return NSLocalizedString(@"386 speed (%u cycles)",		@"Description for 80386 speed class. %u is cycles setting.");
-	if (speed >= BX286SpeedThreshold)		return NSLocalizedString(@"AT speed (%u cycles)",		@"Description for PC-AT 80286 speed class. %u is cycles setting.");
-	
-	return NSLocalizedString(@"XT speed (%u cycles)",		@"Description for PC-XT 8088 speed class. %u is cycles setting.");
-}
-
-+ (NSString *) descriptionForSpeed: (NSInteger)speed
-{
-    if (speed == BXAutoSpeed)
-    	return NSLocalizedString(@"Maximum speed", @"Description for current CPU speed when in automatic CPU throttling mode.");
-    
-    else
-        return [NSString stringWithFormat: [self cpuClassFormatForSpeed: speed], speed];
-}
 
 #pragma mark -
 #pragma mark Controlling CPU emulation
 
 + (NSSet *) keyPathsForValuesAffectingPlaybackMode
 {
-    return [NSSet setWithObjects: @"paused", @"emulator.turboSpeed", nil];
+    return [NSSet setWithObject: @"paused"];
 }
 
 - (BXPlaybackMode) playbackMode
 {
-    if (self.isPaused)
-        return BXPaused;
-    else if (self.emulator.isTurboSpeed)
-        return BXFastForward;
-    else
-        return BXPlaying;
+    return self.isPaused ? BXPaused : BXPlaying;
 }
 
 - (void) setPlaybackMode: (BXPlaybackMode)playbackMode
@@ -123,9 +71,6 @@
         case BXPlaying:
             [self resume: self];
             break;
-        case BXFastForward:
-            [self fastForward: self];
-            break;
     }
 }
 
@@ -134,19 +79,15 @@
     if (self.isEmulating && !self.isPaused)
     {
         self.paused = YES;
-        //Disable fast-forward upon pausing.
-        self.emulator.turboSpeed = NO;
         [[BXBezelController controller] showPauseBezel];
     }
 }
 
 - (IBAction) resume: (id)sender
 {
-    if (self.isEmulating && (self.isPaused || self.emulator.turboSpeed))
+    if (self.isEmulating && self.isPaused)
     {
         self.paused = NO;
-        //Disable fast-forward upon resuming.
-        self.emulator.turboSpeed = NO;
         [[BXBezelController controller] showPlayBezel];
     }
 }
@@ -157,219 +98,6 @@
         [self resume: sender];
     else
         [self pause: sender];
-}
-
-
-- (BOOL) isAutoSpeed
-{
-	return self.emulator.isAutoSpeed;
-}
-
-- (void) setAutoSpeed: (BOOL)isAuto
-{
-    self.emulator.autoSpeed = isAuto;
-    //Upon changing the emulator speed, turn off fast-forward.
-    self.emulator.turboSpeed = NO;
-	
-	//Preserve changes to the speed settings
-	[self.gameSettings setObject: @(BXAutoSpeed) forKey: @"CPUSpeed"];
-}
-
-- (NSInteger) CPUSpeed
-{
-	return self.emulator.isAutoSpeed ? BXAutoSpeed : self.emulator.fixedSpeed;
-}
-
-- (void) setCPUSpeed: (NSInteger)speed
-{
-    if (speed == BXAutoSpeed)
-    {
-        self.autoSpeed = YES;
-    }
-    else
-    {
-        self.autoSpeed = NO;
-        self.emulator.fixedSpeed = speed;
-        
-        //Upon changing the emulator speed, turn off fast-forward.
-        self.emulator.turboSpeed = NO;
-        
-        [self.gameSettings setObject: @(speed) forKey: @"CPUSpeed"];
-    }
-}
-
-- (BOOL) validateCPUSpeed: (NSNumber **)ioValue error: (NSError **)outError
-{
-	NSInteger theValue = [*ioValue integerValue];
-    if (theValue != BXAutoSpeed)
-    {
-        if		(theValue < BXMinSpeedThreshold) *ioValue = @(BXMinSpeedThreshold);
-        else if	(theValue > BXMaxSpeedThreshold) *ioValue = @(BXMaxSpeedThreshold);
-    }
-	return YES;
-}
-
-- (IBAction) incrementSpeed: (id)sender
-{
-	if (self.speedAtMaximum) return;
-	
-	NSInteger currentSpeed = self.CPUSpeed;
-	
-	if (currentSpeed >= BXMaxSpeedThreshold) self.autoSpeed = YES;
-	else
-	{
-		NSInteger increment	= [self.class incrementAmountForSpeed: currentSpeed goingUp: YES];
-		//This snaps the speed to the nearest increment rather than doing straight addition
-		increment -= (currentSpeed % increment);
-		
-		//Validate our final value before assigning it
-		NSNumber *newSpeed = @(currentSpeed + increment);
-		if ([self validateCPUSpeed: &newSpeed error: nil])
-			self.CPUSpeed = newSpeed.integerValue;
-	}
-    
-    [[BXBezelController controller] showCPUSpeedBezelForSpeed: self.CPUSpeed];
-}
-
-- (IBAction) decrementSpeed: (id)sender
-{
-	if (self.speedAtMinimum) return;
-	
-	if (self.isAutoSpeed)
-	{
-		self.CPUSpeed = BXMaxSpeedThreshold;
-	}
-	else
-	{
-		NSInteger currentSpeed	= self.CPUSpeed;
-		NSInteger increment		= [self.class incrementAmountForSpeed: currentSpeed goingUp: NO];
-		//This snaps the speed to the nearest increment rather than doing straight subtraction
-		NSInteger diff			= currentSpeed % increment;
-		if (diff) increment = diff;
-		
-		//Validate our final value before assigning it
-		NSNumber *newSpeed = @(currentSpeed - increment);
-		if ([self validateCPUSpeed: &newSpeed error: nil])
-			self.CPUSpeed = newSpeed.integerValue;
-	}
-    
-    [[BXBezelController controller] showCPUSpeedBezelForSpeed: self.CPUSpeed];
-}
-
-
-
-- (IBAction) toggleFastForward: (id)sender
-{
-    if (!self.emulating) return;
-    
-    //Check if the menu option was triggered via its key equivalent or via a regular click.
-    NSEvent *currentEvent = [NSApp currentEvent];
-    
-    //If the toggle was triggered by a key event, then trigger the fast-forward until the key is released.
-    if (currentEvent.type == NSEventTypeKeyDown)
-    {
-        [self fastForward: sender];
-        
-        if (self.emulator.isConcurrent)
-        {
-            //Keep fast-forwarding until the user lifts the key. Once we receive the key-up,
-            //then discard all the repeated key-down events that occurred before the key-up:
-            //otherwise, the action will trigger again and again for each repeat.
-            NSEvent *keyUp = [NSApp nextEventMatchingMask: NSEventMaskKeyUp
-                                                untilDate: [NSDate distantFuture]
-                                                   inMode: NSEventTrackingRunLoopMode
-                                                  dequeue: NO];
-            [NSApp discardEventsMatchingMask: NSEventMaskKeyDown beforeEvent: keyUp];
-            [self releaseFastForward: sender];
-        }
-        else
-        {
-            //IMPLEMENTATION NOTE: when the emulator is running on the main thread,
-            //an event-tracking loop like the one above would block the emulation:
-            //defeating the purpose of the fast-forward. So instead, we listen for
-            //the key-up within the session's event-dispatch loop: making it a kind
-            //of inverted tracking loop.
-            _waitingForFastForwardRelease = YES;
-        }
-    }
-    //If the option was toggled by a regular menu click, then make it 'stick' until toggled again.
-    else
-    {
-        if (!self.emulator.turboSpeed)
-        {
-            [self fastForward: sender];
-        }
-        else
-        {
-            [self releaseFastForward: sender];
-        }
-        _waitingForFastForwardRelease = NO;
-    }
-}
-
-- (IBAction) fastForward: (id)sender
-{
-    if (!self.isEmulating) return;
-    
-    //Unpause when fast-forwarding
-    [self resume: self];
-    
-    if (!self.emulator.turboSpeed)
-    {
-        self.emulator.turboSpeed = YES;
-        
-        [[BXBezelController controller] showFastForwardBezel];
-    }
-}
-        
-- (IBAction) releaseFastForward: (id)sender
-{
-    if (self.emulator.turboSpeed || _waitingForFastForwardRelease)
-    {
-        if (self.isEmulating)
-            self.emulator.turboSpeed = NO;
-        
-        BXBezelController *bezel = [BXBezelController controller];
-        if (bezel.currentBezel == bezel.fastForwardBezel)
-            [bezel hideBezel];
-        
-        _waitingForFastForwardRelease = NO;
-    }
-}
-
-
-- (void) setSliderSpeed: (NSInteger)speed
-{
-	//If we're at the maximum speed, bump it into auto-throttling mode
-	if (speed >= BXMaxSpeedThreshold) speed = BXAutoSpeed;
-	self.CPUSpeed = speed;
-    
-    [[BXBezelController controller] showCPUSpeedBezelForSpeed: speed];
-}
-
-- (NSInteger) sliderSpeed
-{
-	//Report the max fixed speed if we're in auto-throttling mode,
-    //so that the knob will appear at the top end of the slider
-    //instead of the bottom
-	return (self.isAutoSpeed) ? BXMaxSpeedThreshold : self.CPUSpeed;
-}
-
-//Snap fixed speed to even increments, unless the Option key is held down
-- (BOOL) validateSliderSpeed: (NSNumber **)ioValue error: (NSError **)outError
-{
-	if (!([NSApp currentEvent].modifierFlags & NSEventModifierFlagOption))
-	{
-		NSInteger speed			= [*ioValue integerValue]; 
-		NSInteger snappedSpeed	= [self.class snappedSpeed: speed];
-		*ioValue = @(snappedSpeed);
-	}
-	return YES;
-}
-
-+ (NSSet *) keyPathsForValuesAffectingSliderSpeed
-{
-    return [NSSet setWithObjects: @"emulating", @"CPUSpeed", @"autoSpeed", @"dynamic", nil];
 }
 
 
@@ -394,10 +122,6 @@
 	SEL theAction = theItem.action;
     
     BOOL isShowingDOSView = (self.DOSWindowController.currentPanel == BXDOSWindowDOSView);
-    
-	if (theAction == @selector(incrementSpeed:))		return isShowingDOSView && !self.speedAtMaximum;
-	if (theAction == @selector(decrementSpeed:))		return isShowingDOSView && !self.speedAtMinimum;
-
     
 	if (theAction == @selector(saveScreenshot:))        return isShowingDOSView;
     
@@ -474,15 +198,9 @@
         return self.isEmulating && isShowingDOSView;
     }
     
-    else if (theAction == @selector(fastForward:))
-    {
-        theItem.state = (self.emulator.isTurboSpeed) ? NSControlStateValueOn : NSControlStateValueOff;
-        return self.isEmulating && isShowingDOSView;
-    }
-    
     else if (theAction == @selector(resume:))
     {
-        theItem.state = (!self.emulator.isTurboSpeed && !self.isPaused) ? NSControlStateValueOn : NSControlStateValueOff;
+        theItem.state = (!self.isPaused) ? NSControlStateValueOn : NSControlStateValueOff;
         return self.isEmulating && isShowingDOSView;
     }
     
@@ -559,20 +277,6 @@
         
         return NO;
     }
-    //Fast-forward/resume menu item
-    else if (theAction == @selector(toggleFastForward:))
-    {
-		if (!self.emulator.isTurboSpeed)
-			title = NSLocalizedString(@"Fast Forward", @"Emulation menu option for fast-forwarding the emulator.");
-		else
-			title = NSLocalizedString(@"Normal Speed", @"Emulation menu option for returning from fast-forward.");
-		
-		theItem.title = title;
-        
-        //TWEAK: disable the menu item while we're waiting for the user to release the key.
-        //That will break out of the menu's own key-event loop, which would otherwise block.
-		return self.isEmulating && isShowingDOSView && !_waitingForFastForwardRelease;
-    }
     //Restart menu item
     else if (theAction == @selector(performRestartAtLaunchPanel:))
     {
@@ -596,12 +300,6 @@
     }
     return YES;
 }
-
-
-//Used to selectively enable/disable menu items by validateUserInterfaceItem
-- (BOOL) speedAtMinimum		{ return !self.isAutoSpeed && (self.CPUSpeed <= BXMinSpeedThreshold); }
-- (BOOL) speedAtMaximum		{ return self.isAutoSpeed; }
-
 
 
 #pragma mark -
@@ -669,15 +367,6 @@
 {
     return [NSSet setWithObject: @"displayName, hasGamebox"];
 }
-
-- (NSString *) speedDescription
-{	
-	if (!self.isEmulating) return @"";
-    return [self.class descriptionForSpeed: self.CPUSpeed];
-}
-
-+ (NSSet *) keyPathsForValuesAffectingSpeedDescription		{ return [NSSet setWithObject: @"sliderSpeed"]; }
-
 
 #pragma mark -
 #pragma mark Recording

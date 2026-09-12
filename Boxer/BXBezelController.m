@@ -26,7 +26,6 @@
 #define BXScreenshotBezelDuration 0.75
 #define BXVolumeBezelDuration 0.75
 #define BXPausePlayBezelDuration 0.75
-#define BXFastForwardBezelDuration 0.0 //Leave on-screen until dismissed
 #define BXNumpadBezelDuration 2.0
 #define BXNumlockBezelDuration 2.0
 #define BXFullscreenBezelDuration 3.0
@@ -220,12 +219,6 @@
            priority: BXBezelPriorityHigh];    
 }
 
-- (void) showFastForwardBezel
-{
-    [self showBezel: self.fastForwardBezel
-        forDuration: BXFastForwardBezelDuration
-           priority: BXBezelPriorityHigh];
-}
 
 - (void) showNumpadActiveBezel
 {
@@ -283,36 +276,6 @@
     [self showBezel: self.mouseLockedBezel
         forDuration: BXMouseLockedBezelDuration
            priority: BXBezelPriorityLow];
-}
-
-- (void) showCPUSpeedBezelForSpeed: (NSInteger)cpuSpeed
-{
-    //Tweak: if the CPU inspector panel is visible, don’t bother showing the bezel.
-    BXInspectorController *inspector = [NSClassFromString(@"BXInspectorController") controller];
-    if (inspector.isVisible && inspector.selectedTabViewItemIndex == BXCPUInspectorPanelIndex)
-        return;
-    
-    NSView *bezel = self.CPUSpeedBezel;
-    
-    NSString *speedDescription = [BXSession descriptionForSpeed: cpuSpeed];
-    
-    NSLevelIndicator *level = [bezel viewWithTag: BXBezelLevel];
-    NSTextField *label      = [bezel viewWithTag: BXBezelLevelStatus];
-    
-    //Make maximum (auto) values appear at the end of the speed scale
-    NSInteger displayedSpeed = (cpuSpeed == BXAutoSpeed) ? BXMaxSpeedThreshold : cpuSpeed;
-       
-    //TODO: set these up with a binding instead?
-    NSValueTransformer *cpuScale = [NSValueTransformer valueTransformerForName: @"BXSpeedSliderTransformer"];
-    
-    NSNumber *scaledValue = [cpuScale transformedValue: [NSNumber numberWithInteger: displayedSpeed]];
-                             
-    level.doubleValue = scaledValue.doubleValue;
-    label.stringValue = speedDescription;
-    
-    [self showBezel: bezel
-        forDuration: BXCPUBezelDuration
-           priority: BXBezelPriorityNormal];
 }
 
 - (void) showThrottleBezelForValue: (float)throttleValue

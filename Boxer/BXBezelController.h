@@ -56,7 +56,6 @@ NS_ENUM(NSInteger) {
 @property (strong, nonatomic, null_unspecified) IBOutlet NSView *joystickIgnoredBezel;
 
 /// The bezel view used for CPU speed notifications.
-@property (strong, nonatomic, null_unspecified) IBOutlet NSView *CPUSpeedBezel;
 
 /// The bezel view used for flightstick throttle notifications.
 @property (strong, nonatomic, null_unspecified) IBOutlet NSView *throttleBezel;
@@ -75,7 +74,6 @@ NS_ENUM(NSInteger) {
 /// Pause/play/fast-forward bezel views.
 @property (strong, nonatomic, null_unspecified) IBOutlet NSView *pauseBezel;
 @property (strong, nonatomic, null_unspecified) IBOutlet NSView *playBezel;
-@property (strong, nonatomic, null_unspecified) IBOutlet NSView *fastForwardBezel;
 
 /// Numpad simulation bezels.
 @property (strong, nonatomic, null_unspecified) IBOutlet NSView *numpadActiveBezel;
@@ -115,7 +113,6 @@ NS_ENUM(NSInteger) {
 
 - (void) showPauseBezel;
 - (void) showPlayBezel;
-- (void) showFastForwardBezel;
 
 - (void) showScreenshotBezel;
 
@@ -131,7 +128,6 @@ NS_ENUM(NSInteger) {
 - (void) showMT32BezelForMessage: (NSString *)message;
 - (void) showMT32MissingBezel;
 
-- (void) showCPUSpeedBezelForSpeed: (NSInteger)cpuSpeed;
 - (void) showThrottleBezelForValue: (float)throttleValue;
 
 - (void) showVolumeBezelForVolume: (float)volume;

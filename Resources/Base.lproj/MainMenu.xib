@@ -614,12 +614,6 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="2261"/>
-                            <menuItem title="Fast Forward" keyEquivalent="" id="2192">
-                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
-                                <connections>
-                                    <action selector="toggleFastForward:" target="-1" id="2193"/>
-                                </connections>
-                            </menuItem>
                             <menuItem title="Pause" keyEquivalent="p" id="1932">
                                 <connections>
                                     <action selector="togglePaused:" target="-1" id="2042"/>
@@ -810,18 +804,6 @@
                                 </menu>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="2103"/>
-                            <menuItem title="Speed Up CPU" keyEquivalent="" id="2034">
-                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
-                                <connections>
-                                    <action selector="incrementSpeed:" target="-1" id="2041"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Slow Down CPU" keyEquivalent="" id="2035">
-                                <modifierMask key="keyEquivalentModifierMask" option="YES" command="YES"/>
-                                <connections>
-                                    <action selector="decrementSpeed:" target="-1" id="2040"/>
-                                </connections>
-                            </menuItem>
                             <menuItem title="Show CPU Settings" id="2033">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>

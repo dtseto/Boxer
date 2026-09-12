@@ -7,6 +7,7 @@
 
 #import "BXAboutController.h"
 #import "BXBaseAppController.h"
+#import "config.h"
 
 
 @implementation BXAboutController
@@ -32,6 +33,10 @@
 	NSString *versionString	= [NSString stringWithFormat: versionFormat, versionName, buildNumber];
 	
     self.version.stringValue = versionString;
+
+	//DOSBox Staging's version comes directly from DOSBox/config.h.
+	NSString *creditsFormat = NSLocalizedString(@"Boxer is designed by\nAlun Bestor & released under the GNU General Public License.\n\nBuilt with DOSBox Staging %@, OpenEmu Shaders, Boxer MT-32 Emu, and DDHidLib.", @"About panel credits. %@ is the DOSBox Staging version.");
+	self.credits.stringValue = [NSString stringWithFormat: creditsFormat, @VERSION];
 }
 
 - (IBAction) showAcknowledgements: (id)sender

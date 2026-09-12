@@ -74,7 +74,7 @@
       }
     },
     "56.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Boxer is designed by\\nAlun Bestor & released under the GNU Public License.\\n\\nBoxer is based on DOSBox 0.79.1, which is \\n© 2002–2010 by the DOSBox Team.\"; ObjectID = \"56\";",
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Credits are populated from build metadata.\"; ObjectID = \"56\";",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -97,24 +97,24 @@
       }
     },
     "58.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"[Version 1.2 | build 20111031.1]\"; ObjectID = \"58\";",
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Version and build are populated from the app bundle\"; ObjectID = \"58\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "[Version 1.2 | build 20111031.1]"
+            "value" : "Version and build are populated from the app bundle"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "[Version 1.2 | build 20111031.1]"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "[Version 1.2 | build 20111031.1]"
           }
         }

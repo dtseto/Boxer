@@ -65,18 +65,25 @@
     }
 }
 
+//IMPLEMENTATION NOTE: this is called on the event tap's own thread, once for
+//every key event, and it must not touch the main thread. It used to answer both
+//of its first two questions by dispatch_sync-ing to the main queue -- [NSApp
+//isActive] and "does the key window belong to the current session?" are both
+//main-thread-only reads. That is one half of a deadlock: -[BXKeyboardEventTap
+//_stopTapping] waits for this thread from the main thread, so a key event in
+//flight when the tap is cancelled leaves the tap thread waiting on the main
+//queue and the main thread waiting on the tap thread. On quit that hung the app
+//outright with nothing on screen to explain it. See D46.
+//
+//Neither answer can change while a single key event is being handled, so both
+//are now cached on the main thread as they change (-registerHotkeyStateObservers
+//in BXBaseAppController) and simply read here. The wait in -_stopTapping is
+//still bounded as a belt-and-braces measure, but nothing in this callback
+//should reach it any more.
 - (BOOL) eventTap: (BXKeyboardEventTap *)tap shouldCaptureKeyEvent: (NSEvent *)event
 {
-    __block BOOL shouldReturn = NO;
     //Don't capture any keys when we're not the active application
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        if (![NSApp isActive]) {
-            shouldReturn = YES;
-        }
-    });
-    if (shouldReturn) {
-        return NO;
-    }
+    if (!self.hotkeyAppIsActive) return NO;
     
     //Tweak: let Cmd-modified keys fall through, so that key-repeat events
     //for key equivalents are handled properly.
@@ -85,14 +92,7 @@
     
     //Only capture if the current session is key and is running a program.
     if (!self.currentSession.programIsActive) return NO;
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        if ([self documentForWindow: [NSApp keyWindow]] != self.currentSession) {
-            shouldReturn = YES;
-        }
-    });
-    if (shouldReturn) {
-        return NO;
-    }
+    if (!self.hotkeyKeyWindowBelongsToCurrentSession) return NO;
     
     switch (event.keyCode)
     {
@@ -125,7 +125,8 @@
     if (event.subtype != BXMediaKeyEventSubtype) return NO;
     
     //Don't capture any keys when we're not the active application.
-    if (![NSApp isActive]) return NO;
+    //Read from the cache rather than [NSApp isActive]: this is the tap thread too.
+    if (!self.hotkeyAppIsActive) return NO;
     
     //Only capture media keys if the current session is running.
     if (!self.currentSession) return NO;

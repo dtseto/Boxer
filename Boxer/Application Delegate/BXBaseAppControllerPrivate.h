@@ -52,6 +52,23 @@
 /// Registers the application delegate to receive notifications about application mode changes.
 - (void) registerApplicationModeObservers;
 
+/// Whether the application is currently active, and whether the key window
+/// belongs to the current session. Both are maintained on the main thread (see
+/// -registerHotkeyStateObservers) purely so that the keyboard event tap can
+/// answer -eventTap:shouldCaptureKeyEvent: from its own thread without hopping
+/// to the main queue for every keystroke. That hop is what deadlocked the app
+/// when the tap was cancelled with a key event in flight. See D46 in FINDINGS.md.
+///
+/// atomic, and read from the tap thread.
+@property (atomic, assign) BOOL hotkeyAppIsActive;
+@property (atomic, assign) BOOL hotkeyKeyWindowBelongsToCurrentSession;
+
+/// Registers the main-thread observers that keep the two properties above current.
+- (void) registerHotkeyStateObservers;
+
+/// Recomputes @c hotkeyKeyWindowBelongsToCurrentSession. Main thread only.
+- (void) syncHotkeyKeyWindowState;
+
 /// Called whenever a Boxer session releases the mouse.
 - (void) sessionDidUnlockMouse: (NSNotification *)notification;
 

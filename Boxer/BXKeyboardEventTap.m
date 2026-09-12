@@ -303,20 +303,20 @@ static CGEventRef _handleEventFromTap(CGEventTapProxy proxy, CGEventType type, C
             [self.tapThread cancel];
 
             //IMPLEMENTATION NOTE: we deliberately do not use -waitUntilFinished
-            //here, which waits forever. The tap thread calls the delegate for
-            //every key event, and the delegate answers by dispatch_sync-ing to
-            //the main queue (see -eventTap:shouldCaptureKeyEvent: in
-            //BXBaseAppController+BXHotKeys). -waitUntilFinished spin-sleeps
-            //without servicing the main queue, so if a key event is in flight
-            //when we cancel, the tap thread is waiting on the main thread and
-            //the main thread is waiting on the tap thread: both wait forever.
-            //On quit that hangs the app outright, with no window left to
-            //explain why. See D46 in FINDINGS.md.
+            //here, which waits forever. -waitUntilFinished spin-sleeps without
+            //servicing the main queue, so anything the tap thread waits on the
+            //main queue for while we are cancelling deadlocks the two threads
+            //against each other: the tap thread waits on the main thread and the
+            //main thread waits on the tap thread. On quit that hung the app
+            //outright, with no window left to explain why. See D46 in FINDINGS.md.
             //
-            //Waiting at all is only a courtesy -- the thread retains itself
-            //until it exits, and the system removes the tap with the process --
-            //so give up after a moment and carry on. The real fix is for the
-            //delegate not to need the main thread from that callback.
+            //The cause is fixed: handling a key event no longer touches the main
+            //queue at all. -eventTap:shouldCaptureKeyEvent: answers from state
+            //cached on the main thread as it changes, and the CGEvent-to-NSEvent
+            //conversion above happens on the tap thread. This bounded wait stays
+            //as belt and braces, since waiting at all is only a courtesy -- the
+            //thread retains itself until it exits, and the system removes the tap
+            //with the process.
             NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow: 0.5];
             while (self.tapThread.isExecuting && deadline.timeIntervalSinceNow > 0)
                 [NSThread sleepForTimeInterval: 0.001];
@@ -351,22 +351,30 @@ static CGEventRef _handleEventFromTap(CGEventTapProxy proxy, CGEventType type, C
         {
             BOOL shouldCapture = NO;
             
-            //First try and make this into a cocoa event
-            __block NSEvent *cocoaEvent = nil;
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                @try
-                {
-                    cocoaEvent = [NSEvent eventWithCGEvent: event];
-                }
-                @catch (NSException *exception)
-                {
+            //First try and make this into a cocoa event.
+            //
+            //IMPLEMENTATION NOTE: this used to be done inside a dispatch_sync to
+            //the main queue. That is the other half of D46: -_stopTapping waits
+            //for this thread from the main thread, so any main-queue wait here
+            //can deadlock the two against each other when the tap is cancelled
+            //with an event in flight. The wrapper is built on this thread
+            //instead. The resulting NSEvent was already being read from this
+            //thread by the delegate callbacks below, so only its construction
+            //moved. The @try is kept: eventWithCGEvent: throws for events it
+            //cannot represent.
+            NSEvent *cocoaEvent = nil;
+            @try
+            {
+                cocoaEvent = [NSEvent eventWithCGEvent: event];
+            }
+            @catch (NSException *exception)
+            {
 #ifdef BOXER_DEBUG
-                    //If the event could not be converted into a cocoa event, give up
-                    NSString *eventDesc = CFBridgingRelease(CFCopyDescription(event));
-                    NSLog(@"Could not convert CGEvent: %@", eventDesc);
+                //If the event could not be converted into a cocoa event, give up
+                NSString *eventDesc = CFBridgingRelease(CFCopyDescription(event));
+                NSLog(@"Could not convert CGEvent: %@", eventDesc);
 #endif
-                }
-            });
+            }
             
             if (cocoaEvent)
             {

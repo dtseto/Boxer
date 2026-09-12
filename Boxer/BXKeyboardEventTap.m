@@ -249,6 +249,14 @@ static CGEventRef _handleEventFromTap(CGEventTapProxy proxy, CGEventType type, C
     {
         if (!self.class.canCaptureKeyEvents)
         {
+            //IMPLEMENTATION NOTE: say so. This return used to be silent, which
+            //made "the tap is not installed" indistinguishable from "the tap
+            //code did not run at all" -- and since an ad-hoc-signed build has
+            //no Accessibility permission, that is the case on every run of a
+            //development build. D46 could not be run-tested for want of this
+            //one line telling us which of the two we were looking at.
+            NSLog(@"Not installing event tap: Boxer has not been granted Accessibility permission. "
+                  @"Grant it to this bundle in System Settings > Privacy & Security > Accessibility.");
             self.status = BXKeyboardEventTapNotTapping;
             [self.delegate eventTapDidFinishAttaching: self];
             return;
@@ -317,12 +325,19 @@ static CGEventRef _handleEventFromTap(CGEventTapProxy proxy, CGEventType type, C
             //as belt and braces, since waiting at all is only a courtesy -- the
             //thread retains itself until it exits, and the system removes the tap
             //with the process.
-            NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow: 0.5];
+            NSDate *started = [NSDate date];
+            NSDate *deadline = [started dateByAddingTimeInterval: 0.5];
             while (self.tapThread.isExecuting && deadline.timeIntervalSinceNow > 0)
                 [NSThread sleepForTimeInterval: 0.001];
 
             if (self.tapThread.isExecuting)
                 NSLog(@"Keyboard event tap thread did not stop when asked; abandoning it.");
+            else
+                //This is the line that answers D46: if the tap thread is still
+                //waiting on the main queue with a key event in flight, it never
+                //appears and the wait runs to its deadline instead.
+                NSLog(@"Keyboard event tap thread stopped after %.0fms.",
+                      -started.timeIntervalSinceNow * 1000.0);
 
             self.tapThread = nil;
         }

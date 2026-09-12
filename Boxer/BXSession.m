@@ -708,7 +708,11 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
     
     if (reopenURL)
         [(BXBaseAppController *)[NSApp delegate] openDocumentWithContentsOfURL: reopenURL display: YES completionHandler:^(NSDocument * _Nullable document, BOOL documentWasAlreadyOpen, NSError * _Nullable error) {
-            //do nothing
+            //Say so if the session went away and did not come back: this used to
+            //discard the error, which made a failed restart look identical to a
+            //plain close.
+            if (!document)
+                NSLog(@"Restart failed to reopen %@: %@", reopenURL.path, error);
         }];
     else
         [(BXBaseAppController *)[NSApp delegate] openUntitledDocumentAndDisplay: YES error: NULL];

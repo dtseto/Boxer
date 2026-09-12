@@ -42,6 +42,9 @@ NS_ENUM(NSInteger) {
 
 /// Show help pages for the various panels
 - (IBAction) showGamePanelHelp: (id)sender;
+/// Restarts the current session, for the CPU panel's "Restart to apply" button.
+- (IBAction) restartSession: (id)sender;
+
 - (IBAction) showCPUPanelHelp: (id)sender;
 - (IBAction) showMousePanelHelp: (id)sender;
 - (IBAction) showDrivesPanelHelp: (id)sender;

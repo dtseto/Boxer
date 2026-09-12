@@ -303,7 +303,7 @@ to the DOS prompt instead.</string>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>
                                                     <connections>
-                                                        <action selector="performRestart:" target="-1" id="Spd-bt-a01"/>
+                                                        <action selector="restartSession:" target="-2" id="Spd-bt-a01"/>
                                                         <binding destination="56" name="hidden" keyPath="selection.speedChangeNeedsRestart" id="Spd-bt-b01">
                                                             <dictionary key="options">
                                                                 <string key="NSValueTransformerName">NSNegateBoolean</string>

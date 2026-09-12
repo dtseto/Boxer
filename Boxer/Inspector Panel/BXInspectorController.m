@@ -226,6 +226,37 @@
 
 
 #pragma mark -
+#pragma mark Emulation
+
+// The CPU panel's "Restart to apply" button.
+//
+// It cannot go to the first responder the way copy:/paste: in this panel do.
+// The Inspector is a nonactivating utility panel: it becomes key while the DOS
+// window stays main, and a nil-targeted action sent from it resolves against
+// the *panel's* responder chain, which does not contain the session document.
+// So the button targets this controller, which reaches the session the same way
+// everything else in this class does.
+- (IBAction) restartSession: (id)sender
+{
+    BXSession *session = [(BXBaseAppController *)[NSApp delegate] currentSession];
+    
+    //Deferred to the next pass of the run loop rather than run inside the
+    //button's own action dispatch. -restartShowingLaunchPanel: closes the
+    //session document and immediately asks the document controller to reopen the
+    //same URL, and that reopen quietly does nothing if it happens while this
+    //panel is still handling the click: the session closes and never comes back.
+    //Restarting from the Emulation menu works because the menu's own tracking
+    //has already finished by the time the action runs.
+    //
+    //-performRestart: puts up its own confirmation if a program is running, on
+    //the session's own window rather than on this panel.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [session performRestart: sender];
+    });
+}
+
+
+#pragma mark -
 #pragma mark Help
 
 - (IBAction) showGamePanelHelp: (id)sender				{ [(BXBaseAppController *)[NSApp delegate] showHelpAnchor: @"game-inspector"]; }

@@ -1044,6 +1044,24 @@
 		AEAE98F35E990959ED7C64BE /* shell_misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 932B3E088F35163FADAD8FF8 /* shell_misc.cpp */; };
 		B600D5458883E5C0F128776A /* env_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BF2E57C3B5D74DD8FBD167F9 /* env_utils.cpp */; };
 		85FB90AA253C2CD3655C3414 /* string_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1C8BECB34764F7FBFA769B0D /* string_utils.cpp */; };
+		DAEAEE5D7E2F7B77B8620FB3 /* resample.c in Sources */ = {isa = PBXBuildFile; fileRef = C091D730F17AB2CF813E9522 /* resample.c */; settings = {COMPILER_FLAGS = "-DHAVE_CONFIG_H"; }; };
+		FCF3E1ECE9B9D6300FAE8409 /* resample.c in Sources */ = {isa = PBXBuildFile; fileRef = C091D730F17AB2CF813E9522 /* resample.c */; settings = {COMPILER_FLAGS = "-DHAVE_CONFIG_H"; }; };
+		59D5F50E1528AFABA4B8F102 /* Biquad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C5757C5E03550A5C95150C3F /* Biquad.cpp */; };
+		71C33884D4DE6E8660986E72 /* Biquad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C5757C5E03550A5C95150C3F /* Biquad.cpp */; };
+		07EC2619EE66A4FD5E003781 /* Butterworth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5250903D643066456973564C /* Butterworth.cpp */; };
+		F90A59886139E47C41AF8F3E /* Butterworth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5250903D643066456973564C /* Butterworth.cpp */; };
+		F1ACB6E1F11E798CC1A42515 /* Cascade.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40B4AF6251DDAD2449C0FA14 /* Cascade.cpp */; };
+		A5B1E8C1F21D9E6CE3C84784 /* Cascade.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 40B4AF6251DDAD2449C0FA14 /* Cascade.cpp */; };
+		EB56C9BEE630211D6F4DE69D /* ChebyshevI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7407BD237523E1CA77A70D7C /* ChebyshevI.cpp */; };
+		3747FA29B60779E834025C10 /* ChebyshevI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7407BD237523E1CA77A70D7C /* ChebyshevI.cpp */; };
+		A817E58468EA0D4A4CD6AFB1 /* ChebyshevII.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 433292704841AA67A6232F6E /* ChebyshevII.cpp */; };
+		A3AA6847C4EF22BCC40EB0BA /* ChebyshevII.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 433292704841AA67A6232F6E /* ChebyshevII.cpp */; };
+		9A3C689D7B4BA59D61D1A68C /* Custom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5A203C888E4400BE6CBFCA33 /* Custom.cpp */; };
+		C14162D4FD16ED83186B6B29 /* Custom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5A203C888E4400BE6CBFCA33 /* Custom.cpp */; };
+		58BF087DE7806A1C5660D1B1 /* PoleFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CE1670A3F97BF4B208D6CF0 /* PoleFilter.cpp */; };
+		8D81554CE5FD905CB5AE2A19 /* PoleFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CE1670A3F97BF4B208D6CF0 /* PoleFilter.cpp */; };
+		6DFE7C70009797DC5F19D4F2 /* RBJ.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5B2F95F4E9549B690B1C0700 /* RBJ.cpp */; };
+		736B862963ABCD268C6CEA72 /* RBJ.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5B2F95F4E9549B690B1C0700 /* RBJ.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1205,6 +1223,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
+
 
 /* Begin PBXFileReference section */
 		0532FBF624BAA1A4008EAD86 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
@@ -2043,6 +2062,15 @@
 		932B3E088F35163FADAD8FF8 /* shell_misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shell_misc.cpp; sourceTree = "<group>"; };
 		BF2E57C3B5D74DD8FBD167F9 /* env_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = env_utils.cpp; sourceTree = "<group>"; };
 		1C8BECB34764F7FBFA769B0D /* string_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = string_utils.cpp; sourceTree = "<group>"; };
+		C091D730F17AB2CF813E9522 /* resample.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = resample.c; path = libspeexdsp/resample.c; sourceTree = "<group>"; };
+		C5757C5E03550A5C95150C3F /* Biquad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Biquad.cpp; path = iir/Biquad.cpp; sourceTree = "<group>"; };
+		5250903D643066456973564C /* Butterworth.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Butterworth.cpp; path = iir/Butterworth.cpp; sourceTree = "<group>"; };
+		40B4AF6251DDAD2449C0FA14 /* Cascade.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Cascade.cpp; path = iir/Cascade.cpp; sourceTree = "<group>"; };
+		7407BD237523E1CA77A70D7C /* ChebyshevI.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ChebyshevI.cpp; path = iir/ChebyshevI.cpp; sourceTree = "<group>"; };
+		433292704841AA67A6232F6E /* ChebyshevII.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ChebyshevII.cpp; path = iir/ChebyshevII.cpp; sourceTree = "<group>"; };
+		5A203C888E4400BE6CBFCA33 /* Custom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Custom.cpp; path = iir/Custom.cpp; sourceTree = "<group>"; };
+		6CE1670A3F97BF4B208D6CF0 /* PoleFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PoleFilter.cpp; path = iir/PoleFilter.cpp; sourceTree = "<group>"; };
+		5B2F95F4E9549B690B1C0700 /* RBJ.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RBJ.cpp; path = iir/RBJ.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2244,6 +2272,7 @@
 				9F2D317915B823D300FAE848 /* Standalone */,
 				9FB4539016442CDD00BCF63B /* Bundler */,
 				9FBC3A7A0F56CEA2001811F2 /* DOSBox */,
+				9810879D3178761C5CB6FDA8 /* Vendored libraries */,
 				9FFF978412327D58009B5EE5 /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
@@ -3763,6 +3792,40 @@
 			path = utils;
 			sourceTree = "<group>";
 		};
+		8BEEFEE79F2C0A79760ADD77 /* speexdsp */ = {
+			isa = PBXGroup;
+			children = (
+				C091D730F17AB2CF813E9522 /* resample.c */,
+			);
+			name = speexdsp;
+			path = "Vendor/speexdsp";
+			sourceTree = "<group>";
+		};
+		344989D151424963387D3401 /* iir1 */ = {
+			isa = PBXGroup;
+			children = (
+				C5757C5E03550A5C95150C3F /* Biquad.cpp */,
+				5250903D643066456973564C /* Butterworth.cpp */,
+				40B4AF6251DDAD2449C0FA14 /* Cascade.cpp */,
+				7407BD237523E1CA77A70D7C /* ChebyshevI.cpp */,
+				433292704841AA67A6232F6E /* ChebyshevII.cpp */,
+				5A203C888E4400BE6CBFCA33 /* Custom.cpp */,
+				6CE1670A3F97BF4B208D6CF0 /* PoleFilter.cpp */,
+				5B2F95F4E9549B690B1C0700 /* RBJ.cpp */,
+			);
+			name = iir1;
+			path = "Vendor/iir1";
+			sourceTree = "<group>";
+		};
+		9810879D3178761C5CB6FDA8 /* Vendored libraries */ = {
+			isa = PBXGroup;
+			children = (
+				8BEEFEE79F2C0A79760ADD77 /* speexdsp */,
+				344989D151424963387D3401 /* iir1 */,
+			);
+			name = "Vendored libraries";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -4082,6 +4145,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DAEAEE5D7E2F7B77B8620FB3 /* resample.c in Sources */,
+				59D5F50E1528AFABA4B8F102 /* Biquad.cpp in Sources */,
+				07EC2619EE66A4FD5E003781 /* Butterworth.cpp in Sources */,
+				F1ACB6E1F11E798CC1A42515 /* Cascade.cpp in Sources */,
+				EB56C9BEE630211D6F4DE69D /* ChebyshevI.cpp in Sources */,
+				A817E58468EA0D4A4CD6AFB1 /* ChebyshevII.cpp in Sources */,
+				9A3C689D7B4BA59D61D1A68C /* Custom.cpp in Sources */,
+				58BF087DE7806A1C5660D1B1 /* PoleFilter.cpp in Sources */,
+				6DFE7C70009797DC5F19D4F2 /* RBJ.cpp in Sources */,
 				7D0514FB79EDDF9AA166C06A /* event_list.cpp in Sources */,
 				C5DF746A50C35F8CF234C99D /* library.cpp in Sources */,
 				6F62C3ED7E378292BE187055 /* plugin.cpp in Sources */,
@@ -4552,6 +4624,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FCF3E1ECE9B9D6300FAE8409 /* resample.c in Sources */,
+				71C33884D4DE6E8660986E72 /* Biquad.cpp in Sources */,
+				F90A59886139E47C41AF8F3E /* Butterworth.cpp in Sources */,
+				A5B1E8C1F21D9E6CE3C84784 /* Cascade.cpp in Sources */,
+				3747FA29B60779E834025C10 /* ChebyshevI.cpp in Sources */,
+				A3AA6847C4EF22BCC40EB0BA /* ChebyshevII.cpp in Sources */,
+				C14162D4FD16ED83186B6B29 /* Custom.cpp in Sources */,
+				8D81554CE5FD905CB5AE2A19 /* PoleFilter.cpp in Sources */,
+				736B862963ABCD268C6CEA72 /* RBJ.cpp in Sources */,
 				5E1C2C1905EDB794E1CEA66F /* event_list.cpp in Sources */,
 				39D12E0E6451408DC7C64BB3 /* library.cpp in Sources */,
 				BA4BB290DC66AD8BC126B45C /* plugin.cpp in Sources */,
@@ -5376,21 +5457,16 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/riffcpp",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/whereami",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/YM7128B_emu",
-					/opt/homebrew/include,
+					"$(SRCROOT)/Vendor/iir1",
+					"$(SRCROOT)/Vendor/speexdsp",
+					"$(SRCROOT)/Vendor/speexdsp/include",
+					"$(SRCROOT)/Vendor/speexdsp/libspeexdsp",
+					/opt/homebrew/opt/asio/include,
 				);
 				INFOPLIST_FILE = "Standalone/Boxer Standalone-Info.plist";
 				LD_NO_PIE = YES;
 				"LD_NO_PIE[arch=arm64]" = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/opt/homebrew/lib,
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-lspeexdsp",
-					"-liir",
-				);
 				MARKETING_VERSION = "2.0.0-alpha";
 				OTHER_CFLAGS = "-mstackrealign";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dtseto.boxer-standalone";
@@ -5440,21 +5516,16 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/riffcpp",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/whereami",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/YM7128B_emu",
-					/opt/homebrew/include,
+					"$(SRCROOT)/Vendor/iir1",
+					"$(SRCROOT)/Vendor/speexdsp",
+					"$(SRCROOT)/Vendor/speexdsp/include",
+					"$(SRCROOT)/Vendor/speexdsp/libspeexdsp",
+					/opt/homebrew/opt/asio/include,
 				);
 				INFOPLIST_FILE = "Standalone/Boxer Standalone-Info.plist";
 				LD_NO_PIE = YES;
 				"LD_NO_PIE[arch=arm64]" = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/opt/homebrew/lib,
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-lspeexdsp",
-					"-liir",
-				);
 				MARKETING_VERSION = "2.0.0-alpha";
 				OTHER_CFLAGS = "-mstackrealign";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.dtseto.boxer-standalone";
@@ -5645,22 +5716,17 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/riffcpp",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/whereami",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/YM7128B_emu",
-					/opt/homebrew/include,
+					"$(SRCROOT)/Vendor/iir1",
+					"$(SRCROOT)/Vendor/speexdsp",
+					"$(SRCROOT)/Vendor/speexdsp/include",
+					"$(SRCROOT)/Vendor/speexdsp/libspeexdsp",
+					/opt/homebrew/opt/asio/include,
 				);
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				LD_NO_PIE = YES;
 				"LD_NO_PIE[arch=arm64]" = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/opt/homebrew/lib,
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-lspeexdsp",
-					"-liir",
-				);
 				MARKETING_VERSION = "2.0.2-alpha";
 				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				OTHER_CFLAGS = "-mstackrealign";
@@ -5716,22 +5782,17 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/riffcpp",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/whereami",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/YM7128B_emu",
-					/opt/homebrew/include,
+					"$(SRCROOT)/Vendor/iir1",
+					"$(SRCROOT)/Vendor/speexdsp",
+					"$(SRCROOT)/Vendor/speexdsp/include",
+					"$(SRCROOT)/Vendor/speexdsp/libspeexdsp",
+					/opt/homebrew/opt/asio/include,
 				);
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				LD_NO_PIE = YES;
 				"LD_NO_PIE[arch=arm64]" = NO;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					/opt/homebrew/lib,
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-lspeexdsp",
-					"-liir",
-				);
 				MARKETING_VERSION = "2.0.2-alpha";
 				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				OTHER_CFLAGS = "-mstackrealign";

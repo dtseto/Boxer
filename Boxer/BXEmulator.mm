@@ -1116,6 +1116,12 @@ static NSObject *_DOSBoxLifecycleLock(void)
 {
     @synchronized (_DOSBoxLifecycleLock())
     {
+        //Idempotent: -tearDownForImminentExit below may have to do this from a
+        //quit path that will never let -_startDOSBox return, and the ordinary
+        //teardown at the end of -_startDOSBox must then not run it a second time.
+        //`configuration` is cleared below and is the marker for "already done".
+        if (!configuration) return;
+
         [self.videoHandler shutdown];
 
         DOSBOX_DestroyModules();
@@ -1126,6 +1132,27 @@ static NSObject *_DOSBoxLifecycleLock(void)
         delete commandLine;
         commandLine = NULL;
     }
+}
+
+//Last-resort teardown for a quit that is about to call exit() with DOSBox still
+//running, which -_startDOSBox's own teardown above will never get to.
+//
+//-[NSApplication terminate:] calls exit() directly, and Boxer pumps NSApp's
+//event queue from inside DOSBox's emulation loop (-[BXSession
+//_processEventsUntilDate:], called from normal_loop via boxer_processEvents).
+//So a Cmd-Q key equivalent is routed to terminate: *from inside* that loop:
+//exit() runs with normal_loop still on the stack, -_startDOSBox never returns,
+//and DOSBox's modules are left to C++ static teardown -- which is D45 exactly,
+//the abort in ~IO() logging through a loguru mutex that is already gone. A quit
+//by Apple Event does not do this, because it does not come back through
+//sendEvent: while the loop is on the stack, which is why quitting that way looked
+//clean and Cmd-Q did not. This is D60.
+//
+//Calling DOSBOX_DestroyModules() with normal_loop still on the stack is only
+//safe because we never return to it: exit() is the next thing that runs.
++ (void) tearDownForImminentExit
+{
+    [_currentEmulator _tearDownDOSBox];
 }
 
 @end

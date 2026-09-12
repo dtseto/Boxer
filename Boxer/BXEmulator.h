@@ -311,6 +311,12 @@ extern NSStringEncoding BXDirectStringEncoding;
 /// Returns the currently active DOS session.
 @property (readonly, retain, class, nullable) BXEmulator *currentEmulator;
 
+/// Tears DOSBox down immediately, for a quit path that is about to call exit()
+/// while the emulation loop is still on the stack and so will never let the
+/// emulator shut itself down. Does nothing if DOSBox is already torn down.
+/// Only safe to call when the process really is about to exit. See D60.
++ (void) tearDownForImminentExit;
+
 /// Whether it is safe to launch a new emulator instance. Will be @c NO after an emulator has been opened
 /// (and the memory state is too polluted to reuse.)
 @property (readonly, class) BOOL canLaunchEmulator;

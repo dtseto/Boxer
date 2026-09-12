@@ -127,6 +127,7 @@
 	{
 		self.generalQueue = [[NSOperationQueue alloc] init];
 		[self registerApplicationModeObservers];
+		[self registerHotkeyStateObservers];
 	}
 	return self;
 }
@@ -200,6 +201,14 @@
 	for (id document in [NSArray arrayWithArray: self.documents])
         [document close];
 	
+	//Make sure DOSBox is torn down before AppKit calls exit(). Closing the
+	//documents above is normally what does this, but a Cmd-Q arrives through
+	//sendEvent: from inside DOSBox's own emulation loop, so -[NSApplication
+	//terminate:] reaches exit() without the loop ever unwinding and without the
+	//emulator's own teardown running. This is a no-op on the quit paths that
+	//already tore it down. See D60.
+	[BXEmulator tearDownForImminentExit];
+	
 	//Save our preferences to disk before exiting
 	[[NSUserDefaults standardUserDefaults] synchronize];
     
@@ -269,6 +278,70 @@
 	[center addObserver: self selector: @selector(sessionDidUnlockMouse:)
 				   name: BXSessionDidUnlockMouseNotification
 				 object: nil];
+}
+
+#pragma mark - Cached state for the keyboard event tap
+
+//See the property declarations in BXBaseAppControllerPrivate.h, and D46.
+//-eventTap:shouldCaptureKeyEvent: is called on the event tap's own thread for
+//every key event, and used to answer it by dispatch_sync-ing to the main queue
+//twice: once for -[NSApp isActive] and once to compare the key window's document
+//against the current session. Both are main-thread-only reads, but neither ever
+//changes while a key is in flight, so the tap can be given the answers in
+//advance instead. Keeping them cached is what lets that callback stay entirely
+//on the tap thread -- which is the fix for the deadlock, since _stopTapping
+//waits for that thread from the main thread.
+- (void) registerHotkeyStateObservers
+{
+	NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+	
+	[center addObserver: self selector: @selector(_hotkeyAppDidBecomeActive:)
+				   name: NSApplicationDidBecomeActiveNotification
+				 object: nil];
+	
+	[center addObserver: self selector: @selector(_hotkeyAppDidResignActive:)
+				   name: NSApplicationDidResignActiveNotification
+				 object: nil];
+	
+	//Any window becoming or resigning key can change which document owns the
+	//key window, so recheck on both.
+	[center addObserver: self selector: @selector(_hotkeyKeyWindowDidChange:)
+				   name: NSWindowDidBecomeKeyNotification
+				 object: nil];
+	
+	[center addObserver: self selector: @selector(_hotkeyKeyWindowDidChange:)
+				   name: NSWindowDidResignKeyNotification
+				 object: nil];
+	
+	//Seed both from the current state, in case we are registered after launch.
+	self.hotkeyAppIsActive = [NSApp isActive];
+	[self syncHotkeyKeyWindowState];
+}
+
+- (void) _hotkeyAppDidBecomeActive: (NSNotification *)notification
+{
+	self.hotkeyAppIsActive = YES;
+	[self syncHotkeyKeyWindowState];
+}
+
+- (void) _hotkeyAppDidResignActive: (NSNotification *)notification
+{
+	self.hotkeyAppIsActive = NO;
+	[self syncHotkeyKeyWindowState];
+}
+
+- (void) _hotkeyKeyWindowDidChange: (NSNotification *)notification
+{
+	[self syncHotkeyKeyWindowState];
+}
+
+- (void) syncHotkeyKeyWindowState
+{
+	NSAssert([NSThread isMainThread], @"syncHotkeyKeyWindowState must be called on the main thread.");
+	
+	BXSession *session = self.currentSession;
+	self.hotkeyKeyWindowBelongsToCurrentSession =
+		(session != nil && [self documentForWindow: [NSApp keyWindow]] == session);
 }
 
 - (void) syncApplicationPresentationMode
@@ -385,6 +458,7 @@
 	if ([theDocument isKindOfClass: [BXSession class]])
 	{
 		[self setCurrentSession: (BXSession *)theDocument];
+		[self syncHotkeyKeyWindowState];
 	}
 }
 
@@ -394,7 +468,11 @@
 	[super removeDocument: theDocument];
 	
 	//Clear the current session
-	if (self.currentSession == theDocument) self.currentSession = nil;
+	if (self.currentSession == theDocument)
+	{
+		self.currentSession = nil;
+		[self syncHotkeyKeyWindowState];
+	}
 }
 
 

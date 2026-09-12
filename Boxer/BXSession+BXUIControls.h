@@ -12,26 +12,34 @@
 #import <Cocoa/Cocoa.h>
 #import "BXSession.h"
 
-/// The speed thresholds used by cpuClassFormatForSpeed: to describe the current
-/// emulation speed in terms of CPU class. Kept from the pre-0.83 slider: 0.83's
-/// own `cpu_cycles` help now ships a comparable ladder (8088 300, 286-12 1500,
-/// 386DX-40 8000, 486DX-33 12000, 486DX/2-66 25000, Pentium 90 50000), but
-/// changing these would silently retune what every existing saved speed means.
+/// The CPU-class thresholds the speed slider bands onto, taken from the ladder
+/// in 0.83's own `cpu_cycles` help so that Boxer and DOSBox Staging describe the
+/// same speed the same way:
+///
+///     8088 (4.77 MHz)  300     486DX-33          12000
+///     286-8            700     486DX/2-66        25000
+///     286-12          1500     Pentium 90        50000
+///     386SX-20        3000     Pentium MMX-166  100000
+///     386DX-33        6000     Pentium II 300   200000
+///     386DX-40        8000
+///
+/// The floor is DOSBox's own CpuCyclesMin rather than a CPU class: plenty of
+/// early games need to run slower than an 8088.
 enum
 {
-	BXMaxSpeedThreshold		= 62500,
-	BXPentiumSpeedThreshold	= 25000,
-	BX486SpeedThreshold		= 10000,
-	BX386SpeedThreshold		= 2500,
-	BX286SpeedThreshold		= 1000,
-	BXMinSpeedThreshold		= 50
+	BXMaxSpeedThreshold		= 200000,	//Pentium II 300
+	BXPentiumSpeedThreshold	= 50000,	//Pentium 90
+	BX486SpeedThreshold		= 12000,	//486DX-33
+	BX386SpeedThreshold		= 3000,		//386SX-20
+	BX286SpeedThreshold		= 700,		//286-8
+	BXMinSpeedThreshold		= 50		//CpuCyclesMin
 };
 
 /// The increments the CPU speed slider snaps to within each band above.
 enum
 {
-	BXPentiumSpeedIncrement	= 2500,
-	BX486SpeedIncrement		= 1000,
+	BXPentiumSpeedIncrement	= 10000,
+	BX486SpeedIncrement		= 2500,
 	BX386SpeedIncrement		= 500,
 	BX286SpeedIncrement		= 100,
 	BXMinSpeedIncrement		= 50

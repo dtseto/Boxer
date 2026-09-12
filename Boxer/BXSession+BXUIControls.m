@@ -75,20 +75,23 @@
 	return (NSInteger)(round((CGFloat)rawSpeed / increment) * increment);
 }
 
+//Named for the CPU classes in 0.83's own `cpu_cycles` help, so that Boxer and
+//DOSBox Staging describe the same speed the same way.
 + (NSString *) cpuClassFormatForSpeed: (NSInteger)speed
 {
-	if (speed >= BXPentiumSpeedThreshold)	return NSLocalizedString(@"Pentium speed (%u cycles)",	@"Description for Pentium speed class. %u is cycles setting.");
-	if (speed >= BX486SpeedThreshold)		return NSLocalizedString(@"486 speed (%u cycles)",		@"Description for 80486 speed class. %u is cycles setting.");
-	if (speed >= BX386SpeedThreshold)		return NSLocalizedString(@"386 speed (%u cycles)",		@"Description for 80386 speed class. %u is cycles setting.");
-	if (speed >= BX286SpeedThreshold)		return NSLocalizedString(@"AT speed (%u cycles)",		@"Description for PC-AT 80286 speed class. %u is cycles setting.");
+	if (speed >= BXPentiumSpeedThreshold)	return NSLocalizedString(@"Pentium (%u cycles)",	@"Description for Pentium speed class. %u is the cpu_cycles setting.");
+	if (speed >= BX486SpeedThreshold)		return NSLocalizedString(@"486 (%u cycles)",		@"Description for 80486 speed class. %u is the cpu_cycles setting.");
+	if (speed >= BX386SpeedThreshold)		return NSLocalizedString(@"386 (%u cycles)",		@"Description for 80386 speed class. %u is the cpu_cycles setting.");
+	if (speed >= BX286SpeedThreshold)		return NSLocalizedString(@"286 (%u cycles)",		@"Description for 80286 speed class. %u is the cpu_cycles setting.");
 	
-	return NSLocalizedString(@"XT speed (%u cycles)",		@"Description for PC-XT 8088 speed class. %u is cycles setting.");
+	return NSLocalizedString(@"8088 (%u cycles)",		@"Description for 8088 speed class. %u is the cpu_cycles setting.");
 }
 
 + (NSString *) descriptionForSpeed: (NSInteger)speed
 {
     if (speed == BXAutoSpeed)
-    	return NSLocalizedString(@"Maximum speed", @"Description for current CPU speed when in automatic CPU throttling mode.");
+        //DOSBox Staging's own name for this setting value.
+    	return NSLocalizedString(@"max cycles", @"Description for current CPU speed when cpu_cycles is set to 'max'.");
     
     else
         return [NSString stringWithFormat: [self cpuClassFormatForSpeed: speed], speed];

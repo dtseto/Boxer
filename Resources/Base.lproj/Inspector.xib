@@ -228,7 +228,7 @@ to the DOS prompt instead.</string>
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-t1-001">
                                                     <rect key="frame" x="20" y="338" width="36" height="11"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="XT" id="Spd-t1-c01">
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="8088" id="Spd-t1-c01">
                                                         <font key="font" metaFont="miniSystem"/>
                                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -237,7 +237,7 @@ to the DOS prompt instead.</string>
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-t2-001">
                                                     <rect key="frame" x="53" y="338" width="44" height="11"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="AT" id="Spd-t2-c01">
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="286" id="Spd-t2-c01">
                                                         <font key="font" metaFont="miniSystem"/>
                                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -273,14 +273,14 @@ to the DOS prompt instead.</string>
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-t6-001">
                                                     <rect key="frame" x="244" y="338" width="36" height="11"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Max" id="Spd-t6-c01">
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="max" id="Spd-t6-c01">
                                                         <font key="font" metaFont="miniSystem"/>
                                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
                                                 </textField>
                                                 <textField hidden="YES" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-nt-001">
-                                                    <rect key="frame" x="20" y="288" width="176" height="34"/>
+                                                    <rect key="frame" x="20" y="288" width="130" height="34"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="left" title="This change may need a restart to take effect." id="Spd-nt-c01">
                                                         <font key="font" metaFont="smallSystem"/>
@@ -296,9 +296,9 @@ to the DOS prompt instead.</string>
                                                     </connections>
                                                 </textField>
                                                 <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-bt-001">
-                                                    <rect key="frame" x="198" y="292" width="78" height="24"/>
+                                                    <rect key="frame" x="154" y="292" width="122" height="24"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                                                    <buttonCell key="cell" type="push" title="Restart" bezelStyle="push" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Spd-bt-c01">
+                                                    <buttonCell key="cell" type="push" title="Restart to apply" bezelStyle="push" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Spd-bt-c01">
                                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                         <font key="font" metaFont="smallSystem"/>
                                                     </buttonCell>

@@ -623,6 +623,23 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 	[super removeWindowController: windowController];
 }
 
+//BXSession posts its own KVO notifications for DOSWindowController, from
+//-setDOSWindowController: below, so that the observer swap happens between the
+//will- and did- calls. Automatic notification has to be turned off for the key
+//or every change posts *two* pairs, which is fatal to anything observing a key
+//path *through* this property: NSKeyValueNestedProperty records the intermediate
+//object at willChange and finds it already replaced by the outer didChange,
+//and throws "Cannot update for observer ... Check the KVO-compliance of the
+//BXSession class". The Inspector panel's "Input Mediator" binds
+//DOSWindowController.inputController, so it is observing exactly such a path
+//whenever it is open, and the exception was thrown out of
+//-removeWindowController: during -close — aborting session teardown partway.
+//This is D62.
++ (BOOL) automaticallyNotifiesObserversOfDOSWindowController
+{
+    return NO;
+}
+
 - (void) setDOSWindowController: (BXDOSWindowController *)controller
 {
     if (controller != self.DOSWindowController)

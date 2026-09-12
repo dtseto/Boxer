@@ -93,7 +93,13 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
 {
-	if (self.documents == 0) {
+	//NSDocumentController's -documents is an array, not a count: comparing it
+	//against 0 compares the pointer against nil, which is never true for a live
+	//document controller. So this fast path never fired and every quit went down
+	//the NSTerminateLater branch below -- including quits with nothing to close,
+	//which is why quitting with no session open needed two or three attempts and
+	//answered AppleScript with "User cancelled" in between.
+	if (self.documents.count == 0) {
 		return NSTerminateNow;
 	}
 	//Tell any remaining documents to close on exit so they can clean up properly and save their state.

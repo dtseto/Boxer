@@ -43,7 +43,8 @@
 
 
 /// Simply inverts a number and returns it.
-/// Registered as `BXFrameRateSliderTransformer` by BXSession+BXEmulatorControls, which is used for flipping the values of the framerate slider.
+/// No longer registered under a name: its only user was the Inspector's frameskip
+/// slider, which went when DOSBox Staging 0.83 removed frameskip (D3).
 @interface BXInvertNumberTransformer: NSValueTransformer
 @end
 

@@ -36,9 +36,6 @@ enum
 
 #define BXAutoSpeed -1
 
-/// The maximum frameskip level we can set
-#define BXMaxFrameskip 9
-
 typedef NS_ENUM(NSInteger, BXPlaybackMode) {
     BXPaused,
     BXPlaying,
@@ -54,9 +51,6 @@ typedef NS_ENUM(NSInteger, BXPlaybackMode) {
 #pragma mark -
 #pragma mark Properties
 
-/// The number of frames to be skipped for each frame that is played
-@property (assign, nonatomic) NSUInteger frameskip;
-
 /// The CPU speed, as a fixed cycles number or BXAutoSpeed (if autoSpeed is YES).
 @property (assign, nonatomic) NSInteger CPUSpeed;
 
@@ -71,17 +65,12 @@ typedef NS_ENUM(NSInteger, BXPlaybackMode) {
 @property (assign, nonatomic, getter=isDynamic) BOOL dynamic;
 
 
-/// Whether the current frameskip level is at the minimum or maximum bounds.
-@property (readonly, nonatomic) BOOL frameskipAtMinimum; 
-@property (readonly, nonatomic) BOOL frameskipAtMaximum;
-
 /// Whether the current CPU speed is at the minimum or maximum bounds.
 @property (readonly, nonatomic) BOOL speedAtMinimum;
 @property (readonly, nonatomic) BOOL speedAtMaximum;
 
-/// Localised human-readable descriptions of the current CPU speed/frameskip setting.
+/// Localised human-readable description of the current CPU speed.
 @property (readonly, nonatomic) NSString *speedDescription;
-@property (readonly, nonatomic) NSString *frameskipDescription;
 
 /// The current playback mode: paused, playing, fast-forwarding. Used for UI bindings.
 @property (assign, nonatomic) BXPlaybackMode playbackMode;
@@ -122,10 +111,6 @@ typedef NS_ENUM(NSInteger, BXPlaybackMode) {
 /// if the emulation was previously paused, otherwise will have no effect.
 - (IBAction) resume: (id)sender;
 
-/// Increase/decrease the current frameskip by 1.
-- (IBAction) incrementFrameSkip: (id)sender;
-- (IBAction) decrementFrameSkip: (id)sender;
-
 /// Increase/decrease the CPU speed by an appropriate increment,
 /// according to incrementAmountForSpeed:goingUp:
 - (IBAction) incrementSpeed: (id)sender;	
@@ -138,9 +123,6 @@ typedef NS_ENUM(NSInteger, BXPlaybackMode) {
 
 /// Caps the speed within minimum and maximum limits
 - (BOOL) validateCPUSpeed: (NSNumber **)ioValue error: (NSError **)outError;
-
-/// Caps the frameskip amount within minimum and maximum limits
-- (BOOL) validateFrameskip: (NSNumber **)ioValue error: (NSError **)outError;
 
 /// Snaps the speed to set increments, and switches to auto speed above the maximum speed.
 - (BOOL) validateSliderSpeed: (NSNumber **)ioValue error: (NSError **)outError;

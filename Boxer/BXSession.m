@@ -1351,12 +1351,6 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 {
 	_hasLaunched = YES;
     
-    //Do any just-in-time configuration, which should override all previous startup stuff.
-	NSNumber *frameskip = [self.gameSettings objectForKey: @"frameskip"];
-	if (frameskip && [self validateValue: &frameskip forKey: @"frameskip" error: nil])
-		[self setValue: frameskip forKey: @"frameskip"];
-	
-	
 	//After all preflight configuration has finished, go ahead and open whatever
     //file or folder we're pointing at.
 	NSURL *targetURL = self.targetURL;
@@ -1616,9 +1610,6 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 	//These reside in BXEmulatorControls, as should this function, but so be it
 	[self willChangeValueForKey: @"sliderSpeed"];
 	[self didChangeValueForKey: @"sliderSpeed"];
-	
-	[self willChangeValueForKey: @"frameskip"];
-	[self didChangeValueForKey: @"frameskip"];
 	
 	[self willChangeValueForKey: @"dynamic"];
 	[self didChangeValueForKey: @"dynamic"];	

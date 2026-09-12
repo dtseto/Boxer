@@ -492,12 +492,6 @@
 /* Label shown in File Menu for Player Data submenu. %@ is the display name of the current session. */
 "Player Data for “%@”" = "Player Data for “%@”";
 
-/* Descriptive text for >0 frameskipping */
-"Playing 1 in %u frames" = "Playing 1 in %u frames";
-
-/* Descriptive text for 0 frameskipping */
-"Playing every frame" = "Playing every frame";
-
 /* Explanatory text shown when chosen games folder was read-only. */
 "Please check the file permissions, or choose a different folder." = "Please check the file permissions, or choose a different folder.";
 

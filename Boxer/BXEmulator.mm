@@ -894,12 +894,10 @@ static BOOL _hasStartedEmulator = NO;
     {
         [self willChangeValueForKey: @"fixedSpeed"];
         [self willChangeValueForKey: @"autoSpeed"];
-        [self willChangeValueForKey: @"frameskip"];
         [self willChangeValueForKey: @"coreMode"];
         
         [self didChangeValueForKey: @"fixedSpeed"];
         [self didChangeValueForKey: @"autoSpeed"];
-        [self didChangeValueForKey: @"frameskip"];
         [self didChangeValueForKey: @"coreMode"];
         
         NSString *newProcessName = [NSString stringWithCString: RunningProgram

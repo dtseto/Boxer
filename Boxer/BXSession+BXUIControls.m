@@ -50,12 +50,10 @@
             BXMaxSpeedThreshold
         };
         NSValueTransformer *speedBanding		= [[BXBandedValueTransformer alloc] initWithThresholds: bands count: 6];
-        NSValueTransformer *invertFramerate     = [[BXInvertNumberTransformer alloc] init];
         NSValueTransformer *screenshotDater     = [[BXDateTransformer alloc] initWithDateFormatter: screenshotDateFormatter];
         
         
         [NSValueTransformer setValueTransformer: speedBanding forName: @"BXSpeedSliderTransformer"];
-        [NSValueTransformer setValueTransformer: invertFramerate forName: @"BXFrameRateSliderTransformer"];
         [NSValueTransformer setValueTransformer: screenshotDater forName: @"BXCaptureDateTransformer"];
     }
 }
@@ -159,44 +157,6 @@
         [self resume: sender];
     else
         [self pause: sender];
-}
-
-- (NSUInteger) frameskip
-{
-	return self.emulator.videoHandler.frameskip;
-}
-
-- (void) setFrameskip: (NSUInteger)frameskip
-{
-	self.emulator.videoHandler.frameskip = frameskip;
-	
-	[self.gameSettings setObject: @(frameskip) forKey: @"frameskip"];
-}
-
-- (BOOL) validateFrameskip: (NSNumber **)ioValue error: (NSError **)outError
-{
-	NSUInteger theValue = [*ioValue unsignedIntegerValue];
-	if (theValue > BXMaxFrameskip)
-        *ioValue = @(BXMaxFrameskip);
-    
-	return YES;
-}
-
-- (IBAction) incrementFrameSkip: (id)sender
-{
-	NSNumber *newFrameskip = @(self.frameskip + 1);
-	if ([self validateFrameskip: &newFrameskip error: nil])
-		self.frameskip = newFrameskip.unsignedIntegerValue;
-}
-
-- (IBAction) decrementFrameSkip: (id)sender
-{
-    if (self.frameskip > 0)
-    {
-        NSNumber *newFrameskip = @(self.frameskip - 1);
-        if ([self validateFrameskip: &newFrameskip error: nil])
-            self.frameskip = newFrameskip.unsignedIntegerValue;
-    }
 }
 
 
@@ -438,8 +398,6 @@
 	if (theAction == @selector(incrementSpeed:))		return isShowingDOSView && !self.speedAtMaximum;
 	if (theAction == @selector(decrementSpeed:))		return isShowingDOSView && !self.speedAtMinimum;
 
-	if (theAction == @selector(incrementFrameSkip:))	return isShowingDOSView && !self.frameskipAtMaximum;
-	if (theAction == @selector(decrementFrameSkip:))	return isShowingDOSView && !self.frameskipAtMinimum;
     
 	if (theAction == @selector(saveScreenshot:))        return isShowingDOSView;
     
@@ -644,8 +602,6 @@
 - (BOOL) speedAtMinimum		{ return !self.isAutoSpeed && (self.CPUSpeed <= BXMinSpeedThreshold); }
 - (BOOL) speedAtMaximum		{ return self.isAutoSpeed; }
 
-- (BOOL) frameskipAtMinimum	{ return self.frameskip <= 0; }
-- (BOOL) frameskipAtMaximum	{ return self.frameskip >= BXMaxFrameskip; }
 
 
 #pragma mark -
@@ -720,20 +676,7 @@
     return [self.class descriptionForSpeed: self.CPUSpeed];
 }
 
-- (NSString *) frameskipDescription
-{
-	if (!self.isEmulating) return @"";
-	
-	NSString *format;
-	if (self.frameskip == 0)
-			format = NSLocalizedString(@"Playing every frame",		@"Descriptive text for 0 frameskipping");
-	else	format = NSLocalizedString(@"Playing 1 in %u frames",	@"Descriptive text for >0 frameskipping");
-	
-	return [NSString stringWithFormat: format, self.frameskip + 1];
-}
-
 + (NSSet *) keyPathsForValuesAffectingSpeedDescription		{ return [NSSet setWithObject: @"sliderSpeed"]; }
-+ (NSSet *) keyPathsForValuesAffectingFrameskipDescription	{ return [NSSet setWithObjects: @"emulating", @"frameskip", nil]; }
 
 
 #pragma mark -

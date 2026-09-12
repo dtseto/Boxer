@@ -119,22 +119,6 @@
     else return NO;
 }
 
-- (NSUInteger) frameskip
-{
-    // DOSBox Staging removed frameskip in 0.83: gui/render/render.cpp now only
-    // keeps a Deprecated 'frameskip' setting that prints a notice. There is
-    // nothing left to read, so this reports 0 (no frames skipped).
-    //
-    // TODO: Boxer still exposes a frameskip control in its UI. That control no
-    // longer does anything and should be removed.
-    return 0;
-}
-
-- (void) setFrameskip: (NSUInteger)frameskip
-{
-    // No-op: see -frameskip above.
-}
-
 //Chooses the specified filter, and resets the renderer to apply the change immediately.
 - (void) setFilterType: (BXFilterType)type
 {

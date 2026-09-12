@@ -498,12 +498,6 @@ en ejes separados.";
 /* Label shown in File Menu for Player Data submenu. %@ is the display name of the current session. */
 "Player Data for “%@”" = "Datos de juego para “%@”";
 
-/* Descriptive text for >0 frameskipping */
-"Playing 1 in %u frames" = "Reproduciendo 1 de %u fotogramas";
-
-/* Descriptive text for 0 frameskipping */
-"Playing every frame" = "Reproduciendo cada fotograma";
-
 /* Explanatory text shown when chosen games folder was read-only. */
 "Please check the file permissions, or choose a different folder." = "Por favor compruebe los permisos de archivo, o elija una carpeta diferente.";
 

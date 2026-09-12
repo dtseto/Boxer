@@ -185,17 +185,6 @@ to the DOS prompt instead.</string>
                                             <rect key="frame" x="0.0" y="0.0" width="296" height="432"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                             <subviews>
-                                                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2225">
-                                                    <rect key="frame" x="20" y="139" width="256" height="28"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="left" id="2226">
-                                                        <font key="font" metaFont="smallSystem"/>
-                                                        <string key="title">Reduce the frame rate if the game’s
-sound or animation are stuttering.</string>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
                                                 <button horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1466">
                                                     <rect key="frame" x="254" y="16" width="25" height="25"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
@@ -224,7 +213,7 @@ sound or animation are stuttering.</string>
                                                                 <connections>
                                                                     <binding destination="56" name="value" keyPath="selection.dynamic" id="2037"/>
                                                                     <binding destination="56" name="enabled" keyPath="selection.emulating" id="2050"/>
-                                                                    <outlet property="nextKeyView" destination="2044" id="2286"/>
+                                                                    <outlet property="nextKeyView" destination="1466" id="2286"/>
                                                                 </connections>
                                                             </button>
                                                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2031">
@@ -241,27 +230,6 @@ sound or animation are stuttering.</string>
                                                     <color key="borderColor" white="0.0" alpha="0.10000000000000001" colorSpace="calibratedWhite"/>
                                                     <color key="fillColor" white="0.0" alpha="0.050000000000000003" colorSpace="calibratedWhite"/>
                                                 </box>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2038">
-                                                    <rect key="frame" x="20" y="201" width="126" height="17"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Frame rate:" id="2039">
-                                                        <font key="font" metaFont="systemBold"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                </textField>
-                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2040">
-                                                    <rect key="frame" x="150" y="201" width="126" height="14"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="[Current framerate]" id="2041">
-                                                        <font key="font" metaFont="smallSystem"/>
-                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
-                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                                    </textFieldCell>
-                                                    <connections>
-                                                        <binding destination="56" name="value" keyPath="selection.frameskipDescription" id="2043"/>
-                                                    </connections>
-                                                </textField>
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2084">
                                                     <rect key="frame" x="20" y="378" width="87" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -283,24 +251,6 @@ sound or animation are stuttering.</string>
                                                         <binding destination="56" name="value" keyPath="selection.speedDescription" id="2089"/>
                                                     </connections>
                                                 </textField>
-                                                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2044">
-                                                    <rect key="frame" x="20" y="174" width="256" height="18"/>
-                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" minValue="-9" tickMarkPosition="above" numberOfTickMarks="10" allowsTickMarkValuesOnly="YES" sliderType="linear" id="2045">
-                                                        <connections>
-                                                            <binding destination="56" name="enabled" keyPath="selection.emulating" id="2052"/>
-                                                        </connections>
-                                                    </sliderCell>
-                                                    <connections>
-                                                        <binding destination="56" name="enabled" keyPath="selection.emulating" id="2068"/>
-                                                        <binding destination="56" name="value" keyPath="selection.frameskip" id="2070">
-                                                            <dictionary key="options">
-                                                                <string key="NSValueTransformerName">BXFrameRateSliderTransformer</string>
-                                                            </dictionary>
-                                                        </binding>
-                                                        <outlet property="nextKeyView" destination="1466" id="2054"/>
-                                                    </connections>
-                                                </slider>
                                                 <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2057">
                                                     <rect key="frame" x="20" y="352" width="256" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -1007,7 +957,6 @@ if the joystick drifts or behaves erratically.</string>
         </menu>
         <objectController objectClassName="BXSession" editable="NO" id="56" userLabel="Session Mediator">
             <declaredKeys>
-                <string>frameskip</string>
                 <string>dynamic</string>
                 <string>drives</string>
                 <string>gameSettings</string>
@@ -1033,7 +982,6 @@ if the joystick drifts or behaves erratically.</string>
                 <string>settings.mouseButtonShortcutRight</string>
                 <string>gameSettings.mouseButtonModifierRight</string>
                 <string>gameSettings.mouseButtonModifierBoth</string>
-                <string>frameskipDescription</string>
                 <string>sliderSpeed</string>
                 <string>speedDescription</string>
                 <string>gameSettings.strictGameportTiming</string>

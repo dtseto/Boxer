@@ -126,9 +126,6 @@ typedef NS_ENUM(uint8_t, BXCGACompositeMode) {
 @property (assign, nonatomic) BXCGACompositeMode CGAComposite;
 @property (assign, nonatomic) double CGAHueAdjustment;
 
-/// The current DOSBox frameskip setting.
-@property (assign, nonatomic) NSUInteger frameskip;
-
 /// Whether the chosen filter is actually being rendered. This will be NO if the current rendered
 /// size is smaller than the minimum size supported by the chosen filter.
 @property (readonly) BOOL filterIsActive;

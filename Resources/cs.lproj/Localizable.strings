@@ -498,12 +498,6 @@ na vlastních osách.";
 /* Label shown in File Menu for Player Data submenu. %@ is the display name of the current session. */
 "Player Data for “%@”" = "Herní data pro hru “%@”";
 
-/* Descriptive text for >0 frameskipping */
-"Playing 1 in %u frames" = "Zobrazuji každý %u. snímek";
-
-/* Descriptive text for 0 frameskipping */
-"Playing every frame" = "Zobrazuji každý snímek";
-
 /* Explanatory text shown when chosen games folder was read-only. */
 "Please check the file permissions, or choose a different folder." = "Zkontrolujte prosím oprávnění u souborů nebo zvolte jinou složku.";
 

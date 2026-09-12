@@ -6,6 +6,8 @@
  */
 
 
+#include <string>
+
 #import "BXCoalface.h"
 #import "BXEmulatorPrivate.h"
 #import "config/setup.h"
@@ -13,6 +15,51 @@
 #import "misc/cross.h"
 #import "shell/shell.h"
 #import "ADBFilesystem.h"
+#import "BXBaseAppController+BXSupportFiles.h"
+
+#pragma mark - Support files
+
+/// Supplies DOSBox's config directory, which is also its resource and plugin
+/// lookup root: shaders, soundfonts, plugins, MT-32 and SoundCanvas ROMs, the
+/// mapper file and the webserver directory all hang off it.
+///
+/// Upstream's macOS location is ~/Library/Preferences/DOSBox -- a directory
+/// named for a different application, inside the folder macOS reserves for
+/// preference plists, which Boxer never had. Boxer already keeps its own
+/// support files in ~/Library/Application Support/Boxer, so DOSBox's go in a
+/// DOSBox-Staging folder beside them. See D34.
+///
+/// cross.cpp creates the directory itself; we only name it. The path is cached
+/// because get_or_create_config_dir() may be called before the delegate is in a
+/// position to answer, and because the answer cannot change during a run.
+const char *boxer_configDirPath()
+{
+    static std::string cachedPath;
+
+    if (cachedPath.empty())
+    {
+        NSURL *supportURL = nil;
+
+        id delegate = [NSApp delegate];
+        if ([delegate respondsToSelector: @selector(supportURLCreatingIfMissing:error:)])
+            supportURL = [delegate supportURLCreatingIfMissing: YES error: NULL];
+
+        //Fall back to the same location worked out by hand, rather than letting
+        //DOSBox drop its files somewhere else entirely if the delegate is not
+        //available: this is called during emulator startup and must not fail.
+        if (!supportURL)
+        {
+            NSArray *appSupportURLs = [[NSFileManager defaultManager] URLsForDirectory: NSApplicationSupportDirectory
+                                                                            inDomains: NSUserDomainMask];
+            supportURL = [appSupportURLs.firstObject URLByAppendingPathComponent: @"Boxer"];
+        }
+
+        NSURL *configURL = [supportURL URLByAppendingPathComponent: @"DOSBox-Staging"];
+        cachedPath = configURL.path.fileSystemRepresentation;
+    }
+
+    return cachedPath.c_str();
+}
 
 #pragma mark - Runloop state functions
 

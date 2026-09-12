@@ -198,6 +198,13 @@ extern "C" {
 	void boxer_setMouseActive(bool mouseActive);
 	void boxer_mouseMovedToPoint(float x, float y);
     
+    /// Called from cross.cpp's get_or_create_config_dir(): supplies the directory
+    /// DOSBox should use as its config, resource and plugin root, in place of
+    /// upstream's ~/Library/Preferences/DOSBox. Boxer keeps everything DOSBox
+    /// needs inside its own Application Support folder instead. See D34.
+    /// The returned string is owned by Boxer and stays valid for the process.
+    const char *boxer_configDirPath();
+
     /// Defined in keyboard.cpp to let Boxer see if there's any room left in the keyboard buffer.
     Bitu boxer_keyboardBufferRemaining();
     

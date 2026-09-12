@@ -101,6 +101,23 @@ extern "C" {
     uint8_t boxer_CGAComponentMode(void);
     void boxer_setCGAComponentMode(uint8_t newCGA);
 
+    /// Defined in cpu.cpp to give Boxer control of the emulated CPU speed.
+    /// These drive whichever cycles model is live -- 0.83's `cpu_cycles` or the
+    /// deprecated `cycles` -- and apply immediately, the way upstream's own
+    /// Inc/Dec Cycles hotkeys do. See the comment at their definition: setting
+    /// CPU_CycleMax directly is NOT enough in 0.83.
+    void boxer_setCpuCycles(int cycles);
+    void boxer_setCpuCyclesToMax(void);
+
+    /// The speed actually in force, read back rather than remembered, so Boxer
+    /// can tell whether what it asked for took effect. 0 means "max".
+    int boxer_cpuCycles(void);
+    bool boxer_isCpuCyclesMax(void);
+
+    /// True when the session's config still uses the deprecated `cycles`
+    /// setting, which puts 0.83 into a different CPU-timing model.
+    bool boxer_isLegacyCyclesMode(void);
+
 #pragma mark - Shell
     
     void boxer_shellWillStart(DOS_Shell *shell);

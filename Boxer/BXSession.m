@@ -816,6 +816,7 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 		BXEmulatorConfiguration *runtimeConf = [BXEmulatorConfiguration configuration];
 		
 		//These are the settings we want to keep in the configuration file
+		NSNumber *CPUSpeed      = [self.gameSettings objectForKey: @"CPUSpeed"];
 		NSNumber *coreMode		= [self.gameSettings objectForKey: @"coreMode"];
 		NSNumber *strictGameportTiming = [self.gameSettings objectForKey: @"strictGameportTiming"];
 		
@@ -833,9 +834,27 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 		
 		//Strip out these settings once we're done, so we won't preserve them in user defaults and won't re-record them
         //if they haven't changed by the next time the settings are synchronized.
-		//NOTE: "CPUSpeed" is still stripped here even though nothing writes it any
-		//more: a gamebox last opened by an older Boxer can still have one left in
-		//user defaults, and leaving it there would persist it forever.
+		if (CPUSpeed)
+		{
+            NSInteger speed = CPUSpeed.integerValue;
+            BOOL isAutoSpeed = (speed == BXAutoSpeed);
+			NSString *cyclesString = [BXEmulator configStringForFixedSpeed: speed
+																	isAuto: isAutoSpeed];
+			
+			//0.83 deprecated `cycles` and split it into a real-mode and a
+			//protected-mode setting. Boxer's Inspector offers a single speed,
+			//so it writes cpu_cycles and has the protected-mode setting follow
+			//it -- which is what cpu_cycles_protected = auto means. See D39.
+			[runtimeConf setValue: cyclesString forKey: @"cpu_cycles" inSection: @"cpu"];
+			[runtimeConf setValue: @"auto" forKey: @"cpu_cycles_protected" inSection: @"cpu"];
+			
+			//Clear any `cycles` a previous version of Boxer wrote here: leaving
+			//it would put 0.83 into its legacy cycles mode and override the two
+			//settings above.
+			[runtimeConf removeValueForKey: @"cycles" inSection: @"cpu"];
+		}
+		
+		//Strip out these settings once we're done, so we won't preserve them in user defaults
 		NSArray *confSettings = [NSArray arrayWithObjects: @"CPUSpeed", @"coreMode", @"strictGameportTiming", nil];
 		[self.gameSettings removeObjectsForKeys: confSettings];
 
@@ -1597,6 +1616,9 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 - (void) emulatorDidChangeEmulationState: (NSNotification *)notification
 {
 	//These reside in BXEmulatorControls, as should this function, but so be it
+	[self willChangeValueForKey: @"sliderSpeed"];
+	[self didChangeValueForKey: @"sliderSpeed"];
+	
 	[self willChangeValueForKey: @"dynamic"];
 	[self didChangeValueForKey: @"dynamic"];	
 }

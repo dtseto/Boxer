@@ -112,6 +112,11 @@ typedef NS_ENUM(NSInteger, BXSessionProgramCompletionBehavior) {
 	NSURL *_temporaryFolderURL;
 	
 	BOOL _hasStarted;
+	
+	/// Set when a CPU speed change could not be applied to the running emulator,
+	/// so the CPU Inspector can offer to restart the session. See BXUIControls.
+	BOOL _speedChangeNeedsRestart;
+	
 	BOOL _hasConfigured;
 	BOOL _hasLaunched;
     BOOL _hasFinishedStartupProcess;

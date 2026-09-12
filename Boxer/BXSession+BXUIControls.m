@@ -31,7 +31,7 @@
 @implementation BXSession (BXUIControls)
 
 #pragma mark -
-#pragma mark Helper methods
+#pragma mark Speed-related helper methods
 
 + (void) initialize
 {
@@ -41,10 +41,57 @@
         NSDateFormatter *screenshotDateFormatter = [[NSDateFormatter alloc] init];
         screenshotDateFormatter.dateFormat = NSLocalizedString(@"yyyy-MM-dd 'at' h.mm.ss a", @"The date and time format to use for screenshot filenames. Literal strings (such as the 'at') should be enclosed in single quotes. The date order should not be changed when localizing unless really necessary, as this is important to maintain chronological ordering in alphabetical file listings. Note that some characters such as / and : are not permissible in filenames and will be stripped out or replaced.");
         
+        double bands[6] = {
+            BXMinSpeedThreshold,
+            BX286SpeedThreshold,
+            BX386SpeedThreshold,
+            BX486SpeedThreshold,
+            BXPentiumSpeedThreshold,
+            BXMaxSpeedThreshold
+        };
+        NSValueTransformer *speedBanding    = [[BXBandedValueTransformer alloc] initWithThresholds: bands count: 6];
         NSValueTransformer *screenshotDater = [[BXDateTransformer alloc] initWithDateFormatter: screenshotDateFormatter];
         
+        [NSValueTransformer setValueTransformer: speedBanding forName: @"BXSpeedSliderTransformer"];
         [NSValueTransformer setValueTransformer: screenshotDater forName: @"BXCaptureDateTransformer"];
     }
+}
+
+
+//We use different increment scales depending on the speed, to give more accuracy to low-speed adjustments
++ (NSInteger) incrementAmountForSpeed: (NSInteger)speed goingUp: (BOOL) increasing
+{
+	speed += increasing;
+	if (speed > BXPentiumSpeedThreshold)	return BXPentiumSpeedIncrement;
+	if (speed > BX486SpeedThreshold)		return BX486SpeedIncrement;
+	if (speed > BX386SpeedThreshold)		return BX386SpeedIncrement;
+	if (speed > BX286SpeedThreshold)		return BX286SpeedIncrement;
+											return BXMinSpeedIncrement;
+}
+
++ (NSInteger) snappedSpeed: (NSInteger) rawSpeed
+{
+	NSInteger increment = [self incrementAmountForSpeed: rawSpeed goingUp: YES];
+	return (NSInteger)(round((CGFloat)rawSpeed / increment) * increment);
+}
+
++ (NSString *) cpuClassFormatForSpeed: (NSInteger)speed
+{
+	if (speed >= BXPentiumSpeedThreshold)	return NSLocalizedString(@"Pentium speed (%u cycles)",	@"Description for Pentium speed class. %u is cycles setting.");
+	if (speed >= BX486SpeedThreshold)		return NSLocalizedString(@"486 speed (%u cycles)",		@"Description for 80486 speed class. %u is cycles setting.");
+	if (speed >= BX386SpeedThreshold)		return NSLocalizedString(@"386 speed (%u cycles)",		@"Description for 80386 speed class. %u is cycles setting.");
+	if (speed >= BX286SpeedThreshold)		return NSLocalizedString(@"AT speed (%u cycles)",		@"Description for PC-AT 80286 speed class. %u is cycles setting.");
+	
+	return NSLocalizedString(@"XT speed (%u cycles)",		@"Description for PC-XT 8088 speed class. %u is cycles setting.");
+}
+
++ (NSString *) descriptionForSpeed: (NSInteger)speed
+{
+    if (speed == BXAutoSpeed)
+    	return NSLocalizedString(@"Maximum speed", @"Description for current CPU speed when in automatic CPU throttling mode.");
+    
+    else
+        return [NSString stringWithFormat: [self cpuClassFormatForSpeed: speed], speed];
 }
 
 
@@ -99,6 +146,115 @@
     else
         [self pause: sender];
 }
+
+
+- (BOOL) isAutoSpeed
+{
+	return self.emulator.isAutoSpeed;
+}
+
+- (void) setAutoSpeed: (BOOL)isAuto
+{
+    self.emulator.autoSpeed = isAuto;
+	
+	//Preserve changes to the speed settings
+	[self.gameSettings setObject: @(BXAutoSpeed) forKey: @"CPUSpeed"];
+    
+    [self _checkSpeedTookEffect: BXAutoSpeed isAuto: YES];
+}
+
+- (NSInteger) CPUSpeed
+{
+	return self.emulator.isAutoSpeed ? BXAutoSpeed : self.emulator.fixedSpeed;
+}
+
+- (void) setCPUSpeed: (NSInteger)speed
+{
+    if (speed == BXAutoSpeed)
+    {
+        self.autoSpeed = YES;
+    }
+    else
+    {
+        self.emulator.autoSpeed = NO;
+        self.emulator.fixedSpeed = speed;
+        
+        [self.gameSettings setObject: @(speed) forKey: @"CPUSpeed"];
+        
+        [self _checkSpeedTookEffect: speed isAuto: NO];
+    }
+}
+
+// 0.83 applies a speed change immediately, whether the session's config uses
+// `cpu_cycles` or the deprecated `cycles` -- boxer_setCpuCycles() drives
+// whichever model is live. But we read the speed back rather than assume:
+// if nothing is running to apply it to, the CPU panel offers a restart instead
+// of silently doing nothing.
+- (void) _checkSpeedTookEffect: (NSInteger)speed isAuto: (BOOL)isAuto
+{
+    BOOL applied = [self.emulator speedIsInEffect: speed isAuto: isAuto];
+    
+    if (applied == _speedChangeNeedsRestart) return;
+    
+    [self willChangeValueForKey: @"speedChangeNeedsRestart"];
+    _speedChangeNeedsRestart = !applied;
+    [self didChangeValueForKey: @"speedChangeNeedsRestart"];
+}
+
+- (BOOL) speedChangeNeedsRestart
+{
+    return _speedChangeNeedsRestart;
+}
+
+- (BOOL) validateCPUSpeed: (NSNumber **)ioValue error: (NSError **)outError
+{
+	NSInteger theValue = [*ioValue integerValue];
+    if (theValue != BXAutoSpeed)
+    {
+        if		(theValue < BXMinSpeedThreshold) *ioValue = @(BXMinSpeedThreshold);
+        else if	(theValue > BXMaxSpeedThreshold) *ioValue = @(BXMaxSpeedThreshold);
+    }
+	return YES;
+}
+
+- (void) setSliderSpeed: (NSInteger)speed
+{
+	//If we're at the maximum speed, bump it into auto-throttling mode
+	if (speed >= BXMaxSpeedThreshold) speed = BXAutoSpeed;
+	self.CPUSpeed = speed;
+}
+
+- (NSInteger) sliderSpeed
+{
+	//Report the max fixed speed if we're in auto-throttling mode, so that the
+    //knob appears at the top end of the slider instead of the bottom
+	return (self.isAutoSpeed) ? BXMaxSpeedThreshold : self.CPUSpeed;
+}
+
+//Snap fixed speed to even increments, unless the Option key is held down
+- (BOOL) validateSliderSpeed: (NSNumber **)ioValue error: (NSError **)outError
+{
+	if (!([NSApp currentEvent].modifierFlags & NSEventModifierFlagOption))
+	{
+		NSInteger speed			= [*ioValue integerValue]; 
+		NSInteger snappedSpeed	= [self.class snappedSpeed: speed];
+		*ioValue = @(snappedSpeed);
+	}
+	return YES;
+}
+
++ (NSSet *) keyPathsForValuesAffectingSliderSpeed
+{
+    return [NSSet setWithObjects: @"emulating", @"CPUSpeed", @"autoSpeed", @"dynamic", nil];
+}
+
+- (NSString *) speedDescription
+{	
+	if (!self.isEmulating) return @"";
+    return [self.class descriptionForSpeed: self.CPUSpeed];
+}
+
++ (NSSet *) keyPathsForValuesAffectingSpeedDescription		{ return [NSSet setWithObject: @"sliderSpeed"]; }
 
 
 - (BOOL) isDynamic

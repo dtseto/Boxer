@@ -80,7 +80,11 @@ void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
 
 // Replaces DOSBox's CPU_OldCycleMax, removed in 0.83: it only ever backed
 // Boxer's own save/restore of the cycle count around auto-speed changes.
-static int boxer_savedCycleMax = 0;
+// The fixed speed to return to when the user comes back from 'max'. Seeded
+// with DOSBox's own real-mode default (CpuCyclesRealModeDefault) so that
+// coming back from max before any fixed speed was ever set lands somewhere
+// sensible rather than at the 50-cycle floor.
+static int boxer_savedCycleMax = 3000;
 
 @implementation BXEmulator
 {
@@ -138,11 +142,13 @@ static BOOL _hasStartedEmulator = NO;
 	return !_hasStartedEmulator;
 }
 
+// 0.83 deprecated `cycles` in favour of `cpu_cycles`, which takes a bare number
+// or "max" -- not the "fixed N" the old setting used. See D39 in FINDINGS.md.
 + (NSString *) configStringForFixedSpeed: (NSInteger)speed
 								  isAuto: (BOOL)isAutoSpeed
 {
 	if (isAutoSpeed) return @"max";
-	else return [NSString stringWithFormat: @"fixed %ld", (long)speed];
+	else return [NSString stringWithFormat: @"%ld", (long)speed];
 }
 
 + (NSString *) configStringForCoreMode: (BXCoreMode)mode
@@ -407,57 +413,57 @@ static BOOL _hasStartedEmulator = NO;
 
 - (NSInteger) fixedSpeed
 {
-	NSInteger fixedSpeed = 0;
-	if (self.isExecuting)
-	{
-		fixedSpeed = (NSInteger)CPU_CycleMax;
-	}
-	return fixedSpeed;
+	return self.isExecuting ? (NSInteger)boxer_cpuCycles() : 0;
 }
 
 - (void) setFixedSpeed: (NSInteger)newSpeed
 {
 	if (self.isExecuting)
 	{
-		//Turn off automatic speed scaling
-        self.autoSpeed = NO;
-        
-        // CPU_OldCycleMax was a DOSBox global up to 0.78; it existed only for
-        // this save/restore, so Boxer keeps it now.
-        boxer_savedCycleMax = CPU_CycleMax = (int)newSpeed;
-		
-		//Stop DOSBox from resetting the cycles after a program exits
-		auto_determine_mode.auto_cycles = false;
-		
-		//Wipe out the cycles queue: we do this because DOSBox's CPU functions do whenever they modify the cycles
-		CPU_CycleLeft	= 0;
-		CPU_Cycles		= 0;
+        // Up to 0.78 this was a matter of assigning CPU_CycleMax. It is not at
+        // 0.83: in the modern cycles model DOSBox re-derives CPU_CycleMax from
+        // its own config struct at every real<->protected mode switch, so the
+        // assignment would be undone mid-game. boxer_setCpuCycles() updates
+        // whichever model is live and applies it now -- see its definition in
+        // cpu.cpp, and D39 in FINDINGS.md.
+        boxer_setCpuCycles((int)newSpeed);
 	}
 }
 
 - (BOOL) isAutoSpeed
 {
-	BOOL autoSpeed = NO;
-	if ([self isExecuting])
-	{
-        autoSpeed = (CPU_CycleAutoAdjust == BXSpeedAuto);
-	}
-	return autoSpeed;
+	return self.isExecuting ? (BOOL)boxer_isCpuCyclesMax() : NO;
 }
 
 - (void) setAutoSpeed: (BOOL)autoSpeed
 {
 	if (self.isExecuting && self.isAutoSpeed != autoSpeed)
 	{
-        //Be a good boy and record/restore the old cycles setting
-        if (autoSpeed)	boxer_savedCycleMax = CPU_CycleMax;
-        else			CPU_CycleMax = boxer_savedCycleMax;
-        
-        //Always force the usage percentage to 100
-        CPU_CyclePercUsed = 100;
-        
-        CPU_CycleAutoAdjust = (autoSpeed) ? BXSpeedAuto : BXSpeedFixed;
+        if (autoSpeed)
+        {
+            boxer_savedCycleMax = (int)boxer_cpuCycles();
+            boxer_setCpuCyclesToMax();
+        }
+        else
+        {
+            boxer_setCpuCycles(boxer_savedCycleMax);
+        }
 	}
+}
+
+/// Whether the speed Boxer last asked for is the speed now in force. It will
+/// not be if there is no emulator running to apply it to; the CPU Inspector
+/// uses this to decide whether to offer its "restart to apply" note.
+- (BOOL) speedIsInEffect: (NSInteger)requestedSpeed isAuto: (BOOL)isAuto
+{
+    if (!self.isExecuting) return NO;
+    if (isAuto) return self.isAutoSpeed;
+    return !self.isAutoSpeed && self.fixedSpeed == requestedSpeed;
+}
+
+- (BOOL) usesLegacyCyclesConfig
+{
+    return self.isExecuting ? (BOOL)boxer_isLegacyCyclesMode() : NO;
 }
 
 - (BXCoreMode) coreMode

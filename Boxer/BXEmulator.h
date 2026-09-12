@@ -253,6 +253,15 @@ extern NSStringEncoding BXDirectStringEncoding;
 /// Whether we are running at automatic maximum speed.
 @property (assign, getter=isAutoSpeed) BOOL autoSpeed;
 
+/// Whether the speed last asked for is the speed now in force. The CPU
+/// Inspector uses this to decide whether to offer its "restart to apply" note.
+- (BOOL) speedIsInEffect: (NSInteger)requestedSpeed isAuto: (BOOL)isAuto;
+
+/// Whether the session's config still uses the deprecated `cycles` setting
+/// rather than 0.83's `cpu_cycles`. A gamebox last opened by an older Boxer
+/// will; it puts DOSBox into a different CPU-timing model.
+@property (readonly, getter=usesLegacyCyclesConfig) BOOL legacyCyclesConfig;
+
 
 /// The current CPU core mode.
 @property (assign) BXCoreMode coreMode;

@@ -185,6 +185,132 @@ to the DOS prompt instead.</string>
                                             <rect key="frame" x="0.0" y="0.0" width="296" height="432"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                             <subviews>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-tl-001">
+                                                    <rect key="frame" x="20" y="378" width="87" height="17"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="CPU speed:" id="Spd-tl-c01">
+                                                        <font key="font" metaFont="systemBold"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-rd-001">
+                                                    <rect key="frame" x="109" y="378" width="167" height="14"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="[Current CPU speed]" id="Spd-rd-c01">
+                                                        <font key="font" metaFont="smallSystem"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                    <connections>
+                                                        <binding destination="56" name="value" keyPath="selection.speedDescription" id="Spd-rd-b01"/>
+                                                    </connections>
+                                                </textField>
+                                                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-sl-001">
+                                                    <rect key="frame" x="20" y="352" width="256" height="17"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <sliderCell key="cell" controlSize="small" continuous="YES" alignment="left" maxValue="1" doubleValue="1" tickMarkPosition="below" numberOfTickMarks="11" sliderType="linear" id="Spd-sl-c01">
+                                                        <connections>
+                                                            <binding destination="56" name="enabled" keyPath="selection.emulating" id="Spd-sl-b01"/>
+                                                        </connections>
+                                                    </sliderCell>
+                                                    <connections>
+                                                        <binding destination="56" name="enabled" keyPath="selection.emulating" id="Spd-sl-b02"/>
+                                                        <binding destination="56" name="value" keyPath="selection.sliderSpeed" id="Spd-sl-b03">
+                                                            <dictionary key="options">
+                                                                <bool key="NSValidatesImmediately" value="YES"/>
+                                                                <string key="NSValueTransformerName">BXSpeedSliderTransformer</string>
+                                                            </dictionary>
+                                                        </binding>
+                                                        <outlet property="nextKeyView" destination="2032" id="Spd-sl-o01"/>
+                                                    </connections>
+                                                </slider>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-t1-001">
+                                                    <rect key="frame" x="20" y="338" width="36" height="11"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="left" title="XT" id="Spd-t1-c01">
+                                                        <font key="font" metaFont="miniSystem"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-t2-001">
+                                                    <rect key="frame" x="53" y="338" width="44" height="11"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="AT" id="Spd-t2-c01">
+                                                        <font key="font" metaFont="miniSystem"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-t3-001">
+                                                    <rect key="frame" x="102" y="338" width="44" height="11"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="386" id="Spd-t3-c01">
+                                                        <font key="font" metaFont="miniSystem"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-t4-001">
+                                                    <rect key="frame" x="150" y="338" width="44" height="11"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="486" id="Spd-t4-c01">
+                                                        <font key="font" metaFont="miniSystem"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-t5-001">
+                                                    <rect key="frame" x="199" y="338" width="44" height="11"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Pentium" id="Spd-t5-c01">
+                                                        <font key="font" metaFont="miniSystem"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-t6-001">
+                                                    <rect key="frame" x="244" y="338" width="36" height="11"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Max" id="Spd-t6-c01">
+                                                        <font key="font" metaFont="miniSystem"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
+                                                <textField hidden="YES" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-nt-001">
+                                                    <rect key="frame" x="20" y="288" width="176" height="34"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="left" title="This change may need a restart to take effect." id="Spd-nt-c01">
+                                                        <font key="font" metaFont="smallSystem"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                    <connections>
+                                                        <binding destination="56" name="hidden" keyPath="selection.speedChangeNeedsRestart" id="Spd-nt-b01">
+                                                            <dictionary key="options">
+                                                                <string key="NSValueTransformerName">NSNegateBoolean</string>
+                                                            </dictionary>
+                                                        </binding>
+                                                    </connections>
+                                                </textField>
+                                                <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Spd-bt-001">
+                                                    <rect key="frame" x="198" y="292" width="78" height="24"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                                                    <buttonCell key="cell" type="push" title="Restart" bezelStyle="push" alignment="center" controlSize="small" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Spd-bt-c01">
+                                                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                                        <font key="font" metaFont="smallSystem"/>
+                                                    </buttonCell>
+                                                    <connections>
+                                                        <action selector="performRestart:" target="-1" id="Spd-bt-a01"/>
+                                                        <binding destination="56" name="hidden" keyPath="selection.speedChangeNeedsRestart" id="Spd-bt-b01">
+                                                            <dictionary key="options">
+                                                                <string key="NSValueTransformerName">NSNegateBoolean</string>
+                                                            </dictionary>
+                                                        </binding>
+                                                    </connections>
+                                                </button>
                                                 <button horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1466">
                                                     <rect key="frame" x="254" y="16" width="25" height="25"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
@@ -197,7 +323,7 @@ to the DOS prompt instead.</string>
                                                     </connections>
                                                 </button>
                                                 <box autoresizesSubviews="NO" fixedFrame="YES" boxType="custom" borderType="line" title="Box" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="2030">
-                                                    <rect key="frame" x="-1" y="330" width="298" height="86"/>
+                                                    <rect key="frame" x="-1" y="190" width="298" height="86"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="Y99-kE-dZv">
                                                         <rect key="frame" x="1" y="1" width="296" height="84"/>
@@ -235,7 +361,7 @@ to the DOS prompt instead.</string>
                                     </subviews>
                                 </view>
                                 <connections>
-                                    <outlet property="initialFirstResponder" destination="2032" id="2071"/>
+                                    <outlet property="initialFirstResponder" destination="Spd-sl-001" id="2071"/>
                                 </connections>
                             </tabViewItem>
                             <tabViewItem label="Mouse Inspector" identifier="2" id="1426" userLabel="Mouse Panel">
@@ -888,6 +1014,9 @@ if the joystick drifts or behaves erratically.</string>
                 <string>settings.mouseButtonShortcutRight</string>
                 <string>gameSettings.mouseButtonModifierRight</string>
                 <string>gameSettings.mouseButtonModifierBoth</string>
+                <string>sliderSpeed</string>
+                <string>speedDescription</string>
+                <string>speedChangeNeedsRestart</string>
                 <string>gameSettings.strictGameportTiming</string>
             </declaredKeys>
             <connections>

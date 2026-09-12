@@ -12,6 +12,34 @@
 #import <Cocoa/Cocoa.h>
 #import "BXSession.h"
 
+/// The speed thresholds used by cpuClassFormatForSpeed: to describe the current
+/// emulation speed in terms of CPU class. Kept from the pre-0.83 slider: 0.83's
+/// own `cpu_cycles` help now ships a comparable ladder (8088 300, 286-12 1500,
+/// 386DX-40 8000, 486DX-33 12000, 486DX/2-66 25000, Pentium 90 50000), but
+/// changing these would silently retune what every existing saved speed means.
+enum
+{
+	BXMaxSpeedThreshold		= 62500,
+	BXPentiumSpeedThreshold	= 25000,
+	BX486SpeedThreshold		= 10000,
+	BX386SpeedThreshold		= 2500,
+	BX286SpeedThreshold		= 1000,
+	BXMinSpeedThreshold		= 50
+};
+
+/// The increments the CPU speed slider snaps to within each band above.
+enum
+{
+	BXPentiumSpeedIncrement	= 2500,
+	BX486SpeedIncrement		= 1000,
+	BX386SpeedIncrement		= 500,
+	BX286SpeedIncrement		= 100,
+	BXMinSpeedIncrement		= 50
+};
+
+/// Stands in for "as fast as the host can manage" (0.83's `cpu_cycles = max`).
+#define BXAutoSpeed -1
+
 typedef NS_ENUM(NSInteger, BXPlaybackMode) {
     BXPaused,
     BXPlaying,
@@ -26,6 +54,24 @@ typedef NS_ENUM(NSInteger, BXPlaybackMode) {
 #pragma mark -
 #pragma mark Properties
 
+/// The CPU speed, as a fixed cycles number or BXAutoSpeed (if autoSpeed is YES).
+@property (assign, nonatomic) NSInteger CPUSpeed;
+
+/// Whether the CPU runs as fast as the host can manage.
+@property (assign, nonatomic, getter=isAutoSpeed) BOOL autoSpeed;
+
+/// The slider speed snaps the CPU speed to fixed increments and bumps it to
+/// maximum at the top of its range. Used by the speed slider in the CPU panel.
+@property (assign, nonatomic) NSInteger sliderSpeed;
+
+/// Localised human-readable description of the current CPU speed.
+@property (readonly, nonatomic) NSString *speedDescription;
+
+/// Whether the last speed change could not be applied to the running emulator,
+/// so the CPU panel should offer to restart the session. NO when there is
+/// nothing to apply it to yet.
+@property (readonly, nonatomic) BOOL speedChangeNeedsRestart;
+
 /// Whether the CPU is in dynamic core mode
 @property (assign, nonatomic, getter=isDynamic) BOOL dynamic;
 
@@ -35,6 +81,25 @@ typedef NS_ENUM(NSInteger, BXPlaybackMode) {
 
 /// The title to use for the "Player Data" submenu in the File menu when this session is active.
 @property (readonly, nonatomic) NSString *playerDataMenuLabel;
+
+#pragma mark -
+#pragma mark Class methods
+
+/// Returns the increment the slider should use within the band the given speed
+/// falls into. increasing affects which band a speed exactly on a threshold
+/// belongs to.
++ (NSInteger) incrementAmountForSpeed: (NSInteger)speed goingUp: (BOOL)increasing;
+
+/// Returns a speed snapped to the increment for its band.
++ (NSInteger) snappedSpeed: (NSInteger)rawSpeed;
+
+/// Returns a localised format string describing the CPU class (AT, 386,
+/// Pentium...) corresponding to the specified speed.
++ (NSString *) cpuClassFormatForSpeed: (NSInteger)speed;
+
+/// Returns a version of the above pre-formatted with the specified speed.
++ (NSString *) descriptionForSpeed: (NSInteger)speed;
+
 
 #pragma mark -
 #pragma mark Interface actions and validation
@@ -49,6 +114,13 @@ typedef NS_ENUM(NSInteger, BXPlaybackMode) {
 /// Resume the emulation if it was paused. Will show an unpaused bezel notification
 /// if the emulation was previously paused, otherwise will have no effect.
 - (IBAction) resume: (id)sender;
+
+/// Caps the speed within minimum and maximum limits.
+- (BOOL) validateCPUSpeed: (NSNumber **)ioValue error: (NSError **)outError;
+
+/// Snaps the speed to set increments, and switches to maximum above the top of
+/// the slider's range.
+- (BOOL) validateSliderSpeed: (NSNumber **)ioValue error: (NSError **)outError;
 
 /// Paste data from the clipboard into the DOS session.
 - (IBAction) paste: (id)sender;

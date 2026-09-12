@@ -112,6 +112,19 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("src/midi/midi.cpp", contains: "boxer_suggestMIDIHandler(dev, fullconf.c_str());")
     }
 
+    func testMT32MixerCallbackDoesNotReenterAudioDeviceLock() throws {
+        let audioBridge = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator+BXAudio.mm"))
+        let callback = try sourceRegion(
+            in: audioBridge,
+            beginningWith: "void _renderMIDIOutput(Bitu numFrames)",
+            endingBefore: "- (MixerChannel *) _MIDIMixerChannel"
+        )
+
+        XCTAssertTrue(audioBridge.contains("static mixer_channel_t BXMIDIChannel;"))
+        XCTAssertTrue(callback.contains("BXMIDIChannel.get()"))
+        XCTAssertFalse(callback.contains("MIXER_FindChannel(BXMIDIChannelName)"))
+    }
+
     func testMixerVolumeBridgeContracts() throws {
         // Protects BOXER marker: mixer-volume-bridge
         try requireAnnotated079Migration()

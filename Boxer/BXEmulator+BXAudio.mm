@@ -18,6 +18,7 @@
 
 
 static const char *BXMIDIChannelName = "MIDI";
+static mixer_channel_t BXMIDIChannel;
 
 NSString * const BXEmulatorDidDisplayMT32MessageNotification = @"BXEmulatorDidDisplayMT32MessageNotification";
 
@@ -168,16 +169,16 @@ NSString * const BXMIDIExternalDeviceNeedsMT32SysexDelaysKey = @"Needs MT-32 Sys
 //Called periodically by our MIDI channel to fill its buffer with audio data.
 void _renderMIDIOutput(Bitu numFrames)
 {
-    //We need to look up the corresponding channel for this because DOSBox's
-    //mixer doesn't pass any context with its callbacks.
-    MixerChannel *channel = MIXER_FindChannel(BXMIDIChannelName).get();
+    // MIXER_Mix holds the audio-device lock while invoking channel callbacks,
+    // so a MIXER_FindChannel call here would deadlock trying to lock it again.
+    MixerChannel *channel = BXMIDIChannel.get();
     if (channel) [[BXEmulator currentEmulator] _renderMIDIOutputToChannel: channel frames: numFrames];
 }
 
 
 - (MixerChannel *) _MIDIMixerChannel
 {
-    return MIXER_FindChannel(BXMIDIChannelName).get();
+    return BXMIDIChannel.get();
 }
 
 - (MixerChannel *) _addMIDIMixerChannelWithSampleRate: (NSUInteger)sampleRate
@@ -190,11 +191,12 @@ void _renderMIDIOutput(Bitu numFrames)
     }
     else
     {
-        channel = MIXER_AddChannel(_renderMIDIOutput,
-                                   (int)sampleRate,
-                                   BXMIDIChannelName,
-                                   {ChannelFeature::Stereo,
-                                    ChannelFeature::Synthesizer}).get();
+        BXMIDIChannel = MIXER_AddChannel(_renderMIDIOutput,
+                                        (int)sampleRate,
+                                        BXMIDIChannelName,
+                                        {ChannelFeature::Stereo,
+                                         ChannelFeature::Synthesizer});
+        channel = BXMIDIChannel.get();
     }
     channel->Enable(true);
     return channel;

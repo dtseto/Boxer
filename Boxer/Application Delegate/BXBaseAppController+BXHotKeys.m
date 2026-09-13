@@ -8,7 +8,6 @@
 #import "BXBaseAppControllerPrivate.h"
 #import "BXKeyboardEventTap.h"
 #import "BXSession+BXUIControls.h"
-#import "SystemPreferences.h"
 #import "ADBAppKitVersionHelpers.h"
 
 //For various keycode definitions
@@ -275,12 +274,23 @@
 
 + (NSString *) localizedSystemAccessibilityPreferencesName
 {
+    //IMPLEMENTATION NOTE: this used to be read straight out of the preference
+    //pane's own bundle, which is where its localized name used to live. On
+    //current macOS that returns nil -- Security.prefPane still exists but has
+    //no Info.plist at all, so there is no CFBundleName to read -- and the nil
+    //was interpolated into the UI verbatim, producing "Open (null) Preferences".
+    //The lookup is kept because it costs nothing and is correct where it works;
+    //what is new is that we no longer trust it to succeed.
     NSURL *prefsURL = [self hasPerAppAccessibilityControls] ? self._securityPreferencesURL : self._accessibilityPreferencesURL;
     
     NSBundle *prefs = [NSBundle bundleWithURL: prefsURL];
     NSString *prefsName = [prefs objectForInfoDictionaryKey: @"CFBundleName"];
     
-    return prefsName;
+    if (prefsName.length)
+        return prefsName;
+    
+    return NSLocalizedString(@"Privacy & Security",
+                             @"Fallback name for the macOS settings pane that grants accessibility control, used when the pane does not report a name of its own.");
 }
 
 - (IBAction) showHotkeyWarningIfUnavailable: (id)sender
@@ -397,25 +407,21 @@
 
 - (void) _showPerAppAccessibilityControls
 {
-    //Get a reference we can use to send scripting messages to the System Preferences application.
-    //This will not launch the application or establish a connection to it until we start sending it commands.
-    SystemPreferencesApplication *prefsApp = [SBApplication applicationWithBundleIdentifier: @"com.apple.systempreferences"];
+    //IMPLEMENTATION NOTE: this used to drive System Preferences over the
+    //scripting bridge, asking the "com.apple.preference.security" pane to
+    //reveal its "Privacy_Accessibility" anchor. Ventura replaced System
+    //Preferences with System Settings and dropped that scripting interface, so
+    //the messages went nowhere -- and because the bridge returns usable proxy
+    //objects for panes and anchors that do not exist, and we send with
+    //kAENoReply, the failure was completely silent. The button simply did
+    //nothing.
+    //
+    //The URL below addresses exactly the same pane and anchor, and is resolved
+    //by the system rather than by us, so it does not care how any given macOS
+    //version arranges its settings UI.
+    NSURL *accessibilitySettingsURL = [NSURL URLWithString: @"x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"];
     
-    //Tell the scripting bridge wrapper not to block this thread while waiting for replies from the other process.
-    //(The commands we'll be sending it don't have return values that we care about.)
-    prefsApp.sendMode = kAENoReply;
-    
-    //Get a reference to the accessibility anchor within the Security & Privacy pane.
-    //Note that even if the pane or the anchor don't exist (e.g. they've been renamed in a later OS X version),
-    //we'll still get objects for them: but any attempts to talk to those objects will silently fail.
-    SystemPreferencesPane *securityPane = [prefsApp.panes objectWithID: @"com.apple.preference.security"];
-    SystemPreferencesAnchor *accessibilityAnchor = [securityPane.anchors objectWithName: @"Privacy_Accessibility"];
-    
-    //Open the System Preferences application and bring its window to the foreground.
-    [prefsApp activate];
-    
-    //Show the accessibility settings, if they exist.
-    [accessibilityAnchor reveal];
+    [[NSWorkspace sharedWorkspace] openURL: accessibilitySettingsURL];
 }
 
 @end

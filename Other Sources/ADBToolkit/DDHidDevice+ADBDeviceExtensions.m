@@ -205,9 +205,31 @@ io_service_t createServiceFromHIDDevice(IOHIDDeviceRef deviceRef)
 
 @implementation DDHidJoystickStick (ADBJoystickStickExtensions)
 
+//IMPLEMENTATION NOTE: this used to return mStickElements alone, which silently
+//omitted the stick's two most important axes and was the second half of the
+//joystick breakage (D65; D64 was the gameport scaling).
+//
+//DDHidJoystickStick files elements as they arrive: the *first* X usage goes into
+//xAxisElement, the first Y into yAxisElement, and everything after that -- Z,
+//Rx, Ry, Rz, Dial, Slider, and any second X or Y -- into mStickElements. So
+//mStickElements is "the other axes", never the primary pair, and on a typical
+//gamepad it contains only Z and Rz. Returning it as the complete axis list meant
+//-generateBindings never saw X or Y, so the left stick was bound to nothing at
+//all, and Z/Rz were left to normalize onto the *secondary* axes -- rudder,
+//throttle, X2, Y2 -- which is exactly what they do when X and Y are already
+//spoken for. The whole mapping shifted one place along.
+//
+//DDHidLib's own -allElements is not a substitute: it appends mPovElements too,
+//and POV hats are bound separately by -bindPOVElements:.
 - (NSArray *) axisElements
 {
-    return mStickElements;
+    NSMutableArray *axes = [NSMutableArray arrayWithCapacity: mStickElements.count + 2];
+    
+    if (self.xAxisElement) [axes addObject: self.xAxisElement];
+    if (self.yAxisElement) [axes addObject: self.yAxisElement];
+    [axes addObjectsFromArray: mStickElements];
+    
+    return axes;
 }
 
 - (NSArray *) povElements

@@ -241,6 +241,18 @@
 		9F2D30DB15B8233800FAE848 /* Snapshot.aiff in Resources */ = {isa = PBXBuildFile; fileRef = 9FE202470F6D749500B3A38C /* Snapshot.aiff */; };
 		9F2D30E815B8233800FAE848 /* GameProfiles.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9FFAFE2C10DE33FB00728BAC /* GameProfiles.plist */; };
 		9F2D30E915B8233800FAE848 /* Configurations in Resources */ = {isa = PBXBuildFile; fileRef = 9FFAFE2E10DE343F00728BAC /* Configurations */; };
+		D350BD000000000000000002 /* freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = D350BD000000000000000001 /* freedos-keyboard */; };
+		D350BD000000000000000003 /* freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = D350BD000000000000000001 /* freedos-keyboard */; };
+		D35C00000000000000000002 /* freedos-cpi in Resources */ = {isa = PBXBuildFile; fileRef = D35C00000000000000000001 /* freedos-cpi */; };
+		D35C00000000000000000003 /* freedos-cpi in Resources */ = {isa = PBXBuildFile; fileRef = D35C00000000000000000001 /* freedos-cpi */; };
+		D350A0000000000000000002 /* mapping in Resources */ = {isa = PBXBuildFile; fileRef = D350A0000000000000000001 /* mapping */; };
+		D350A0000000000000000003 /* mapping in Resources */ = {isa = PBXBuildFile; fileRef = D350A0000000000000000001 /* mapping */; };
+		D35F0D000000000000000002 /* mapping-freedos.org in Resources */ = {isa = PBXBuildFile; fileRef = D35F0D000000000000000001 /* mapping-freedos.org */; };
+		D35F0D000000000000000003 /* mapping-freedos.org in Resources */ = {isa = PBXBuildFile; fileRef = D35F0D000000000000000001 /* mapping-freedos.org */; };
+		D35C0D000000000000000002 /* mapping-unicode.org in Resources */ = {isa = PBXBuildFile; fileRef = D35C0D000000000000000001 /* mapping-unicode.org */; };
+		D35C0D000000000000000003 /* mapping-unicode.org in Resources */ = {isa = PBXBuildFile; fileRef = D35C0D000000000000000001 /* mapping-unicode.org */; };
+		D35E0D000000000000000002 /* mapping-wikipedia.org in Resources */ = {isa = PBXBuildFile; fileRef = D35E0D000000000000000001 /* mapping-wikipedia.org */; };
+		D35E0D000000000000000003 /* mapping-wikipedia.org in Resources */ = {isa = PBXBuildFile; fileRef = D35E0D000000000000000001 /* mapping-wikipedia.org */; };
 		9F2D311515B8233800FAE848 /* KeyboardLayouts.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9FCC303B13670F680013F083 /* KeyboardLayouts.plist */; };
 		9F2D312B15B8233800FAE848 /* MT32ROMTypes.plist in Resources */ = {isa = PBXBuildFile; fileRef = 9F8A9CD1143E120B00C37A93 /* MT32ROMTypes.plist */; };
 		9F2D313F15B8233800FAE848 /* Shaders in Resources */ = {isa = PBXBuildFile; fileRef = 9F84C86D157800DD00CCBCA7 /* Shaders */; };
@@ -1782,6 +1794,12 @@
 		9FF982101646C7640080F763 /* BXPrintSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXPrintSession.m; sourceTree = "<group>"; };
 		9FFAFE2C10DE33FB00728BAC /* GameProfiles.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = GameProfiles.plist; sourceTree = "<group>"; };
 		9FFAFE2E10DE343F00728BAC /* Configurations */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Configurations; sourceTree = "<group>"; };
+		D350BD000000000000000001 /* freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; name = freedos-keyboard; path = "DOSBox-Staging/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
+		D35C00000000000000000001 /* freedos-cpi */ = {isa = PBXFileReference; lastKnownFileType = folder; name = freedos-cpi; path = "DOSBox-Staging/resources/freedos-cpi"; sourceTree = SOURCE_ROOT; };
+		D350A0000000000000000001 /* mapping */ = {isa = PBXFileReference; lastKnownFileType = folder; name = mapping; path = "DOSBox-Staging/resources/mapping"; sourceTree = SOURCE_ROOT; };
+		D35F0D000000000000000001 /* mapping-freedos.org */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "mapping-freedos.org"; path = "DOSBox-Staging/resources/mapping-freedos.org"; sourceTree = SOURCE_ROOT; };
+		D35C0D000000000000000001 /* mapping-unicode.org */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "mapping-unicode.org"; path = "DOSBox-Staging/resources/mapping-unicode.org"; sourceTree = SOURCE_ROOT; };
+		D35E0D000000000000000001 /* mapping-wikipedia.org */ = {isa = PBXFileReference; lastKnownFileType = folder; name = "mapping-wikipedia.org"; path = "DOSBox-Staging/resources/mapping-wikipedia.org"; sourceTree = SOURCE_ROOT; };
 		9FFBF67011A7F8F4000A1863 /* BXFrameRenderingView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXFrameRenderingView.h; sourceTree = "<group>"; };
 		9FFBF6AA11A811F7000A1863 /* BXEventConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXEventConstants.h; sourceTree = "<group>"; };
 		9FFC2ABF12A19CCC008C2B3B /* Sample Game Icons */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "Sample Game Icons"; sourceTree = "<group>"; };
@@ -2300,6 +2318,12 @@
 				9F84C86D157800DD00CCBCA7 /* Shaders */,
 				9F160BD91236952400F8768E /* Sample Games */,
 				9FFAFE2E10DE343F00728BAC /* Configurations */,
+				D350BD000000000000000001 /* freedos-keyboard */,
+				D35C00000000000000000001 /* freedos-cpi */,
+				D350A0000000000000000001 /* mapping */,
+				D35F0D000000000000000001 /* mapping-freedos.org */,
+				D35C0D000000000000000001 /* mapping-unicode.org */,
+				D35E0D000000000000000001 /* mapping-wikipedia.org */,
 				9FCBB5FE10A6DDBD00C28B09 /* DOS Toolkit */,
 				9FBC34390F56C5AC001811F2 /* Images */,
 				9FCBB2CB10A61C6D00C28B09 /* Sounds */,
@@ -4043,6 +4067,12 @@
 				9FFAFE2D10DE33FB00728BAC /* GameProfiles.plist in Resources */,
 				058BC52824C27BA10078C244 /* GroupCell.xib in Resources */,
 				9FFAFE4310DE343F00728BAC /* Configurations in Resources */,
+				D350BD000000000000000002 /* freedos-keyboard in Resources */,
+				D35C00000000000000000002 /* freedos-cpi in Resources */,
+				D350A0000000000000000002 /* mapping in Resources */,
+				D35F0D000000000000000002 /* mapping-freedos.org in Resources */,
+				D35C0D000000000000000002 /* mapping-unicode.org in Resources */,
+				D35E0D000000000000000002 /* mapping-wikipedia.org in Resources */,
 				9FBD321710E5144C00031CB6 /* Brand.png in Resources */,
 				9F4199E41BD416E400A2D165 /* GamesFolderPanelOptions.xib in Resources */,
 				9F4199F41BD416E400A2D165 /* MountPanelOptions.xib in Resources */,
@@ -4099,6 +4129,12 @@
 				9F2D30DB15B8233800FAE848 /* Snapshot.aiff in Resources */,
 				9F2D30E815B8233800FAE848 /* GameProfiles.plist in Resources */,
 				9F2D30E915B8233800FAE848 /* Configurations in Resources */,
+				D350BD000000000000000003 /* freedos-keyboard in Resources */,
+				D35C00000000000000000003 /* freedos-cpi in Resources */,
+				D350A0000000000000000003 /* mapping in Resources */,
+				D35F0D000000000000000003 /* mapping-freedos.org in Resources */,
+				D35C0D000000000000000003 /* mapping-unicode.org in Resources */,
+				D35E0D000000000000000003 /* mapping-wikipedia.org in Resources */,
 				9F7472FE1BE7DCF200B9C9ED /* InfoPlist.strings in Resources */,
 				9F2D311515B8233800FAE848 /* KeyboardLayouts.plist in Resources */,
 				9FAA7EB21BE6996B00F4FCA6 /* Shell.strings in Resources */,

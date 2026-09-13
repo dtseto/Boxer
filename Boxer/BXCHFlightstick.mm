@@ -67,14 +67,14 @@ enum {
     
     //Center the throttle axis after connection,
     //since clearInput will not do this normally
-	JOYSTICK_Move_Y(BXGameportStick2, BXGameportAxisCentered);
+	JOYSTICK_Move_Y(BXGameportStick2, BXGameportAxisValueForPosition(BXGameportAxisCentered));
 }
 
 - (void) clearInput
 {
-	JOYSTICK_Move_X(BXGameportStick1, BXGameportAxisCentered);
-	JOYSTICK_Move_Y(BXGameportStick1, BXGameportAxisCentered);
-	JOYSTICK_Move_X(BXGameportStick2, BXGameportAxisCentered);
+	JOYSTICK_Move_X(BXGameportStick1, BXGameportAxisValueForPosition(BXGameportAxisCentered));
+	JOYSTICK_Move_Y(BXGameportStick1, BXGameportAxisValueForPosition(BXGameportAxisCentered));
+	JOYSTICK_Move_X(BXGameportStick2, BXGameportAxisValueForPosition(BXGameportAxisCentered));
 	//Preserve the value of the throttle axis, because it does not snap back to center
 	
 	[self setPressedButtons: BXNoGameportButtonsMask];

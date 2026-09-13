@@ -9,6 +9,7 @@
 
 #import "BXEmulatedJoystick.h"
 #import "ADBHIDEvent.h"
+#import <math.h>
 #import "dosbox_config.h"
 #import "misc/types.h"
 #import "hardware/input/joystick.h"
@@ -54,6 +55,32 @@ typedef NS_OPTIONS(NSUInteger, BXGameportButtonMask)
 #define BXGameportAxisMin -1.0f
 #define BXGameportAxisMax 1.0f
 #define BXGameportAxisCentered 0.0f
+
+
+/// Converts one of our -1.0...+1.0 axis positions into the raw SDL axis value
+/// that DOSBox's gameport takes. **Every** call to JOYSTICK_Move_X/Y must go
+/// through this.
+///
+/// IMPLEMENTATION NOTE: this scaling is the whole of D64, and its absence was
+/// the joystick regression. Boxer was written against DOSBox 0.74, whose
+/// JOYSTICK_Move_X/Y took a float from -1.0 to +1.0, and it passed its own axis
+/// positions straight through. DOSBox Staging changed those to take an int16_t
+/// from -32768 to 32767 (upstream 27d403aeb, "Use SDL's native joystick axis
+/// values in function arguments") and these call sites were never updated, so
+/// the float was converted by truncation: every axis arrived as 0, or at full
+/// deflection as +/-1, out of +/-32767. The gameport never left centre.
+///
+/// The bounds are asymmetric because DOSBox's own position_to_percent() is: it
+/// divides by 32767 for positive values and 32768 for negative ones. Scaling
+/// this way makes us its exact inverse, and therefore the inverse of
+/// -positionForGameportAxis: too -- that one needs no conversion, since
+/// JOYSTICK_GetMove_X/Y already return a double from -1.0 to +1.0.
+static inline int16_t BXGameportAxisValueForPosition(float position)
+{
+	const float clamped = fmaxf(fminf(position, BXGameportAxisMax), BXGameportAxisMin);
+	const float scale = (clamped < 0.0f) ? 32768.0f : 32767.0f;
+	return (int16_t)lroundf(clamped * scale);
+}
 
 
 

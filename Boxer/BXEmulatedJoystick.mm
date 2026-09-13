@@ -62,10 +62,10 @@ NSString * const BXEmulatedJoystickClassKey = @"BXEmulatedJoystickClassKey";
 
 - (void) clearInput
 {
-	JOYSTICK_Move_X(BXGameportStick1, BXGameportAxisCentered);
-	JOYSTICK_Move_Y(BXGameportStick1, BXGameportAxisCentered);
-	JOYSTICK_Move_X(BXGameportStick2, BXGameportAxisCentered);
-	JOYSTICK_Move_Y(BXGameportStick2, BXGameportAxisCentered);
+	JOYSTICK_Move_X(BXGameportStick1, BXGameportAxisValueForPosition(BXGameportAxisCentered));
+	JOYSTICK_Move_Y(BXGameportStick1, BXGameportAxisValueForPosition(BXGameportAxisCentered));
+	JOYSTICK_Move_X(BXGameportStick2, BXGameportAxisValueForPosition(BXGameportAxisCentered));
+	JOYSTICK_Move_Y(BXGameportStick2, BXGameportAxisValueForPosition(BXGameportAxisCentered));
 	
 	[self setPressedButtons: BXNoGameportButtonsMask];
 }
@@ -150,25 +150,26 @@ NSString * const BXEmulatedJoystickClassKey = @"BXEmulatedJoystickClassKey";
 
 - (void) setPosition: (float)position forGameportAxis: (BXGameportAxis)axis 
 {	
-	//Clamp the position to fit within -1.0 to +1.0
-	position = fmaxf(fminf(position, BXGameportAxisMax), BXGameportAxisMin);
+	//Scale our -1.0...+1.0 position into the raw axis value DOSBox expects.
+	//BXGameportAxisValueForPosition clamps as well as scaling; see D64.
+	const int16_t value = BXGameportAxisValueForPosition(position);
 	
 	switch (axis)
 	{
 		case BXGameportXAxis:
-			JOYSTICK_Move_X(BXGameportStick1, position);
+			JOYSTICK_Move_X(BXGameportStick1, value);
 			break;
 		
 		case BXGameportYAxis:
-			JOYSTICK_Move_Y(BXGameportStick1, position);
+			JOYSTICK_Move_Y(BXGameportStick1, value);
 			break;
 			
 		case BXGameportX2Axis:
-			JOYSTICK_Move_X(BXGameportStick2, position);
+			JOYSTICK_Move_X(BXGameportStick2, value);
 			break;
 			
 		case BXGameportY2Axis:
-			JOYSTICK_Move_Y(BXGameportStick2, position);
+			JOYSTICK_Move_Y(BXGameportStick2, value);
 			break;
 	}
 }

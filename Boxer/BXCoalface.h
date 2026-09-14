@@ -17,6 +17,7 @@
 #import "dosbox_config.h"
 #import "misc/video.h"
 #include <stdio.h>
+#include <string>
 
 #if __cplusplus
 extern "C" {
@@ -138,7 +139,12 @@ extern "C" {
     
 	/// Called from shell_misc.cpp to let Boxer rewrite or interrupt the shell's input processing.
     /// Returns true if Boxer has modified any of the parameters passed by reference.
-	bool boxer_handleShellCommandInput(DOS_Shell *shell, char *cmd, Bitu *cursorPosition, bool *executeImmediately);
+    /// Takes the command by reference because 0.83 builds it as a std::string inside
+    /// DOS_Shell::ReadCommand(), rather than in the fixed (char *line, cursor index)
+    /// buffer the hook was originally written against.
+	bool boxer_handleShellCommandInput(DOS_Shell *shell, std::string &command,
+                                       std::string::size_type &cursorPosition,
+                                       bool &executeImmediately);
     
     /// Called from shell.cpp to give Boxer a chance to launch any commands of its own.
     bool boxer_hasPendingCommandsForShell(DOS_Shell *shell);

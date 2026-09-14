@@ -122,19 +122,31 @@ bool boxer_shellShouldRunCommand(DOS_Shell *shell, char* cmd, char* args)
     return !handledInternally;
 }
 
-bool boxer_handleShellCommandInput(DOS_Shell *shell, char *cmd, Bitu *cursorPosition, bool *executeImmediately)
+bool boxer_handleShellCommandInput(DOS_Shell *shell, std::string &command,
+                                   std::string::size_type &cursorPosition,
+                                   bool &executeImmediately)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
-    NSString *inOutCommand = [NSString stringWithCString: cmd encoding: BXDirectStringEncoding];
+    NSString *inOutCommand = [NSString stringWithCString: command.c_str() encoding: BXDirectStringEncoding];
 	
+    NSUInteger cursor = cursorPosition;
+    BOOL execute = NO;
     if ([emulator _handleCommandInput: &inOutCommand
-                       cursorPosition: (NSUInteger *)cursorPosition
-                       executeCommand: (BOOL *)executeImmediately])
+                       cursorPosition: &cursor
+                       executeCommand: &execute])
 	{
+        executeImmediately = execute;
+        
+        //When Boxer wants the command executed immediately, the line itself is
+        //discarded by the caller: don't bother rewriting it.
+        if (execute)
+            return true;
+        
 		const char *newcmd = [inOutCommand cStringUsingEncoding: BXDirectStringEncoding];
 		if (newcmd)
 		{
-            strlcpy(cmd, newcmd, CMD_MAXLINE);
+            command = newcmd;
+            cursorPosition = MIN((std::string::size_type)cursor, command.size());
             return true;
 		}
 		else return false;

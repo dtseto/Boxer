@@ -31,9 +31,22 @@
 	CGFloat outerRadius = innerRadius + (self.bounds.size.height * 0.5f);
 	NSPoint center = NSMakePoint(NSMidX(self.bounds), (self.bounds.size.height * 0.15f) - innerRadius);
 	
+    //Clip to our own bounds before drawing. The gradient below is drawn with
+    //NSGradientDrawsBeforeStartingLocation|NSGradientDrawsAfterEndingLocation,
+    //which fills the whole clipping region rather than just the band between the
+    //two radii - and the region a layer-backed view is handed is no longer its own
+    //bounds: on macOS 26 and later -visibleRect reports the entire window. Without
+    //this clip the gradient paints over the welcome window's bottom bar, which
+    //draws before us, and its "Open recent" and "Close" buttons vanish while
+    //staying clickable.
+	[NSGraphicsContext saveGraphicsState];
+	[NSBezierPath clipRect: self.bounds];
+	
 	[background drawFromCenter: center radius: innerRadius
 					  toCenter: center radius: outerRadius
 					   options: NSGradientDrawsBeforeStartingLocation | NSGradientDrawsAfterEndingLocation];
+	
+	[NSGraphicsContext restoreGraphicsState];
 }
 
 @end

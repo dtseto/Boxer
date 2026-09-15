@@ -77,7 +77,8 @@
                 [extensionType isEqualToString:BXCDROMImageBundleType] ||
                 [extensionType isEqualToString:BXCuesheetImageType] ||
                 [extensionType isEqualToString:BXISOImageType] ||
-                [extensionType isEqualToString:BXCDRImageType])
+                [extensionType isEqualToString:BXCDRImageType] ||
+                [extensionType isEqualToString:BXMDSImageType])
                 return BXDriveCDROM;
 
             if ([extensionType isEqualToString:BXFloppyFolderType] ||

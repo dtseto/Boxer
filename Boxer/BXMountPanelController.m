@@ -58,7 +58,9 @@
                                          @"Label shown on accept button in mount-a-new-drive panel.");
 	
     openPanel.accessoryView = self.view;
-    openPanel.allowedFileTypes = [BXFileTypes mountableTypes].allObjects;
+    //NSOpenPanel accepts bare filename extensions alongside UTIs, which is how .mds
+    //gets through: it has no system UTI and Boxer declares none for it (D69).
+    openPanel.allowedFileTypes = [[BXFileTypes mountableTypes] setByAddingObject: @"mds"].allObjects;
     openPanel.directoryURL = theSession.gamebox.resourceURL;
 	
 	[self populateDrivesFromSession: theSession];

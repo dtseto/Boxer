@@ -25,6 +25,12 @@ NSString * const BXCDROMFolderType      = @"net.washboardabs.boxer-cdrom-folder"
 NSString * const BXCuesheetImageType    = @"com.goldenhawk.cdrwin-cuesheet";
 NSString * const BXISOImageType         = @"public.iso-image";
 NSString * const BXCDRImageType         = @"com.apple.disk-image-cdr";
+
+//There is no system UTI for .mds: macOS types it dynamically, and Boxer does not
+//declare one. This identifier is an internal token only. That is sufficient because
+//every lookup that matters — the gamebox scan, the drive type and the drive letter —
+//consults +extensionToTypeMapping before it falls back to the file's UTI. See D69.
+NSString * const BXMDSImageType         = @"net.washboardabs.boxer-mds-image";
 NSString * const BXVirtualPCImageType   = @"com.microsoft.virtualpc-disk-image";
 NSString * const BXRawFloppyImageType   = @"com.winimage.raw-disk-image";
 NSString * const BXNDIFImageType        = @"com.apple.disk-image-ndif";
@@ -64,6 +70,7 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
                  BXCDROMImageBundleType,
                  BXISOImageType,
                  BXCDRImageType,
+                 BXMDSImageType,
                  nil];
     });
     return types;
@@ -103,7 +110,8 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
     dispatch_once(&onceToken, ^{
         types = [[self OSXMountableImageTypes] setByAddingObjectsFromArray:
                  @[BXDiskBundleType,
-                   BXCuesheetImageType]];
+                   BXCuesheetImageType,
+                   BXMDSImageType]];
     });
     return types;
 }
@@ -197,6 +205,22 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
     return handlers;
 }
 
++ (NSSet<NSString *> *) companionDataFileExtensions
+{
+    static NSSet *extensions;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        //macOS declares com.alcohol-soft.mdf-image as conforming to public.iso-image,
+        //so a .mdf matches cdVolumeTypes through the UTI fallback and becomes a drive
+        //of its own — and, sorting before "D.mds" by filename, takes the letter the
+        //descriptor asked for, leaving the .mds queued behind it (the D68 shape).
+        //CDROM_Interface_Image::LoadMdsFile() finds the .mdf itself, relative to the
+        //.mds, so the scan has no reason to see it.
+        extensions = [[NSSet alloc] initWithObjects: @"mdf", nil];
+    });
+    return extensions;
+}
+
 + (NSDictionary *) extensionToTypeMapping
 {
     static NSDictionary *mapping;
@@ -215,6 +239,12 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
             @"inst": BXCuesheetImageType,
             @"iso": BXISOImageType,
             @"cdr": BXCDRImageType,
+
+            //Only the .mds descriptor is mountable. Its .mdf data file is deliberately
+            //left unmapped: CDROM_Interface_Image::LoadMdsFile() resolves it itself,
+            //relative to the .mds, and scanning it as a volume of its own would recreate
+            //D68 — an unlettered data file taking the letter the descriptor asked for.
+            @"mds": BXMDSImageType,
             @"ima": BXRawFloppyImageType,
             @"vfd": BXVirtualPCImageType,
             @"gog": @"com.gog.gog-disk-image",

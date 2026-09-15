@@ -24,6 +24,7 @@ extern NSString * const BXCDROMFolderType;      //!< .cdrom
 extern NSString * const BXCuesheetImageType;    //!< .cue / .inst
 extern NSString * const BXISOImageType;         //!< .iso / .gog
 extern NSString * const BXCDRImageType;         //!< .cdr
+extern NSString * const BXMDSImageType;         //!< .mds (Media Descriptor; its .mdf data file is resolved by DOSBox)
 extern NSString * const BXVirtualPCImageType;   //!< .vfd
 extern NSString * const BXRawFloppyImageType;   //!< .ima
 extern NSString * const BXNDIFImageType;        //!< .img
@@ -73,6 +74,11 @@ extern NSString * const BXBatchProgramType;     //!< .bat
 /// This mapping takes precedence over macOS UTI detection, which may be unreliable
 /// when custom UTIs are not properly registered in the Launch Services database.
 @property (class, readonly, copy) NSDictionary<NSString*,NSString*> *extensionToTypeMapping;
+
+/// Extensions that are the data half of a descriptor file — a .mdf beside its .mds —
+/// and are therefore never a volume in their own right, whatever UTI macOS gives them.
+/// The gamebox scan skips these; mounting one by hand is still allowed.
+@property (class, readonly, copy) NSSet<NSString*> *companionDataFileExtensions;
 
 /// Returns a specific bundle identifier that we want to use to open the specified URL,
 /// or `nil` if OS X's default handler should be used. This uses `fileHandlerOverrides` to

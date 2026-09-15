@@ -498,6 +498,13 @@ NSString * const BXGameboxErrorDomain = @"BXGameboxErrorDomain";
 
         // FIRST: Try extension-based matching (authoritative)
         NSString *extension = URL.pathExtension.lowercaseString;
+
+        // ...but never for a descriptor's data file, which is not a volume of its own.
+        if (extension.length > 0 && [[BXFileTypes companionDataFileExtensions] containsObject: extension])
+        {
+            NSLog(@"[BXGamebox] ✗ Skipped companion data file: %@", URL.lastPathComponent);
+            continue;
+        }
         if (extension.length > 0)
         {
             NSString *extensionType = [BXFileTypes extensionToTypeMapping][extension];

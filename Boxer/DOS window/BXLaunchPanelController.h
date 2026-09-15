@@ -47,11 +47,28 @@
 
 
 @class BXLauncherItem;
-/// A custom collection view that uses a different prototype for drive 'headings'
+/// A custom collection view that uses a different prototype for drive 'headings',
+/// and that supports keyboard navigation: it takes focus from the search field on tab,
+/// moves a selection with the arrow keys (skipping heading rows) and launches the
+/// selected row on return.
 @interface BXLauncherList : NSCollectionView
 
 @property (strong, nonatomic) IBOutlet BXLauncherItem *headingPrototype;
 @property (strong, nonatomic) IBOutlet BXLauncherItem *favoritePrototype;
+
+/// The index of the currently selected row, or `NSNotFound` if nothing is selected.
+@property (readonly, nonatomic) NSUInteger selectedRowIndex;
+
+/// Selects the specified row and scrolls it into view. Pass `NSNotFound` to deselect.
+/// Does nothing if the index is out of range or the row is a heading.
+- (void) selectRowAtIndex: (NSUInteger)index;
+
+/// Selects the first row that is not a heading, if any. Called when the list takes focus
+/// with nothing selected yet.
+- (void) selectFirstSelectableRow;
+
+/// Launches the selected row, if there is one and it can be launched right now.
+- (IBAction) launchSelectedRow: (id)sender;
 
 @end
 

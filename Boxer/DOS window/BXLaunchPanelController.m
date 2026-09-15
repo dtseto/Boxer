@@ -345,6 +345,14 @@
     //allows the collection view to correctly persist previously-existing rows: animating them into their new location
     //rather than fading them out and back in again.
     self.displayedRows = displayedRows;
+    
+    //The rows have just been replaced, so a selection index kept from the old list would
+    //now point at an unrelated program — or at a heading. Drop it, and pick a fresh first
+    //row if the list still has focus.
+    BXLauncherList *list = (BXLauncherList *)self.launcherList;
+    [list selectRowAtIndex: NSNotFound];
+    if ([self.view.window.firstResponder isEqual: list])
+        [list selectFirstSelectableRow];
 }
 
 - (void) _syncLaunchableState
@@ -777,11 +785,18 @@
 
 - (BOOL) control: (NSControl *)control textView: (NSTextView *)textView doCommandBySelector: (SEL)command
 {
-    NSLog(@"Search command: %@", NSStringFromSelector(command));
-    if (command == @selector(insertNewline:))
+    //Down-arrow from the search field steps straight into the list, which is what a
+    //search field in front of a list is expected to do; tab does the same by way of the
+    //key-view loop. Both end up at the first row because the list selects one when it
+    //takes focus.
+    if (command == @selector(moveDown:))
     {
-        //TODO: launch the first search result
+        [self.view.window makeFirstResponder: self.launcherList];
+        return YES;
     }
+    
+    //TODO: decide whether return in the search field should launch the first result.
+    //It currently does nothing, as before.
     return NO;
 }
 
@@ -813,6 +828,181 @@
     {
         return [super newItemForRepresentedObject: object];
     }
+}
+
+
+#pragma mark - Keyboard navigation
+
+//IMPLEMENTATION NOTE: the XIB already wires the key-view loop in both directions
+//(search field <-> list) and marks the collection view as selectable, but tab never
+//left the search field: NSCollectionView does not take first responder by itself
+//here, so AppKit skipped it and followed the list's own nextKeyView straight back
+//to the field. Saying yes here is what closes the loop.
+- (BOOL) acceptsFirstResponder
+{
+    return YES;
+}
+
+- (BOOL) becomeFirstResponder
+{
+    BOOL became = [super becomeFirstResponder];
+    if (became)
+    {
+        if (self.selectedRowIndex == NSNotFound)
+            [self selectFirstSelectableRow];
+        
+        [self _redrawSelectedRow];
+    }
+    
+    return became;
+}
+
+- (BOOL) resignFirstResponder
+{
+    BOOL resigned = [super resignFirstResponder];
+    if (resigned)
+        [self _redrawSelectedRow];
+    
+    return resigned;
+}
+
+//The selected row is drawn differently depending on whether the list has focus. A change
+//of first responder within a window posts no notification, so the list has to say so
+//itself — the item views cannot find out on their own.
+- (void) _redrawSelectedRow
+{
+    NSUInteger index = self.selectedRowIndex;
+    if (index != NSNotFound)
+        [[self itemAtIndex: index].view setNeedsDisplay: YES];
+}
+
+//Heading rows are in the same list as program rows but are not targets: they have no
+//URL and their items are never launchable. Navigation skips them entirely rather than
+//letting the selection land somewhere that does nothing on return.
+- (BOOL) _isSelectableRowAtIndex: (NSUInteger)index
+{
+    if (index >= self.content.count)
+        return NO;
+    
+    NSDictionary *row = [self.content objectAtIndex: index];
+    return ![[row objectForKey: @"isHeading"] boolValue];
+}
+
+- (NSUInteger) selectedRowIndex
+{
+    NSUInteger index = self.selectionIndexes.firstIndex;
+    return (index == NSNotFound || index >= self.content.count) ? NSNotFound : index;
+}
+
+- (void) selectRowAtIndex: (NSUInteger)index
+{
+    if (index == NSNotFound)
+    {
+        self.selectionIndexes = [NSIndexSet indexSet];
+        return;
+    }
+    
+    if (![self _isSelectableRowAtIndex: index])
+        return;
+    
+    self.selectionIndexes = [NSIndexSet indexSetWithIndex: index];
+    [self scrollRectToVisible: [self frameForItemAtIndex: index]];
+}
+
+- (void) selectFirstSelectableRow
+{
+    NSUInteger i, numRows = self.content.count;
+    for (i = 0; i < numRows; i++)
+    {
+        if ([self _isSelectableRowAtIndex: i])
+        {
+            [self selectRowAtIndex: i];
+            return;
+        }
+    }
+}
+
+//Walks in the given direction until it finds a selectable row, and stops at the ends
+//of the list rather than wrapping: wrapping in a list this short makes it easy to lose
+//track of where the selection went.
+- (void) _moveSelectionByRows: (NSInteger)delta
+{
+    NSInteger numRows = (NSInteger)self.content.count;
+    if (numRows == 0)
+        return;
+    
+    NSUInteger currentIndex = self.selectedRowIndex;
+    if (currentIndex == NSNotFound)
+    {
+        [self selectFirstSelectableRow];
+        return;
+    }
+    
+    NSInteger index = (NSInteger)currentIndex + delta;
+    while (index >= 0 && index < numRows)
+    {
+        if ([self _isSelectableRowAtIndex: (NSUInteger)index])
+        {
+            [self selectRowAtIndex: (NSUInteger)index];
+            return;
+        }
+        index += delta;
+    }
+}
+
+- (void) keyDown: (NSEvent *)event
+{
+    [self interpretKeyEvents: @[event]];
+}
+
+- (void) moveUp: (id)sender
+{
+    [self _moveSelectionByRows: -1];
+}
+
+- (void) moveDown: (id)sender
+{
+    [self _moveSelectionByRows: 1];
+}
+
+- (void) moveToBeginningOfDocument: (id)sender
+{
+    [self selectFirstSelectableRow];
+}
+
+- (void) moveToEndOfDocument: (id)sender
+{
+    NSInteger i;
+    for (i = (NSInteger)self.content.count - 1; i >= 0; i--)
+    {
+        if ([self _isSelectableRowAtIndex: (NSUInteger)i])
+        {
+            [self selectRowAtIndex: (NSUInteger)i];
+            return;
+        }
+    }
+}
+
+- (void) insertNewline: (id)sender
+{
+    [self launchSelectedRow: sender];
+}
+
+- (IBAction) launchSelectedRow: (id)sender
+{
+    NSUInteger index = self.selectedRowIndex;
+    if (index == NSNotFound)
+        return;
+    
+    BXLauncherItem *item = (BXLauncherItem *)[self itemAtIndex: index];
+    if (item.isLaunchable)
+        [item openItemInDOS: self];
+}
+
+//Escape hands focus back to the search field, which is where the user came from.
+- (void) cancelOperation: (id)sender
+{
+    [self.window selectPreviousKeyView: self];
 }
 
 @end
@@ -957,6 +1147,17 @@
     return NO;
 }
 
+//BXCollectionItemView's own implementation of this is empty, despite its header saying
+//it flags the view for redisplay — only BXHUDCollectionItemView and
+//BXInspectorListCollectionItemView actually do that, and each has its own copy. Without
+//this the keyboard selection was set correctly and simply never drawn: the highlight
+//stayed on whichever row had last been redrawn for some other reason.
+- (void) collectionViewItemDidChangeSelection
+{
+    [self setNeedsDisplay: YES];
+}
+
+
 - (NSMenu *) menuForEvent: (NSEvent *)event
 {
     return [self.delegate menuForView: self];
@@ -1008,6 +1209,24 @@
 
 - (void) drawRect: (NSRect)dirtyRect
 {
+    //Draw the keyboard selection underneath everything else, so that the mouse-hover
+    //and click states still read on top of it when the pointer is over the selected row.
+    if (self.delegate.isSelected)
+    {
+        BOOL listHasFocus = [self.window.firstResponder isKindOfClass: [BXLauncherList class]];
+        
+        NSColor *fillColor = listHasFocus
+            ? [[NSColor alternateSelectedControlColor] colorWithAlphaComponent: 0.45]
+            : [NSColor colorWithCalibratedWhite: 1.0 alpha: 0.12];
+        
+        NSRect fillRect = NSInsetRect(self.bounds, 0, 1);
+        
+        [NSGraphicsContext saveGraphicsState];
+            [fillColor set];
+            NSRectFillUsingOperation(fillRect, NSCompositingOperationSourceOver);
+        [NSGraphicsContext restoreGraphicsState];
+    }
+    
     if (self.isEnabled)
     {
         if (self.isActive)

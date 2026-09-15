@@ -522,11 +522,21 @@ bool boxer_PRINTER_isInited(Bitu port)
 //This is called by MSG_Get in DOSBox's misc/messages.cpp, instead of retrieving strings from its own localisation system
 const char * boxer_localizedStringForKey(char const *keyStr)
 {
+	//-localizedStringForKey:value:table: returns the *key* when the value is nil
+	//or empty and no entry exists, so it can never say "I don't have this one".
+	//We pass a sentinel we can recognise instead, and return NULL when we get it
+	//back: MSG_Get() then falls through to DOSBox's own dictionary. Without this
+	//every message added to DOSBox since Boxer's table was written — 421 of the
+	//570 in 0.83 — printed as its raw key. See D67.
+	static NSString * const notFound = @"\x01BXStringNotFound";
+	
 	NSString *theKey			= [NSString stringWithCString: keyStr encoding: BXDirectStringEncoding];
 	NSString *localizedString	= [[NSBundle mainBundle]
 								   localizedStringForKey: theKey
-								   value: @"" //If the key isn't found, display nothing
+								   value: notFound
 								   table: @"DOSBox"];
+	
+	if ([localizedString isEqualToString: notFound]) return NULL;
 	
 	return [localizedString cStringUsingEncoding: BXDisplayStringEncoding];
 }

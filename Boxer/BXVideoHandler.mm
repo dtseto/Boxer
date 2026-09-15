@@ -185,6 +185,7 @@
 #pragma mark DOSBox callbacks
 
 - (void) prepareForOutputSize: (NSSize)outputSize
+             pixelAspectRatio: (CGFloat)pixelAspectRatio
                  withCallback: (GFX_Callback_t)newCallback
 {
 	//Synchronise our record of the current video mode with the new video mode
@@ -210,6 +211,7 @@
 	
     self.currentFrame.baseResolution = self.resolution;
     self.currentFrame.containsText = nowTextMode;
+    self.currentFrame.pixelAspectRatio = pixelAspectRatio;
 	
 	//Send notifications if the display mode has changed
 	

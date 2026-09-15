@@ -114,7 +114,13 @@ typedef NS_ENUM(uint8_t, BXCGACompositeMode) {
 /// Called from BoxerRenderBackend::NotifyRenderSizeChanged(). The scale
 /// argument the 0.78 hook carried is gone: DOSBox's own scalers went with it,
 /// and Boxer never read it.
+///
+/// pixelAspectRatio is the render pixel aspect ratio 0.83 derived for this video
+/// mode, stamped onto each frame so the window controller can correct the picture
+/// with it rather than assuming every mode was meant to fill a 4:3 screen.
+/// Pass 0 if it is not known.
 - (void) prepareForOutputSize: (NSSize)outputSize
+             pixelAspectRatio: (CGFloat)pixelAspectRatio
 				 withCallback: (GFX_Callback_t)newCallback;
 
 - (BOOL) startFrameWithBuffer: (void **)frameBuffer pitch: (int *)pitch;

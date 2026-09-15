@@ -17,6 +17,7 @@ const CGFloat BX4by3AspectRatio = (CGFloat)320.0 / (CGFloat)240.0;
 @synthesize baseResolution = _baseResolution;
 @synthesize bytesPerPixel = _bytesPerPixel;
 @synthesize intendedScale = _intendedScale;
+@synthesize pixelAspectRatio = _pixelAspectRatio;
 @synthesize containsText = _containsText;
 @synthesize timestamp = _timestamp;
 
@@ -57,6 +58,7 @@ const CGFloat BX4by3AspectRatio = (CGFloat)320.0 / (CGFloat)240.0;
 		_baseResolution	= targetSize;
 		_bytesPerPixel	= depth;
 		_intendedScale	= NSMakeSize(1.0f, 1.0f);
+		_pixelAspectRatio = 0.0f;
 		
 		NSUInteger requiredLength = _size.width * _size.height * _bytesPerPixel;
 		_frameData = [[NSMutableData alloc] initWithLength: requiredLength];
@@ -73,6 +75,24 @@ const CGFloat BX4by3AspectRatio = (CGFloat)320.0 / (CGFloat)240.0;
 {
 	self.intendedScale = [self.class scalingFactorForSize: self.size
                                             toAspectRatio: aspectRatio];
+}
+
+- (void) usePixelAspectRatio: (CGFloat)pixelAspectRatio
+{
+    if (pixelAspectRatio <= 0)
+    {
+        [self useSquarePixels];
+        return;
+    }
+    
+    //Scale up the axis that needs it rather than shrinking the other one,
+    //so that aspect correction never discards pixels: a pixel aspect ratio
+    //below 1 means the pixels are taller than they are wide, so the frame
+    //needs stretching vertically, and vice versa.
+    if (pixelAspectRatio >= 1)
+        self.intendedScale = NSMakeSize(pixelAspectRatio, 1);
+    else
+        self.intendedScale = NSMakeSize(1, 1 / pixelAspectRatio);
 }
 
 - (void) useSquarePixels

@@ -28,6 +28,7 @@ extern const CGFloat BX4by3AspectRatio;
 	NSSize _baseResolution;
 	NSUInteger _bytesPerPixel;
 	NSSize _intendedScale;
+    CGFloat _pixelAspectRatio;
     BOOL _containsText;
     
     NSTimeInterval _timestamp;
@@ -53,6 +54,17 @@ extern const CGFloat BX4by3AspectRatio;
 
 /// The scaling factor to apply to the frame to reach the desired aspect ratio.
 @property (assign) NSSize intendedScale;
+
+/// The pixel aspect ratio of the DOS video mode this frame was rendered from:
+/// the width of one emulated pixel divided by its height. 320x200 modes report
+/// 5:6 (0.833...), square-pixel modes report 1.
+///
+/// DOSBox Staging derives this per video mode -- from the real CRTC timings for
+/// VGA-class modes rather than by assuming the picture was 4:3 -- and it honours
+/// the `aspect` setting, so a config asking for square pixels reports 1 here.
+/// 0 means "not known", in which case consumers should fall back to assuming a
+/// 4:3 picture.
+@property (assign) CGFloat pixelAspectRatio;
 
 /// The size of the frame with aspect ratio correction applied (i.e. scaled by intendedScale.)
 @property (readonly) NSSize scaledSize;
@@ -98,6 +110,11 @@ extern const CGFloat BX4by3AspectRatio;
 /// Sets the frame to use the specified intended aspect ratio.
 /// This does not affect the underlying image data, just the intended scaled size and resolution.
 - (void) useAspectRatio: (CGFloat)aspectRatio;
+
+/// Sets the frame to be displayed with the specified pixel aspect ratio, scaling
+/// up whichever axis needs it so that no detail is thrown away.
+/// As with useAspectRatio:, this only affects the intended scaled size.
+- (void) usePixelAspectRatio: (CGFloat)pixelAspectRatio;
 
 /// Resets the aspect ratio of the frame to use unscaled square pixels.
 - (void) useSquarePixels;

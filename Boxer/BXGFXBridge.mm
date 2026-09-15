@@ -91,7 +91,18 @@ public:
                                              (CGFloat)new_render_height_px);
 
         [_currentVideoHandler() prepareForOutputSize: outputSize
+                                    pixelAspectRatio: _pixelAspectRatio
                                         withCallback: _callback];
+    }
+
+    // The render pixel aspect ratio for the mode being set, stashed by
+    // GFX_SetSize() just before it calls NotifyRenderSizeChanged() -- upstream's
+    // RenderBackend interface does not carry it, because upstream's renderers
+    // read it back from render.cpp when they present a frame, which Boxer's
+    // does not do.
+    void SetPixelAspectRatio(const double pixel_aspect_ratio)
+    {
+        _pixelAspectRatio = (CGFloat)pixel_aspect_ratio;
     }
 
     void StartFrame(uint32_t*& pixels_out, int& pitch_out) override
@@ -225,6 +236,7 @@ private:
     NSSize _lastCanvasSize   = NSMakeSize(640, 480);
     GFX_Callback_t _callback = nullptr;
     VideoMode _videoMode     = {};
+    CGFloat _pixelAspectRatio = 0;
     std::string _symbolicShaderDescriptor = {};
 };
 
@@ -286,18 +298,24 @@ void GFX_SetSize(const int render_width_px, const int render_height_px,
 
     _drawActive = false;
 
-    // The pixel aspect ratio and the doubling flags are DOSBox's advice on how
-    // the frame should be displayed. Boxer does its own aspect correction from
-    // the frame's base resolution (BXVideoFrame.baseResolution, set from
-    // render.src), which is the same information in the form Boxer already uses,
-    // so the advice is not consumed here.
-    (void)render_pixel_aspect_ratio;
+    // 0.83 derives a real pixel aspect ratio for every mode -- from the CRTC
+    // timings for VGA-class modes, rather than by assuming the picture was meant
+    // to fill a 4:3 screen -- and it already honours the 'aspect' setting, so a
+    // config asking for square pixels arrives here as 1:1. Boxer used to discard
+    // this and stretch every corrected frame to a flat 4:3, which agrees with
+    // 0.83 for standard modes and is wrong for tweaked ones (item 27, option 3).
+    // Hand it to the frame; BXDOSWindowController still decides whether to apply
+    // any correction at all.
+    //
+    // The doubling flags stay unread: they are already factored into the render
+    // size and the PAR, and Boxer scales the frame it is given.
     (void)double_width;
     (void)double_height;
     (void)video_mode;
 
     BoxerRenderBackend& backend = _boxerRenderBackend();
     backend.SetFrameCallback(callback);
+    backend.SetPixelAspectRatio(render_pixel_aspect_ratio.ToDouble());
     backend.NotifyRenderSizeChanged(render_width_px, render_height_px);
 
     _drawActive = true;

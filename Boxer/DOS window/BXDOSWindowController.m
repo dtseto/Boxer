@@ -1331,7 +1331,22 @@ static void BXLogGeometryEvent(NSString *format, ...)
 {
     //Apply aspect-ratio correction if appropriate
     if ([self _shouldCorrectAspectRatioOfFrame: frame])
-        [frame useAspectRatio: BX4by3AspectRatio];
+    {
+        //Correct with the pixel aspect ratio DOSBox derived for this video mode,
+        //which for VGA-class modes comes from the mode's real CRTC timings rather
+        //than from assuming the picture was meant to fill a 4:3 screen. The two
+        //agree for standard modes; they differ for tweaked and custom ones, which
+        //is the whole reason for preferring it (Remaining item 27).
+        //
+        //The 4:3 fallback is for frames that arrived without a reported ratio.
+        //Nothing should produce one -- GFX_SetSize() always supplies it -- but
+        //stretching to 4:3 is the behaviour Boxer had before, so it is the safe
+        //thing to fall back to.
+        if (frame.pixelAspectRatio > 0)
+            [frame usePixelAspectRatio: frame.pixelAspectRatio];
+        else
+            [frame useAspectRatio: BX4by3AspectRatio];
+    }
     else
         [frame useSquarePixels];
     

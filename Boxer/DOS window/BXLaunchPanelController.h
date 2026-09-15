@@ -56,6 +56,15 @@
 @property (strong, nonatomic) IBOutlet BXLauncherItem *headingPrototype;
 @property (strong, nonatomic) IBOutlet BXLauncherItem *favoritePrototype;
 
+/// Whether the selection should be drawn as the thing that will be launched even while
+/// the list itself does not have focus. Set while a search is narrowing the list, because
+/// return in the search field launches the selected row from there.
+@property (assign, nonatomic) BOOL highlightsSelectionWhileUnfocused;
+
+/// Whether the selected row is currently the one that return would launch — either
+/// because the list has focus, or because a search is active.
+@property (readonly, nonatomic) BOOL drawsSelectionAsActive;
+
 /// The index of the currently selected row, or `NSNotFound` if nothing is selected.
 @property (readonly, nonatomic) NSUInteger selectedRowIndex;
 

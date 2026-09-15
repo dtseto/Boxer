@@ -347,11 +347,17 @@
     self.displayedRows = displayedRows;
     
     //The rows have just been replaced, so a selection index kept from the old list would
-    //now point at an unrelated program — or at a heading. Drop it, and pick a fresh first
-    //row if the list still has focus.
+    //now point at an unrelated program — or at a heading. Drop it and choose afresh.
     BXLauncherList *list = (BXLauncherList *)self.launcherList;
     [list selectRowAtIndex: NSNotFound];
-    if ([self.view.window.firstResponder isEqual: list])
+    
+    //While a search is narrowing the list, the first result is selected and drawn as
+    //active even though focus is still in the search field: return there launches it,
+    //so the user has to be able to see which row that is.
+    BOOL isFiltering = (self.filterKeywords.count > 0);
+    list.highlightsSelectionWhileUnfocused = isFiltering;
+    
+    if (isFiltering || [self.view.window.firstResponder isEqual: list])
         [list selectFirstSelectableRow];
 }
 
@@ -644,6 +650,12 @@
         for (NSString *keyword in [rawKeywords componentsSeparatedByCharactersInSet: [NSCharacterSet whitespaceCharacterSet]])
         {
             NSString *sanitisedKeyword = keyword;
+            //Splitting on whitespace yields empty strings for runs of spaces, and an
+            //empty keyword matches every row — so a field containing only spaces would
+            //otherwise count as a search and arm return. It is blank.
+            if (!sanitisedKeyword.length)
+                continue;
+            
             if (![self.filterKeywords containsObject: sanitisedKeyword])
                 [self.filterKeywords addObject: sanitisedKeyword];
         }
@@ -795,8 +807,18 @@
         return YES;
     }
     
-    //TODO: decide whether return in the search field should launch the first result.
-    //It currently does nothing, as before.
+    //Return launches the first search result — the row highlighted while filtering.
+    //With no search in progress there is no "first result" to mean, and launching
+    //whatever happens to be top of the unfiltered list would be a nasty surprise, so
+    //return does nothing there.
+    if (command == @selector(insertNewline:))
+    {
+        if (self.filterKeywords.count > 0)
+            [(BXLauncherList *)self.launcherList launchSelectedRow: self];
+        
+        return YES;
+    }
+    
     return NO;
 }
 
@@ -886,6 +908,20 @@
     
     NSDictionary *row = [self.content objectAtIndex: index];
     return ![[row objectForKey: @"isHeading"] boolValue];
+}
+
+- (void) setHighlightsSelectionWhileUnfocused: (BOOL)highlights
+{
+    if (_highlightsSelectionWhileUnfocused != highlights)
+    {
+        _highlightsSelectionWhileUnfocused = highlights;
+        [self _redrawSelectedRow];
+    }
+}
+
+- (BOOL) drawsSelectionAsActive
+{
+    return self.highlightsSelectionWhileUnfocused || [self.window.firstResponder isEqual: self];
 }
 
 - (NSUInteger) selectedRowIndex
@@ -1157,6 +1193,17 @@
     [self setNeedsDisplay: YES];
 }
 
+//Walked rather than taken from -[NSCollectionViewItem collectionView], which is not
+//reliably set on the prototype copies this list makes for each row.
+- (BXLauncherList *) _enclosingLauncherList
+{
+    NSView *view = self.superview;
+    while (view != nil && ![view isKindOfClass: [BXLauncherList class]])
+        view = view.superview;
+    
+    return (BXLauncherList *)view;
+}
+
 
 - (NSMenu *) menuForEvent: (NSEvent *)event
 {
@@ -1213,9 +1260,7 @@
     //and click states still read on top of it when the pointer is over the selected row.
     if (self.delegate.isSelected)
     {
-        BOOL listHasFocus = [self.window.firstResponder isKindOfClass: [BXLauncherList class]];
-        
-        NSColor *fillColor = listHasFocus
+        NSColor *fillColor = [self _enclosingLauncherList].drawsSelectionAsActive
             ? [[NSColor alternateSelectedControlColor] colorWithAlphaComponent: 0.45]
             : [NSColor colorWithCalibratedWhite: 1.0 alpha: 0.12];
         

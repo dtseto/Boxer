@@ -210,7 +210,7 @@
                                                         CGRectMake(0, chassisHeight - bodyPixels, chassisWidth, bodyPixels));
     
     CALayer *root = [CALayer layer];
-    root.frame = NSRectToCGRect(self.bounds);
+    root.bounds = NSRectToCGRect(self.bounds);
     root.delegate = self;
     root.masksToBounds = YES;
     
@@ -335,8 +335,14 @@
     [CATransaction begin];
     [CATransaction setDisableActions: YES];
     
-    self.rootLayer.frame = bounds;
-    //Nothing may escape the printer: the panel's buttons sit directly beneath this view.
+    //IMPLEMENTATION NOTE: do NOT set the root layer's frame here. It is the view's
+    //*backing* layer, so AppKit owns its geometry and places it at the view's frame —
+    //(0, 60) in the panel, with the Discard and Print buttons in the 60 points below.
+    //Assigning self.bounds to it, which is what this line used to do, re-homed the layer
+    //at the window's bottom-left corner on every layout pass and drew the printer over
+    //that banner: invisible, but still clickable, because the buttons themselves had not
+    //moved. Only -bounds is ours, and AppKit already keeps that right.
+    //Nothing may escape the printer, though, so this much is worth re-asserting.
     self.rootLayer.masksToBounds = YES;
     
     for (CALayer *page in self.pageLayers)

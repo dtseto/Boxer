@@ -19,7 +19,7 @@ typedef NS_ENUM(NSInteger, BXArchiveKind) {
     /// A zipped-up gamebox. Not an import at all -- unarchive it and open it.
     BXArchiveKindGamebox,
     /// An eXoDOS game archive, identified by its .exo marker.
-    BXArchiveKindeXoDOSGame,
+    BXArchiveKindExoDOSGame,
 };
 
 

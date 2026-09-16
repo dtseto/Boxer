@@ -23,6 +23,9 @@
 typedef NS_ENUM(NSInteger, BXImportStage) {
 	BXImportSessionWaitingForSource,
 	BXImportSessionLoadingSource,
+	/// An archive has been classified and we are showing the user what we found,
+	/// waiting on them to confirm what to do with it.
+	BXImportSessionWaitingForConfirmation,
 	BXImportSessionWaitingForInstaller,
 	BXImportSessionReadyToLaunchInstaller,
 	BXImportSessionRunningInstaller,
@@ -48,6 +51,7 @@ typedef NS_ENUM(NSInteger, BXSourceFileImportType) {
 };
 
 
+@class BXArchiveClassification;
 @class BXImportWindowController;
 @class BXEmulatorConfiguration;
 @protocol BXDriveImport;
@@ -106,6 +110,15 @@ typedef NS_ENUM(NSInteger, BXSourceFileImportType) {
 
 /// What stage of the import process we are up to (as a BXImportStage constant.)
 @property (readonly, nonatomic) BXImportStage importStage;
+
+/// What Boxer made of a dropped zip archive, once it has been classified.
+/// Nil for every other kind of source. Set before the import stage moves to
+/// \c BXImportSessionWaitingForConfirmation, so the window can render it.
+@property (readonly, strong, nonatomic, nullable) BXArchiveClassification *archiveClassification;
+
+/// The eXoDOS metadata archive belonging to \c archiveClassification, or nil
+/// if it could not be found. An eXoDOS game cannot be converted without it.
+@property (readonly, strong, nonatomic, nullable) NSURL *eXoDOSMetadataURL;
 
 /// How far through the current stage we have progressed.
 ///

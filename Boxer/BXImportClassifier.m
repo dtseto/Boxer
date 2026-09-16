@@ -36,7 +36,7 @@ static NSString * const BXeXoDOSMarkerExtension = @"exo";
 {
     switch (self.kind)
     {
-        case BXArchiveKindeXoDOSGame:
+        case BXArchiveKindExoDOSGame:
             return [NSString stringWithFormat: NSLocalizedString(@"“%@”, an eXoDOS game.",
                 @"Summary shown when Boxer recognises a dropped archive as an eXoDOS game. %@ is the game's title."),
                     self.gameTitle];
@@ -126,7 +126,7 @@ static NSString * const BXeXoDOSMarkerExtension = @"exo";
     if (markers.count == 1)
     {
         NSString *marker = markers.firstObject;
-        classification.kind = BXArchiveKindeXoDOSGame;
+        classification.kind = BXArchiveKindExoDOSGame;
         classification.shortName = root;
         classification.gameTitle = marker.lastPathComponent.stringByDeletingPathExtension;
         return classification;

@@ -11,3 +11,4 @@
 #import "ADBGeometry.h"
 #import "BXMIDIDevice.h"
 #import "BXBootlegCoverArt.h"
+#import "BXImportClassifier.h"

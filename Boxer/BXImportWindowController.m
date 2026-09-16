@@ -8,11 +8,17 @@
 
 #import "BXImportWindowController.h"
 #import "BXImportSession.h"
+#import "BXImportClassifier.h"
+#import "Boxer-Swift.h"
 #import "ADBGeometry.h"
 #import "NSWindow+ADBWindowDimensions.h"
 #import "ADBAppKitVersionHelpers.h"
 
 @implementation BXImportWindowController
+{
+    BXImportClassificationPanelController *_classificationPanelController;
+    BXArchiveClassification *_classifiedArchive;
+}
 
 - (BXImportSession *) document { return (BXImportSession *)[super document]; }
 
@@ -80,6 +86,10 @@
             self.currentPanel = self.loadingPanel;
             break;
             
+        case BXImportSessionWaitingForConfirmation:
+            self.currentPanel = self.classificationPanel;
+            break;
+            
         case BXImportSessionWaitingForInstaller:
         case BXImportSessionReadyToLaunchInstaller:
         case BXImportSessionRunningInstaller:
@@ -97,6 +107,38 @@
             self.currentPanel = self.finishedPanel;
             break;
     }
+}
+
+//The one SwiftUI panel among the NIB's views. It is built on demand rather than
+//loaded from the NIB, and handed over as a plain NSView like the others, so the
+//window controller needs to know nothing about SwiftUI.
+- (NSView *) classificationPanel
+{
+    BXArchiveClassification *classification = self.document.archiveClassification;
+    if (!classification) return self.dropzonePanel;
+    
+    if (!_classificationPanelController ||
+        _classifiedArchive != classification)
+    {
+        BXImportClassificationPanelController *controller =
+            [[BXImportClassificationPanelController alloc] initWithClassification: classification
+                                                                       packFound: (self.document.eXoDOSMetadataURL != nil)];
+        
+        __weak BXImportWindowController *weakSelf = self;
+        controller.onCancel = ^{
+            [weakSelf.document cancelSourceSelection];
+        };
+        controller.onUnzipAsIs = ^{
+            NSLog(@"[BXImportWindowController] unzip-as-is is not wired up yet.");
+        };
+        controller.onContinue = ^{
+            NSLog(@"[BXImportWindowController] conversion is not wired up yet.");
+        };
+        
+        _classificationPanelController = controller;
+        _classifiedArchive = classification;
+    }
+    return _classificationPanelController.view;
 }
 
 - (NSString *) windowTitleForDocumentDisplayName: (NSString *)displayName

@@ -72,6 +72,8 @@
 @property (readwrite, assign, nonatomic) BOOL stageProgressIndeterminate;
 @property (readwrite, retain, nonatomic) ADBOperation *sourceFileImportOperation;
 @property (readwrite, assign, nonatomic) BXSourceFileImportType sourceFileImportType;
+@property (readwrite, retain, nonatomic) BXArchiveClassification *archiveClassification;
+@property (readwrite, retain, nonatomic) NSURL *eXoDOSMetadataURL;
 
 //Only defined for internal use
 @property (copy, nonatomic) NSURL *rootDriveURL;
@@ -90,6 +92,9 @@
 #pragma mark Actual implementation
 
 @implementation BXImportSession
+
+@synthesize archiveClassification = _archiveClassification;
+@synthesize eXoDOSMetadataURL = _eXoDOSMetadataURL;
 @synthesize importWindowController = _importWindowController;
 @synthesize sourceURL = _sourceURL;
 @synthesize rootDriveURL = _rootDriveURL;
@@ -116,6 +121,8 @@
     self.sourceFileImportOperation = nil;
     self.bundledConfigurationURL = nil;
     self.configurationToImport = nil;
+    self.archiveClassification = nil;
+    self.eXoDOSMetadataURL = nil;
     
 	[super dealloc];
 }
@@ -147,7 +154,7 @@
     //turns out to contain, and deciding that costs no extraction.
     if ([BXImportClassifier isZipArchiveAtURL: absoluteURL])
     {
-        return [self _reportClassificationOfArchiveAtURL: absoluteURL error: outError];
+        return [self _classifyArchiveAtURL: absoluteURL error: outError];
     }
 
 	NSURL *preferredURL = [self.class preferredSourceURLForURL: absoluteURL];
@@ -176,87 +183,35 @@
     return YES;
 }
 
-//Reports what Boxer makes of a dropped zip archive, and stops there.
+//Classifies a dropped zip archive and hands it to the wizard.
 //
-//This is deliberately the whole of the zip path for now: it proves the
-//classification and the pack lookup against real archives on all three entry
-//routes, without yet committing to a conversion. The wizard that acts on this
-//replaces the reporting, not the deciding.
-- (BOOL) _reportClassificationOfArchiveAtURL: (NSURL *)URL error: (NSError **)outError
+//This deliberately succeeds even when the archive turns out to be something we
+//cannot convert. Returning NO here would mean "this document cannot be opened",
+//which kills the session before any window exists -- and the welcome window
+//discards the error on its way out, so the user would see the window close and
+//nothing else happen. The classification is a *result* to be shown, not a
+//failure to be reported, so it travels as state and the window renders it.
+- (BOOL) _classifyArchiveAtURL: (NSURL *)URL error: (NSError **)outError
 {
     NSError *classificationError = nil;
     BXArchiveClassification *classification = [BXImportClassifier classifyArchiveAtURL: URL
                                                                                  error: &classificationError];
+    //Only an unreadable file is a genuine failure: there is nothing to show.
     if (!classification)
     {
         if (outError) *outError = classificationError;
         return NO;
     }
 
-    NSString *message = nil;
-    NSString *suggestion = nil;
+    self.archiveClassification = classification;
+    self.eXoDOSMetadataURL = (classification.kind == BXArchiveKindExoDOSGame)
+        ? [BXImportClassifier metadataArchiveURLForGameArchiveAtURL: URL]
+        : nil;
 
-    switch (classification.kind)
-    {
-        case BXArchiveKindeXoDOSGame:
-        {
-            //An eXoDOS game carries no configuration of its own: its drive
-            //layout, launch command and machine settings all live in the pack's
-            //metadata archive. Without that there is nothing to convert, so
-            //finding it is part of recognising the game, not a later step.
-            NSURL *metadataURL = [BXImportClassifier metadataArchiveURLForGameArchiveAtURL: URL];
-
-            message = [NSString stringWithFormat:
-                       NSLocalizedString(@"Boxer recognises this as %@",
-                                         @"Message shown when Boxer classifies a dropped archive. %@ is a description of what it found."),
-                       classification.localizedSummary];
-
-            if (metadataURL)
-            {
-                suggestion = [NSString stringWithFormat:
-                              NSLocalizedString(@"It will need %@ of disk space once unpacked, and its eXoDOS configuration was found alongside it.",
-                                                @"Recovery suggestion shown for a recognised eXoDOS game whose pack was located. %@ is a formatted file size."),
-                              [NSByteCountFormatter stringFromByteCount: (long long)classification.unpackedSize
-                                                             countStyle: NSByteCountFormatterCountStyleFile]];
-            }
-            else
-            {
-                suggestion = NSLocalizedString(@"Boxer could not find this game’s eXoDOS pack nearby. The pack’s “!DOSmetadata.zip” holds the game’s configuration, so it is needed to convert it.",
-                                               @"Recovery suggestion shown for an eXoDOS game whose pack could not be located.");
-            }
-            break;
-        }
-
-        case BXArchiveKindGamebox:
-            message = [NSString stringWithFormat:
-                       NSLocalizedString(@"Boxer recognises this as %@",
-                                         @"Message shown when Boxer classifies a dropped archive. %@ is a description of what it found."),
-                       classification.localizedSummary];
-            suggestion = NSLocalizedString(@"This is an existing gamebox rather than a game to import, so it will be unpacked and opened.",
-                                           @"Recovery suggestion shown for a dropped archive containing a gamebox.");
-            break;
-
-        case BXArchiveKindGenericZip:
-        default:
-            message = NSLocalizedString(@"Boxer does not recognise what kind of game this archive holds.",
-                                        @"Message shown when a dropped archive could not be classified.");
-            suggestion = classification.rejectionReason;
-            break;
-    }
-
-    if (outError)
-    {
-        NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithObject: message
-                                                                          forKey: NSLocalizedDescriptionKey];
-        if (suggestion)
-            [userInfo setObject: suggestion forKey: NSLocalizedRecoverySuggestionErrorKey];
-        [userInfo setObject: URL forKey: NSURLErrorKey];
-
-        *outError = [NSError errorWithDomain: NSCocoaErrorDomain
-                                        code: NSFeatureUnsupportedError
-                                    userInfo: userInfo];
-    }
-    return NO;
+    self.sourceURL = URL;
+    self.fileURL = URL;
+    self.importStage = BXImportSessionWaitingForConfirmation;
+    return YES;
 }
 
 - (void) installerScanDidFinish: (NSNotification *)notification

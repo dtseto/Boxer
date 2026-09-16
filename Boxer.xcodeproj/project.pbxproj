@@ -101,6 +101,8 @@
 		9F18133B129990D5009BC4B2 /* BXGamesFolderPanelController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F18133A129990D5009BC4B2 /* BXGamesFolderPanelController.m */; };
 		9F18BE9513EB07190047C217 /* BXInstallerScan.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F18BE9413EB07190047C217 /* BXInstallerScan.m */; };
 		9F1CBA58120C796C00C5E926 /* BXImportSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F1CBA57120C796C00C5E926 /* BXImportSession.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		9FE0D05000000000000B0001 /* BXZipCentralDirectory.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0D05000000000000A0002 /* BXZipCentralDirectory.m */; };
+		9FE0D05000000000000B0002 /* BXImportClassifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0D05000000000000A0004 /* BXImportClassifier.m */; };
 		9F1CBA97120C7D9000C5E926 /* BXImportWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F1CBA96120C7D9000C5E926 /* BXImportWindowController.m */; };
 		9F1CBAAB120C830600C5E926 /* BXImportSession+BXImportPolicies.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F1CBAAA120C830600C5E926 /* BXImportSession+BXImportPolicies.m */; };
 		9F1CBB59120CAA5500C5E926 /* BXBlueprintPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F1CBB58120CAA5500C5E926 /* BXBlueprintPanel.m */; };
@@ -1355,6 +1357,10 @@
 		9F18E28516E2763F002D4198 /* ADBLocalFilesystemPrivate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ADBLocalFilesystemPrivate.h; sourceTree = "<group>"; };
 		9F1920DF144B2BCB00B0617A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		9F1CBA56120C796C00C5E926 /* BXImportSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXImportSession.h; sourceTree = "<group>"; };
+		9FE0D05000000000000A0001 /* BXZipCentralDirectory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXZipCentralDirectory.h; sourceTree = "<group>"; };
+		9FE0D05000000000000A0002 /* BXZipCentralDirectory.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXZipCentralDirectory.m; sourceTree = "<group>"; };
+		9FE0D05000000000000A0003 /* BXImportClassifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXImportClassifier.h; sourceTree = "<group>"; };
+		9FE0D05000000000000A0004 /* BXImportClassifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXImportClassifier.m; sourceTree = "<group>"; };
 		9F1CBA57120C796C00C5E926 /* BXImportSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXImportSession.m; sourceTree = "<group>"; };
 		9F1CBA95120C7D9000C5E926 /* BXImportWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXImportWindowController.h; sourceTree = "<group>"; };
 		9F1CBA96120C7D9000C5E926 /* BXImportWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXImportWindowController.m; sourceTree = "<group>"; };
@@ -2476,6 +2482,10 @@
 				9F1CBAAA120C830600C5E926 /* BXImportSession+BXImportPolicies.m */,
 				9F18BE9313EB07190047C217 /* BXInstallerScan.h */,
 				9F18BE9413EB07190047C217 /* BXInstallerScan.m */,
+				9FE0D05000000000000A0003 /* BXImportClassifier.h */,
+				9FE0D05000000000000A0004 /* BXImportClassifier.m */,
+				9FE0D05000000000000A0001 /* BXZipCentralDirectory.h */,
+				9FE0D05000000000000A0002 /* BXZipCentralDirectory.m */,
 			);
 			name = "Game import session";
 			sourceTree = "<group>";
@@ -4516,6 +4526,8 @@
 				9FE90BF711F8D1DC003CFFFF /* ADBDelegatedView.m in Sources */,
 				9FEAA3EC1204595B0085F008 /* ADBOperation.m in Sources */,
 				9F1CBA58120C796C00C5E926 /* BXImportSession.m in Sources */,
+				9FE0D05000000000000B0002 /* BXImportClassifier.m in Sources */,
+				9FE0D05000000000000B0001 /* BXZipCentralDirectory.m in Sources */,
 				9F1CBA97120C7D9000C5E926 /* BXImportWindowController.m in Sources */,
 				9F1CBAAB120C830600C5E926 /* BXImportSession+BXImportPolicies.m in Sources */,
 				9F1CBB59120CAA5500C5E926 /* BXBlueprintPanel.m in Sources */,

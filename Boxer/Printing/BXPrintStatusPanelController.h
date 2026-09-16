@@ -61,10 +61,25 @@
 /// the total printable page height from 0.0 to 1.0.
 @property (assign, nonatomic) CGFloat feedOffset;
 
+/// How far the paper has been rolled back by hand, in points. 0 is the live position,
+/// where the current page sits at the print head. Larger values roll the paper up to
+/// reveal earlier pages, exactly as turning the platen knob on a real printer would.
+@property (assign, nonatomic) CGFloat rollOffset;
+
+/// The furthest the paper can be rolled back: far enough to bring the top of the
+/// oldest printed page into view.
+@property (readonly, nonatomic) CGFloat maxRollOffset;
+
 /// Makes the current page into the previous page,
 /// makes the current page blank, and moves the head
-/// to the top of the current page.
+/// to the top of the current page. Earlier pages are kept so they can be rolled back to.
 - (IBAction) startNewPage: (id)sender;
+
+/// Rolls the paper back to the live printing position.
+- (IBAction) rollToLivePosition: (id)sender;
+
+/// Throws away every page, for the start of a new print session.
+- (void) resetPages;
 
 /// Move the head to the specified offset with a smooth animation.
 - (void) animateHeadToOffset: (CGFloat)headOffset;

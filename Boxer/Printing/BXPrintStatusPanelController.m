@@ -16,6 +16,11 @@
 
 - (void) windowDidLoad
 {
+    //The panel is resizable so that more of the printout can be seen at once; the paper
+    //inside it can also be rolled by hand. It will not usefully go below the size it was
+    //designed at, so that is the floor. -setFrameAutosaveName: below remembers whatever
+    //size the user settles on.
+    self.window.minSize = NSMakeSize(480, 320);
     self.window.movableByWindowBackground = YES;
     ((NSPanel *)self.window).becomesKeyOnlyIfNeeded = YES;
     self.window.frameAutosaveName = @"PrintStatusPanel";
@@ -121,10 +126,26 @@
 
 @interface BXPrintPreview ()
 
-@property (strong, nonatomic) CALayer *currentPage;
-@property (strong, nonatomic) CALayer *previousPage;
+//Derived from pageLayers rather than stored, so that the two names the rest of the
+//class already used keep working now that there is a whole stack behind them.
+@property (readonly, nonatomic) CALayer *currentPage;
+@property (readonly, nonatomic) CALayer *previousPage;
 @property (strong, nonatomic) CALayer *paperFeed;
 @property (strong, nonatomic) CALayer *head;
+
+//Chassis layers, kept so they can be repositioned when the view is resized.
+@property (strong, nonatomic) CALayer *rootLayer;
+@property (strong, nonatomic) CALayer *backdrop;
+@property (strong, nonatomic) CALayer *body;
+@property (strong, nonatomic) CALayer *cover;
+@property (strong, nonatomic) CALayer *lighting;
+@property (strong, nonatomic) CALayer *leftClip;
+@property (strong, nonatomic) CALayer *rightClip;
+@property (strong, nonatomic) CALayer *clipRoller;
+
+/// Every page printed so far, newest first: index 0 is the page being printed,
+/// index 1 the one before it, and so on. Rolling the paper back reveals them.
+@property (strong, nonatomic) NSMutableArray<CALayer *> *pageLayers;
 
 @property (assign, nonatomic) CGSize pageSize;
 @property (assign, nonatomic) CGSize dpi;
@@ -136,6 +157,16 @@
 	CGImageRef _paperTexture;
 }
 
+//The chassis artwork is 480x480 and the panel used to be exactly that wide, so every
+//layer could be placed once from -bounds and never touched again. Now that the window
+//resizes, the placement has to be redone on every bounds change — see -layout — and the
+//backdrop has to be split in two. The art is a flat dark void above a lighter printer
+//body: stretching the void in both directions is invisible, but stretching the body
+//vertically would make the printer grow a thicker lip as the window got taller. So the
+//two bands are separate layers, each drawn from its own slice of the same image.
+#define BXPrinterArtHeight  480.0
+#define BXPrinterBodyHeight 193.0
+
 - (void) awakeFromNib
 {
     self.dpi = CGSizeMake(48, 48);
@@ -143,45 +174,67 @@
                                12.0 * self.dpi.height);
     self.feedOffset = 0;
     self.headOffset = 0;
+    self.pageLayers = [NSMutableArray arrayWithCapacity: 8];
     
     NSImage *paper = [NSImage imageNamed: @"PrinterPaper"];
     _paperTexture = [paper CGImageForProposedRect: NULL context: nil hints: nil];
     
-    CGPoint centerPoint = CGPointMake(NSMidX(self.bounds),
-                                      NSMidY(self.bounds));
+    //Slice the chassis art into its two bands up front. contentsRect would express the
+    //same thing in one layer each, but its interaction with an NSImage's several
+    //representations is not worth relying on; two CGImages are unambiguous.
+    NSImage *chassis = [NSImage imageNamed: @"PrinterBackground"];
+    CGImageRef chassisImage = [chassis CGImageForProposedRect: NULL context: nil hints: nil];
+    CGFloat chassisHeight = CGImageGetHeight(chassisImage);
+    CGFloat chassisWidth = CGImageGetWidth(chassisImage);
+    CGFloat bodyPixels = chassisHeight * (BXPrinterBodyHeight / BXPrinterArtHeight);
     
-    CALayer *background = [CALayer layer];
-    background.contents = [NSImage imageNamed: @"PrinterBackground"];
-    background.contentsGravity = kCAGravityBottom;
-    background.frame = NSRectToCGRect(self.bounds);
-    background.delegate = self;
+    //CGImage coordinates run from the top down, so the void is the first slice.
+    CGImageRef voidImage = CGImageCreateWithImageInRect(chassisImage,
+                                                        CGRectMake(0, 0, chassisWidth, chassisHeight - bodyPixels));
+    CGImageRef bodyImage = CGImageCreateWithImageInRect(chassisImage,
+                                                        CGRectMake(0, chassisHeight - bodyPixels, chassisWidth, bodyPixels));
     
-    CALayer *cover = [CALayer layer];
-    cover.contents = [NSImage imageNamed: @"PrinterCover"];
-    cover.bounds = CGRectMake(0, 0, self.bounds.size.width, 36);
-    cover.anchorPoint = CGPointMake(0.5, 0);
-    cover.position = CGPointMake(centerPoint.x, 0);
-    cover.compositingFilter = [CIFilter filterWithName: @"CIMultiplyBlendMode"];
-    cover.delegate = self;
+    CALayer *root = [CALayer layer];
+    root.frame = NSRectToCGRect(self.bounds);
+    root.delegate = self;
+    root.masksToBounds = YES;
     
-    CALayer *lighting = [CALayer layer];
-    lighting.contents = [NSImage imageNamed: @"PrinterLighting"];
-    lighting.bounds = CGRectMake(0, 0, self.bounds.size.width, 240);
-    lighting.anchorPoint = CGPointMake(0.5, 1);
-    lighting.position = CGPointMake(centerPoint.x, self.bounds.size.height);
-    lighting.compositingFilter = [CIFilter filterWithName: @"CISoftLightBlendMode"];
-    lighting.delegate = self;
-    lighting.autoresizingMask = kCALayerMinYMargin;
+    //The dark void the paper feeds out of. contentsRect takes the top band of the
+    //artwork only; kCAGravityResize then stretches that band to whatever size the
+    //window is, which a flat texture survives.
+    self.backdrop = [CALayer layer];
+    self.backdrop.contents = (__bridge id)voidImage;
+    self.backdrop.contentsGravity = kCAGravityResize;
+    self.backdrop.delegate = self;
+    
+    //The printer body, pinned to the bottom at its natural height so it never stretches
+    //vertically, however tall the window gets.
+    self.body = [CALayer layer];
+    self.body.contents = (__bridge id)bodyImage;
+    self.body.contentsGravity = kCAGravityResize;
+    self.body.anchorPoint = CGPointMake(0.5, 0);
+    self.body.delegate = self;
+    
+    self.cover = [CALayer layer];
+    self.cover.contents = [NSImage imageNamed: @"PrinterCover"];
+    self.cover.contentsGravity = kCAGravityResize;
+    self.cover.anchorPoint = CGPointMake(0.5, 0);
+    self.cover.compositingFilter = [CIFilter filterWithName: @"CIMultiplyBlendMode"];
+    self.cover.delegate = self;
+    
+    self.lighting = [CALayer layer];
+    self.lighting.contents = [NSImage imageNamed: @"PrinterLighting"];
+    self.lighting.contentsGravity = kCAGravityResize;
+    self.lighting.anchorPoint = CGPointMake(0.5, 1);
+    self.lighting.compositingFilter = [CIFilter filterWithName: @"CISoftLightBlendMode"];
+    self.lighting.delegate = self;
     
     self.paperFeed = [CALayer layer];
-    self.paperFeed.bounds = CGRectInset(CGRectMake(0, 0, self.pageSize.width, self.bounds.size.height), -0.5 * self.dpi.width, 0);
     self.paperFeed.anchorPoint = CGPointMake(0.5, 0);
-    self.paperFeed.position = CGPointMake(centerPoint.x, 0);
     self.paperFeed.delegate = self;
     self.paperFeed.shadowOffset = CGSizeMake(0, -2);
     self.paperFeed.shadowRadius = 3;
     self.paperFeed.shadowOpacity = 0.66;
-    self.paperFeed.autoresizingMask = kCALayerHeightSizable;
     self.paperFeed.needsDisplayOnBoundsChange = YES;
     
     self.head = [CALayer layer];
@@ -190,70 +243,107 @@
     self.head.anchorPoint = CGPointMake(0.5, 0);
     self.head.delegate = self;
     
-    self.currentPage = [CALayer layer];
-    self.currentPage.anchorPoint = CGPointMake(0.5, 1);
-    self.currentPage.bounds = CGRectMake(0, 0, self.pageSize.width, self.pageSize.height);
-    self.currentPage.delegate = self;
-    self.currentPage.contentsGravity = kCAGravityTop;
-    //Add a small shadow to thicken the preview and make it bolder
-    self.currentPage.shadowOffset = CGSizeZero;
-    self.currentPage.shadowOpacity = 0.5;
-    self.currentPage.shadowRadius = 0.25;
+    self.leftClip = [CALayer layer];
+    self.leftClip.contents = [NSImage imageNamed: @"PrinterClip"];
+    self.leftClip.bounds = CGRectMake(0, 0, 50, 104);
+    self.leftClip.anchorPoint = CGPointMake(0, 0.5);
+    self.leftClip.delegate = self;
     
-    self.previousPage = [CALayer layer];
-    self.previousPage.anchorPoint = CGPointMake(0.5, 1);
-    self.previousPage.bounds = CGRectMake(0, 0, self.pageSize.width, self.pageSize.height);
-    self.previousPage.delegate = self;
-    self.previousPage.contentsGravity = kCAGravityTop;
-    self.previousPage.shadowOffset = CGSizeZero;
-    self.previousPage.shadowOpacity = 0.5;
-    self.previousPage.shadowRadius = 0.25;
+    self.rightClip = [CALayer layer];
+    self.rightClip.contents = self.leftClip.contents;
+    self.rightClip.bounds = self.leftClip.bounds;
+    self.rightClip.anchorPoint = CGPointMake(0, 0.5);
+    self.rightClip.affineTransform = CGAffineTransformMakeScale(-1, 1);
+    self.rightClip.delegate = self;
     
-    CGFloat clipHeight = 106;
+    self.clipRoller = [CALayer layer];
+    self.clipRoller.backgroundColor = CGColorGetConstantColor(kCGColorBlack);
+    self.clipRoller.delegate = self;
+    self.clipRoller.shadowOffset = CGSizeZero;
+    self.clipRoller.shadowOpacity = 1;
+    self.clipRoller.shadowRadius = 30;
     
-    CALayer *leftClip = [CALayer layer];
-    leftClip.contents = [NSImage imageNamed: @"PrinterClip"];
-    leftClip.bounds = CGRectMake(0, 0, 50, 104);
-    leftClip.anchorPoint = CGPointMake(0, 0.5);
-    leftClip.position = CGPointMake(0, clipHeight);
-    leftClip.delegate = self;
-    
-    CALayer *rightClip = [CALayer layer];
-    rightClip.contents = leftClip.contents;
-    rightClip.bounds = leftClip.bounds;
-    rightClip.anchorPoint = CGPointMake(0, 0.5);
-    rightClip.position = CGPointMake(self.bounds.size.width, clipHeight);
-    rightClip.affineTransform = CGAffineTransformMakeScale(-1, 1);
-    rightClip.delegate = self;
-    
-    CALayer *clipRoller = [CALayer layer];
-    clipRoller.backgroundColor = CGColorGetConstantColor(kCGColorBlack);
-    clipRoller.bounds = CGRectMake(0, 0, self.bounds.size.width, 96);
-    clipRoller.position = CGPointMake(centerPoint.x, clipHeight);
-    clipRoller.delegate = self;
-    clipRoller.shadowOffset = CGSizeZero;
-    clipRoller.shadowOpacity = 1;
-    clipRoller.shadowRadius = 30;
-    
-    [background addSublayer: clipRoller];
-    [background addSublayer: self.paperFeed];
-    [background addSublayer: self.currentPage];
-    [background addSublayer: self.previousPage];
+    [root addSublayer: self.backdrop];
+    [root addSublayer: self.body];
+    [root addSublayer: self.clipRoller];
+    [root addSublayer: self.paperFeed];
+    //Page layers are inserted above the paper feed as they are printed, by -_addPageLayer.
     //We don't bother showing the print head for now because it usually moves too fast for any animation to be visible 
-    //[background addSublayer: self.head];
-    [background addSublayer: cover];
-    [background addSublayer: leftClip];
-    [background addSublayer: rightClip];
-    [background addSublayer: lighting];
+    //[root addSublayer: self.head];
+    [root addSublayer: self.cover];
+    [root addSublayer: self.leftClip];
+    [root addSublayer: self.rightClip];
+    [root addSublayer: self.lighting];
     
-    self.layer = background;
+    CGImageRelease(voidImage);
+    CGImageRelease(bodyImage);
+    
+    //Keep our own reference: -addPageLayer inserts into this as pages are printed, and
+    //-layer is not guaranteed to still be the layer we handed over once wantsLayer is set.
+    self.rootLayer = root;
+    self.layer = root;
     self.wantsLayer = YES;
     
     //For 10.9: fixes crash when using compositing filters.
     self.layerUsesCoreImageFilters = YES;
     
+    //The first page exists before anything is printed to it.
+    [self _addPageLayer];
+    
+    [self _layoutChassis];
     [self _syncPagePosition];
     [self _syncHeadPosition];
+}
+
+//Positions everything that depends on the view's size. Called once at load and again on
+//every resize, with implicit animations off — otherwise each layer crawls to its new
+//position and a live resize looks like jelly.
+- (void) _layoutChassis
+{
+    CGRect bounds = NSRectToCGRect(self.bounds);
+    CGFloat midX = CGRectGetMidX(bounds);
+    CGFloat clipHeight = 106;
+    
+    [CATransaction begin];
+    [CATransaction setDisableActions: YES];
+    
+    self.rootLayer.frame = bounds;
+    
+    self.backdrop.frame = bounds;
+    
+    self.body.bounds = CGRectMake(0, 0, bounds.size.width, BXPrinterBodyHeight);
+    self.body.position = CGPointMake(midX, 0);
+    
+    self.cover.bounds = CGRectMake(0, 0, bounds.size.width, 36);
+    self.cover.position = CGPointMake(midX, 0);
+    
+    self.lighting.bounds = CGRectMake(0, 0, bounds.size.width, 240);
+    self.lighting.position = CGPointMake(midX, bounds.size.height);
+    
+    self.leftClip.position = CGPointMake(0, clipHeight);
+    self.rightClip.position = CGPointMake(bounds.size.width, clipHeight);
+    
+    self.clipRoller.bounds = CGRectMake(0, 0, bounds.size.width, 96);
+    self.clipRoller.position = CGPointMake(midX, clipHeight);
+    
+    self.paperFeed.bounds = CGRectMake(0, 0, self.pageSize.width + self.dpi.width, bounds.size.height);
+    self.paperFeed.position = CGPointMake(midX, 0);
+    
+    [CATransaction commit];
+}
+
+- (void) layout
+{
+    [super layout];
+    [self _layoutChassis];
+    [self _syncPagePosition];
+    [self _syncHeadPosition];
+}
+
+- (void) setFrameSize: (NSSize)newSize
+{
+    [super setFrameSize: newSize];
+    self.needsLayout = YES;
 }
 
 - (void) dealloc
@@ -266,9 +356,19 @@
 {
     if (layer == self.paperFeed)
     {
-        CGRect paperRect = [self.paperFeed convertRect: self.currentPage.bounds fromLayer: self.currentPage];
-        paperRect = CGRectInset(paperRect, -0.5 * self.dpi.width, 0);
+        //Tile the sprocket-holed paper behind every page we are holding, not just the
+        //current one: once the paper can be rolled back, earlier pages need backing too.
+        CGRect paperRect = CGRectNull;
+        for (CALayer *page in self.pageLayers)
+        {
+            CGRect pageRect = [self.paperFeed convertRect: page.bounds fromLayer: page];
+            paperRect = CGRectIsNull(paperRect) ? pageRect : CGRectUnion(paperRect, pageRect);
+        }
         
+        if (CGRectIsNull(paperRect))
+            return;
+        
+        paperRect = CGRectInset(paperRect, -0.5 * self.dpi.width, 0);
         CGContextDrawTiledImage(ctx, paperRect, _paperTexture);
     }
 }
@@ -276,6 +376,36 @@
 - (BOOL) layer: (CALayer *)layer shouldInheritContentsScale: (CGFloat)newScale fromWindow: (NSWindow *)window
 {
     return YES;
+}
+
+//A fresh, empty page layer, inserted at the top of the stack and directly above the
+//paper feed so that it is drawn over the paper but under the chassis.
+- (CALayer *) _addPageLayer
+{
+    CALayer *page = [CALayer layer];
+    page.anchorPoint = CGPointMake(0.5, 1);
+    page.bounds = CGRectMake(0, 0, self.pageSize.width, self.pageSize.height);
+    page.delegate = self;
+    page.contentsGravity = kCAGravityTop;
+    //Add a small shadow to thicken the preview and make it bolder
+    page.shadowOffset = CGSizeZero;
+    page.shadowOpacity = 0.5;
+    page.shadowRadius = 0.25;
+    
+    [self.pageLayers insertObject: page atIndex: 0];
+    [self.rootLayer insertSublayer: page above: self.paperFeed];
+    
+    return page;
+}
+
+- (CALayer *) currentPage
+{
+    return self.pageLayers.firstObject;
+}
+
+- (CALayer *) previousPage
+{
+    return (self.pageLayers.count > 1) ? [self.pageLayers objectAtIndex: 1] : nil;
 }
 
 - (NSImage *) currentPagePreview
@@ -296,12 +426,30 @@
     //TODO: work out why a simple setNeedsDisplay isn't doing the job.
     self.currentPage.contents = nil;
     self.currentPage.contents = preview;
+    
+    //New output arrives at the print head, so take the paper back there: leaving the
+    //user staring at page 2 while page 9 is being printed would be worse than the
+    //interruption.
+    [self rollToLivePosition: self];
 }
 
 - (void) setPreviousPagePreview: (NSImage *)preview
 {
-    self.previousPage.contents = nil;
-    self.previousPage.contents = preview;
+    CALayer *previous = self.previousPage;
+    previous.contents = nil;
+    previous.contents = preview;
+}
+
+- (void) resetPages
+{
+    for (CALayer *page in self.pageLayers)
+        [page removeFromSuperlayer];
+    
+    [self.pageLayers removeAllObjects];
+    _rollOffset = 0;
+    
+    [self _addPageLayer];
+    [self _syncPagePosition];
 }
 
 - (void) _syncHeadPosition
@@ -314,17 +462,109 @@
 {
     //TWEAK: keep the 0-position slightly below the fold, so as not to show unprinted lines during slow printing.
     CGFloat bottomOffset = 15;
-    CGFloat yPos = (self.pageSize.height * self.feedOffset) - bottomOffset;
+    CGFloat yPos = (self.pageSize.height * self.feedOffset) - bottomOffset - self.rollOffset;
+    CGFloat midX = NSMidX(self.bounds);
     
+    //Pages are stacked upwards from the current one: with an anchor point at the top
+    //edge, each page's position *is* the top of the page, and page n sits exactly one
+    //page height above page n-1. Rolling the paper back subtracts from all of them at
+    //once, which walks the whole stack down past the roller.
     //Disable implicit movement animations on <10.7
     [CATransaction begin];
     [CATransaction setAnimationDuration: 0];
-    self.currentPage.position   = CGPointMake(NSMidX(self.bounds), yPos);
-    self.previousPage.position  = CGPointMake(NSMidX(self.bounds),
-                                             CGRectGetMaxY(self.currentPage.frame) + self.previousPage.bounds.size.height);
+        NSUInteger i, numPages = self.pageLayers.count;
+        for (i = 0; i < numPages; i++)
+        {
+            CALayer *page = [self.pageLayers objectAtIndex: i];
+            page.position = CGPointMake(midX, yPos + (i * self.pageSize.height));
+        }
     [CATransaction commit];
     
     [self.paperFeed setNeedsDisplay];
+}
+
+#pragma mark - Rolling the paper by hand
+
+- (CGFloat) maxRollOffset
+{
+    //Far enough back to bring the top of the oldest page to the top of the view, and no
+    //further. Rolling until that top edge reaches the *bottom* of the view would be one
+    //view-height too far and would leave the user looking at blank paper above
+    //everything they had printed, which is exactly what the first version did.
+    NSUInteger pagesAbove = (self.pageLayers.count > 0) ? self.pageLayers.count - 1 : 0;
+    CGFloat topOfOldestPage = self.pageSize.height * (self.feedOffset + pagesAbove);
+    CGFloat maxOffset = topOfOldestPage - self.bounds.size.height;
+    return MAX(maxOffset, 0);
+}
+
+- (void) setRollOffset: (CGFloat)rollOffset
+{
+    CGFloat clamped = MIN(MAX(rollOffset, 0), self.maxRollOffset);
+    if (clamped != _rollOffset)
+    {
+        _rollOffset = clamped;
+        [self _syncPagePosition];
+    }
+}
+
+- (IBAction) rollToLivePosition: (id)sender
+{
+    self.rollOffset = 0;
+}
+
+- (void) scrollWheel: (NSEvent *)event
+{
+    //A trackpad reports deltas already in points; a wheel reports them in lines, and a
+    //line here means a line of text rather than a scroll view's row.
+    CGFloat delta = event.scrollingDeltaY;
+    if (!event.hasPreciseScrollingDeltas)
+        delta *= self.dpi.height / 6.0;
+    
+    self.rollOffset = self.rollOffset + delta;
+}
+
+//The paper can be rolled with the keyboard too, which is the only way to do it precisely.
+- (BOOL) acceptsFirstResponder
+{
+    return YES;
+}
+
+- (void) keyDown: (NSEvent *)event
+{
+    [self interpretKeyEvents: @[event]];
+}
+
+- (void) moveUp: (id)sender
+{
+    self.rollOffset = self.rollOffset + (self.dpi.height / 6.0);
+}
+
+- (void) moveDown: (id)sender
+{
+    self.rollOffset = self.rollOffset - (self.dpi.height / 6.0);
+}
+
+- (void) pageUp: (id)sender
+{
+    self.rollOffset = self.rollOffset + self.pageSize.height;
+}
+
+- (void) pageDown: (id)sender
+{
+    self.rollOffset = self.rollOffset - self.pageSize.height;
+}
+
+- (void) scrollPageUp: (id)sender    { [self pageUp: sender]; }
+- (void) scrollPageDown: (id)sender  { [self pageDown: sender]; }
+
+- (void) moveToBeginningOfDocument: (id)sender
+{
+    self.rollOffset = self.maxRollOffset;
+}
+
+- (void) moveToEndOfDocument: (id)sender
+{
+    [self rollToLivePosition: sender];
 }
 
 - (void) setFeedOffset: (CGFloat)feedOffset
@@ -370,8 +610,12 @@
 
 - (void) startNewPage: (id)sender
 {
-    self.previousPage.contents = self.currentPage.contents;
-    self.currentPage.contents = nil;
+    //The finished page stays exactly where it is and a new blank one is pushed in front
+    //of it. (This used to copy the current page's contents onto a single "previous page"
+    //layer and blank the current one, which kept one page of history; keeping a layer
+    //per page is what makes rolling back through the whole printout possible.)
+    [self _addPageLayer];
+    [self rollToLivePosition: self];
     
     //Move the feed offset immediately by one page so that the previous page
     //lines up exactly with where the old current page was. Then, start a new

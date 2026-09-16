@@ -193,6 +193,11 @@
 {
     //Our print preview is 2/3rds scale, so don't bother rendering previews any larger than that
     session.previewDPI = NSMakeSize(48.0, 48.0);
+    
+    //Throw away the last session's paper. This did not matter while the preview only kept
+    //the current page and the one before it; now that it keeps every page so they can be
+    //rolled back to, stale ones would follow the user into the next session.
+    [self.printStatusController.preview resetPages];
 }
 
 - (void) printer: (BXEmulatedPrinter *)printer didFinishSession: (BXPrintSession *)session

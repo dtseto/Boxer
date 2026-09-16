@@ -150,6 +150,10 @@
 @property (assign, nonatomic) CGSize pageSize;
 @property (assign, nonatomic) CGSize dpi;
 
+/// How much bigger than the artwork's design width the view currently is. Widening the
+/// window zooms the paper and everything on it; making it taller just shows more paper.
+@property (assign, nonatomic) CGFloat scale;
+
 @end
 
 @implementation BXPrintPreview
@@ -165,13 +169,24 @@
 //vertically would make the printer grow a thicker lip as the window got taller. So the
 //two bands are separate layers, each drawn from its own slice of the same image.
 #define BXPrinterArtHeight  480.0
+#define BXPrinterArtWidth   480.0
 #define BXPrinterBodyHeight 193.0
+
+//The paper texture is one 12-inch fanfold sheet at 48dpi, with the sprocket holes punched
+//out of its alpha channel at a half-inch pitch. It is tiled at this size whatever the page
+//length is, because the hole pitch is a property of the paper and not of the page.
+#define BXPrinterPaperTextureWidth  456.0
+#define BXPrinterPaperTextureHeight 576.0
+#define BXPrinterBaseDPI            48.0
 
 - (void) awakeFromNib
 {
-    self.dpi = CGSizeMake(48, 48);
-    self.pageSize = CGSizeMake(8.50 * self.dpi.width,
-                               12.0 * self.dpi.height);
+    //A US fanfold sheet until Page Setup says otherwise.
+    _pageSizeInInches = NSMakeSize(8.5, 12.0);
+    self.scale = 1.0;
+    self.dpi = CGSizeMake(BXPrinterBaseDPI, BXPrinterBaseDPI);
+    self.pageSize = CGSizeMake(_pageSizeInInches.width * self.dpi.width,
+                               _pageSizeInInches.height * self.dpi.height);
     self.feedOffset = 0;
     self.headOffset = 0;
     self.pageLayers = [NSMutableArray arrayWithCapacity: 8];
@@ -304,10 +319,28 @@
     CGFloat midX = CGRectGetMidX(bounds);
     CGFloat clipHeight = 106;
     
+    //Width drives the zoom; height only decides how much paper is on show.
+    CGFloat oldScale = self.scale;
+    CGFloat newScale = (bounds.size.width > 0) ? (bounds.size.width / BXPrinterArtWidth) : 1.0;
+    self.scale = newScale;
+    self.dpi = CGSizeMake(BXPrinterBaseDPI * newScale, BXPrinterBaseDPI * newScale);
+    self.pageSize = CGSizeMake(self.pageSizeInInches.width * self.dpi.width,
+                               self.pageSizeInInches.height * self.dpi.height);
+    
+    //Keep the same part of the printout under the user's eye across a zoom, rather than
+    //having the paper jump because the offset is in points and the points changed size.
+    if (oldScale > 0 && newScale != oldScale)
+        _rollOffset *= (newScale / oldScale);
+    
     [CATransaction begin];
     [CATransaction setDisableActions: YES];
     
     self.rootLayer.frame = bounds;
+    //Nothing may escape the printer: the panel's buttons sit directly beneath this view.
+    self.rootLayer.masksToBounds = YES;
+    
+    for (CALayer *page in self.pageLayers)
+        page.bounds = CGRectMake(0, 0, self.pageSize.width, self.pageSize.height);
     
     self.backdrop.frame = bounds;
     
@@ -326,10 +359,23 @@
     self.clipRoller.bounds = CGRectMake(0, 0, bounds.size.width, 96);
     self.clipRoller.position = CGPointMake(midX, clipHeight);
     
-    self.paperFeed.bounds = CGRectMake(0, 0, self.pageSize.width + self.dpi.width, bounds.size.height);
+    //The paper is as wide as its texture, which includes the sprocket strips; the page
+    //printed on it is narrower.
+    self.paperFeed.bounds = CGRectMake(0, 0, BXPrinterPaperTextureWidth * newScale, bounds.size.height);
     self.paperFeed.position = CGPointMake(midX, 0);
+    [self.paperFeed setNeedsDisplay];
     
     [CATransaction commit];
+}
+
+- (void) setPageSizeInInches: (NSSize)pageSizeInInches
+{
+    if (!NSEqualSizes(pageSizeInInches, _pageSizeInInches) &&
+        pageSizeInInches.width > 0 && pageSizeInInches.height > 0)
+    {
+        _pageSizeInInches = pageSizeInInches;
+        self.needsLayout = YES;
+    }
 }
 
 - (void) layout
@@ -356,21 +402,49 @@
 {
     if (layer == self.paperFeed)
     {
-        //Tile the sprocket-holed paper behind every page we are holding, not just the
-        //current one: once the paper can be rolled back, earlier pages need backing too.
-        CGRect paperRect = CGRectNull;
+        //CGContextDrawTiledImage's rect is the size and origin of ONE tile, not the area
+        //to cover: it repeats that tile across the whole clip. Handing it the union of
+        //every page — which is what the first version of the roll feature did — stretches
+        //a single sheet over the entire printout, and with it the sprocket holes, which
+        //are punched out of the texture's alpha channel. One sheet, always.
+        CALayer *page = self.currentPage;
+        if (!page)
+            return;
+        
+        CGRect pageRect = [self.paperFeed convertRect: page.bounds fromLayer: page];
+        CGRect tile = CGRectMake(CGRectGetMidX(pageRect) - (BXPrinterPaperTextureWidth * self.scale * 0.5),
+                                 CGRectGetMaxY(pageRect) - (BXPrinterPaperTextureHeight * self.scale),
+                                 BXPrinterPaperTextureWidth * self.scale,
+                                 BXPrinterPaperTextureHeight * self.scale);
+        
+        CGContextDrawTiledImage(ctx, tile, _paperTexture);
+        
+        //The hole pitch is a property of the paper and the page length is not, so the two
+        //only coincide on 12-inch fanfold. Draw the fold at the real page boundaries.
+        [self _drawPerforationsInContext: ctx];
+    }
+}
+
+//A dashed line where one page ends and the next begins, which on continuous paper is
+//where it would tear.
+- (void) _drawPerforationsInContext: (CGContextRef)ctx
+{
+    CGFloat dash[] = { 3.0 * self.scale, 3.0 * self.scale };
+    CGContextSaveGState(ctx);
+        CGContextSetLineWidth(ctx, 1.0);
+        CGContextSetGrayStrokeColor(ctx, 0.55, 0.65);
+        CGContextSetLineDash(ctx, 0, dash, 2);
+        
+        CGFloat inset = 0.5 * (BXPrinterPaperTextureWidth - self.pageSizeInInches.width * BXPrinterBaseDPI) * self.scale;
         for (CALayer *page in self.pageLayers)
         {
             CGRect pageRect = [self.paperFeed convertRect: page.bounds fromLayer: page];
-            paperRect = CGRectIsNull(paperRect) ? pageRect : CGRectUnion(paperRect, pageRect);
+            CGFloat y = floor(CGRectGetMinY(pageRect)) + 0.5;
+            CGContextMoveToPoint(ctx, inset, y);
+            CGContextAddLineToPoint(ctx, self.paperFeed.bounds.size.width - inset, y);
         }
-        
-        if (CGRectIsNull(paperRect))
-            return;
-        
-        paperRect = CGRectInset(paperRect, -0.5 * self.dpi.width, 0);
-        CGContextDrawTiledImage(ctx, paperRect, _paperTexture);
-    }
+        CGContextStrokePath(ctx);
+    CGContextRestoreGState(ctx);
 }
 
 - (BOOL) layer: (CALayer *)layer shouldInheritContentsScale: (CGFloat)newScale fromWindow: (NSWindow *)window
@@ -386,7 +460,11 @@
     page.anchorPoint = CGPointMake(0.5, 1);
     page.bounds = CGRectMake(0, 0, self.pageSize.width, self.pageSize.height);
     page.delegate = self;
-    page.contentsGravity = kCAGravityTop;
+    //Not kCAGravityTop, which draws the preview at its natural pixel size and so tied the
+    //layout to the session's preview DPI: raising that DPI for sharper zooming made every
+    //page render half again too wide and spill off the paper. The preview is always a
+    //whole page, so scaling it to the page layer is exact at any DPI.
+    page.contentsGravity = kCAGravityResizeAspect;
     //Add a small shadow to thicken the preview and make it bolder
     page.shadowOffset = CGSizeZero;
     page.shadowOpacity = 0.5;

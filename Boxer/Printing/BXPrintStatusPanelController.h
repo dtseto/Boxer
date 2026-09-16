@@ -61,6 +61,10 @@
 /// the total printable page height from 0.0 to 1.0.
 @property (assign, nonatomic) CGFloat feedOffset;
 
+/// The size of the emulated page, in inches, taken from Page Setup. The preview scales
+/// its paper to match, so a landscape or legal page looks like one.
+@property (assign, nonatomic) NSSize pageSizeInInches;
+
 /// How far the paper has been rolled back by hand, in points. 0 is the live position,
 /// where the current page sits at the print head. Larger values roll the paper up to
 /// reveal earlier pages, exactly as turning the platen knob on a real printer would.

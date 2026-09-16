@@ -64,9 +64,28 @@
 
 - (void) printerDidInitialize: (BXEmulatedPrinter *)printer
 {
+    [self _applyPageSetupToPrinter: printer];
+}
+
+//Page Setup edits the document's printInfo, and nothing told the printer about it: the
+//page size was read once, when the printer initialised, so changing the paper or turning
+//it landscape afterwards changed nothing at all. Re-applied at the start of every session
+//as well, which is where a user who has just changed it will notice.
+- (void) _applyPageSetupToPrinter: (BXEmulatedPrinter *)printer
+{
     //Apply OS X's preferred page size as the default emulated printer setup.
+    //-paperSize is the sheet as loaded, so swap it for a landscape setup.
     NSSize sizeInPoints = self.printInfo.paperSize;
+    if (self.printInfo.orientation == NSPaperOrientationLandscape &&
+        sizeInPoints.height > sizeInPoints.width)
+    {
+        sizeInPoints = NSMakeSize(sizeInPoints.height, sizeInPoints.width);
+    }
+    
     printer.pageSize = NSMakeSize(sizeInPoints.width / 72.0, sizeInPoints.height / 72.0);
+    
+    //Show the same paper in the preview that the printer is using.
+    self.printStatusController.preview.pageSizeInInches = printer.pageSize;
     
     //Ignore OSX's printer margins: many DOS programs will disregard the ESC/P margins and try
     //to make their own margins using spacing/tabs, resulting in wide double margins and awkward
@@ -86,8 +105,19 @@
     NSRect maxPrintBoundsInPoints = self.printInfo.imageablePageBounds;
     printer.leftMargin      = NSMinX(maxPrintBoundsInPoints) / 72.0;
     printer.rightMargin     = NSMaxX(maxPrintBoundsInPoints) / 72.0;
-    printer.bottomMargin    = (sizeInPoints.height - NSMinY(maxPrintBoundsInPoints)) / 72.0;
-    printer.topMargin       = (sizeInPoints.height - NSMaxY(maxPrintBoundsInPoints)) / 72.0;
+    
+    //The *vertical* margins deliberately do not come from the host printer. They used to,
+    //and the result was a band of nothing at every page boundary: the head starts each
+    //page at topMargin and breaks the page once it passes bottomMargin, so the two
+    //unprintable strips add up and appear in the middle of continuous output — obvious
+    //the moment anything spans a fold, such as a graphic.
+    //
+    //A tractor-feed printer has no unprintable top or bottom: the paper is continuous and
+    //the pins reach all of it. The strips in imageablePageBounds belong to whatever
+    //physical printer the PDF is eventually sent to, and that is the right place to
+    //account for them — the print panel's own scaling does it.
+    printer.topMargin       = 0.0;
+    printer.bottomMargin    = printer.pageSize.height;
 }
 
 - (void) printer: (BXEmulatedPrinter *)printer didPrintToPageInSession: (BXPrintSession *)session
@@ -191,8 +221,13 @@
 
 - (void) printer: (BXEmulatedPrinter *)printer willBeginSession: (BXPrintSession *)session
 {
-    //Our print preview is 2/3rds scale, so don't bother rendering previews any larger than that
-    session.previewDPI = NSMakeSize(48.0, 48.0);
+    //The preview used to be a fixed 2/3rds scale, and 48dpi was exactly enough for it.
+    //It zooms with the window now, so render with some headroom or a widened window shows
+    //a page enlarged from too few pixels.
+    session.previewDPI = NSMakeSize(72.0, 72.0);
+    
+    //Pick up any Page Setup changes made since the printer was initialised.
+    [self _applyPageSetupToPrinter: printer];
     
     //Throw away the last session's paper. This did not matter while the preview only kept
     //the current page and the one before it; now that it keeps every page so they can be

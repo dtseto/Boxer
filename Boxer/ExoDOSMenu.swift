@@ -71,11 +71,12 @@ struct ExoDOSMenuBranch {
 ///
 /// **It is deliberately conservative.** Not every batch file the autoexec calls
 /// is one of eXo's menus — plenty are the game's own launcher, looping back to
-/// its own menu after each play, branching on a program's exit code, or running
-/// a sequence of programs. Flattening those would break them, so anything whose
+/// its own menu after each play or branching on a program's exit code — and
+/// flattening those would break them. What can be flattened is a *linear* path,
+/// however many programs it runs; what cannot is branching. Anything whose
 /// shape cannot be accounted for is refused outright and the caller keeps the
-/// old behaviour. Measured over the pack's 2,845 reachable menu batches, 1,466
-/// flatten and the remaining 1,379 fall back.
+/// old behaviour, so nothing that worked can regress. Measured over the pack's
+/// 2,911 games that call a menu, 1,732 flatten and 1,179 fall back.
 enum ExoDOSMenuInterpreter {
 
     struct Unflattenable: Error {

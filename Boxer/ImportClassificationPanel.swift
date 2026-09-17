@@ -51,10 +51,6 @@ final class ImportWizardModel: ObservableObject {
     /// finished gamebox, not reasons to stop.
     @Published var warnings: [String] = []
 
-    /// Folders games have been imported into before, newest first. Read once,
-    /// when the panel is built: nothing else can change them while it is up.
-    @Published var recentDestinations: [URL] = ImportDestinationHistory.recents
-
     let summary: ArchiveSummary
 
     init(summary: ArchiveSummary, destination: URL) {
@@ -78,6 +74,7 @@ struct ImportClassificationView: View {
     var onContinue: () -> Void
     var onUnzipAsIs: () -> Void
     var onCancel: () -> Void
+    var onChooseDestination: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -124,8 +121,13 @@ struct ImportClassificationView: View {
                     .foregroundStyle(model.summary.packFound ? Color.secondary : Color.orange)
             }
             LabeledContent("Import into") {
-                DestinationPathControl(url: $model.destination, recents: model.recentDestinations)
-                    .frame(maxWidth: 260, alignment: .leading)
+                HStack(spacing: 8) {
+                    Text(model.destination.lastPathComponent)
+                        .truncationMode(.middle)
+                        .lineLimit(1)
+                    Button("Change…", action: onChooseDestination)
+                        .buttonStyle(.link)
+                }
             }
 
             if let advice = model.summary.packAdvice {
@@ -247,7 +249,8 @@ final class ImportClassificationPanelController: NSObject {
             model: model,
             onContinue: { [weak self] in self?.advance() },
             onUnzipAsIs: {},
-            onCancel: { [weak self] in self?.cancel() })
+            onCancel: { [weak self] in self?.cancel() },
+            onChooseDestination: { [weak self] in self?.chooseDestination() })
         let view = NSHostingView(rootView: root)
 
         // The window this goes into sizes itself from the panel's frame
@@ -307,13 +310,6 @@ final class ImportClassificationPanelController: NSObject {
         // by hand every time. Given a folder, this presses Continue itself as
         // soon as the panel is up and converts into that folder rather than the
         // user's games folder.
-        // Where the last import actually went beats the games folder: a user
-        // who keeps their eXoDOS conversions somewhere else said so once and
-        // should not have to say it again.
-        if let remembered = ImportDestinationHistory.mostRecent {
-            model.destination = remembered
-        }
-
         if let folder = Self.automaticDestination() {
             model.destination = folder
             DispatchQueue.main.async { [weak self] in self?.beginConversion() }
@@ -335,14 +331,24 @@ final class ImportClassificationPanelController: NSObject {
 
     // MARK: - Driving the conversion
 
+    private func chooseDestination() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = model.destination
+        panel.prompt = NSLocalizedString("Choose", comment: "Confirmation button in the import destination picker.")
+        panel.message = NSLocalizedString("Choose where to keep the imported game:",
+                                          comment: "Prompt in the import destination picker.")
+
+        if panel.runModal() == .OK, let url = panel.url {
+            model.destination = url
+        }
+    }
 
     private func beginConversion() {
         guard let metadataArchiveURL = metadataArchiveURL else { return }
-
-        // Recorded here rather than when the folder is picked, so the list is
-        // of places games were really imported into and a browse that came to
-        // nothing leaves no trace.
-        ImportDestinationHistory.remember(model.destination)
 
         let operation = ExoDOSImportOperation(gameArchiveURL: gameArchiveURL,
                                               metadataArchiveURL: metadataArchiveURL,

@@ -36,6 +36,8 @@ final class ImportWizardModel: ObservableObject {
     enum Phase: Equatable {
         case confirming
         case converting
+        /// Converted, but with things the user should know about the result.
+        case converted
         case failed(String)
     }
 
@@ -85,6 +87,8 @@ struct ImportClassificationView: View {
                 details
             case .converting:
                 conversion
+            case .converted:
+                notes
             case .failed(let message):
                 failure(message)
             }
@@ -149,6 +153,30 @@ struct ImportClassificationView: View {
         }
     }
 
+    /// What the derivation could not account for. Every one of these is a real
+    /// property of the pack rather than a failure — a game whose A: drive eXo
+    /// creates during its Windows-side install and never ships, say — but the
+    /// gamebox is not quite what the config asked for, and saying nothing about
+    /// that is how an importer comes to be distrusted.
+    private var notes: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("The game was imported, with notes.", systemImage: "info.circle")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(Array(model.warnings.enumerated()), id: \.offset) { _, warning in
+                        Text("• " + warning)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textSelection(.enabled)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .frame(maxHeight: 140)
+        }
+    }
+
     private func failure(_ message: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("The game could not be converted.", systemImage: "exclamationmark.triangle")
@@ -169,6 +197,9 @@ struct ImportClassificationView: View {
             switch model.phase {
             case .converting:
                 EmptyView()
+            case .converted:
+                Button("Done", action: onContinue)
+                    .keyboardShortcut(.defaultAction)
             case .confirming, .failed:
                 // Unzipping the archive as-is is the escape hatch for when the
                 // clever path gets something wrong. It is not built yet, and a
@@ -197,8 +228,9 @@ struct ImportClassificationView: View {
 final class ImportClassificationPanelController: NSObject {
     @objc var view: NSView { hostingView }
 
-    /// Called with the finished gamebox. The session takes it from there.
-    @objc var onGameboxReady: ((URL) -> Void)?
+    /// Called with the finished gamebox and its box art, if the media pack had
+    /// any. The session takes it from there.
+    @objc var onGameboxReady: ((URL, NSImage?) -> Void)?
 
     /// Called when the user abandons the import altogether.
     @objc var onCancel: (() -> Void)?
@@ -208,12 +240,14 @@ final class ImportClassificationPanelController: NSObject {
     private let metadataArchiveURL: URL?
     private let queue = OperationQueue()
     private var operation: ExoDOSImportOperation?
+    private var finishedGameboxURL: URL?
+    private var finishedCoverArt: NSImage?
     private var observers: [NSObjectProtocol] = []
 
     private lazy var hostingView: NSView = {
         let root = ImportClassificationView(
             model: model,
-            onContinue: { [weak self] in self?.beginConversion() },
+            onContinue: { [weak self] in self?.advance() },
             onUnzipAsIs: {},
             onCancel: { [weak self] in self?.cancel() },
             onChooseDestination: { [weak self] in self?.chooseDestination() })
@@ -343,6 +377,24 @@ final class ImportClassificationPanelController: NSObject {
         queue.addOperation(operation)
     }
 
+    /// The panel's one forward action, which means different things in each
+    /// phase: convert, try again, or hand the finished gamebox over.
+    private func advance() {
+        switch model.phase {
+        case .confirming, .failed:
+            beginConversion()
+        case .converted:
+            finish()
+        case .converting:
+            break
+        }
+    }
+
+    private func finish() {
+        guard let gameboxURL = finishedGameboxURL else { return }
+        onGameboxReady?(gameboxURL, finishedCoverArt)
+    }
+
     private func conversionDidFinish(_ operation: ExoDOSImportOperation) {
         observers.forEach(NotificationCenter.default.removeObserver)
         observers.removeAll()
@@ -351,7 +403,20 @@ final class ImportClassificationPanelController: NSObject {
         model.warnings = operation.planWarnings
 
         if let gameboxURL = operation.gameboxURL, operation.error == nil {
-            onGameboxReady?(gameboxURL)
+            finishedGameboxURL = gameboxURL
+            // Drawing the cover art has to happen here rather than on the
+            // operation's thread, which is why the operation hands back the
+            // image file rather than an icon.
+            finishedCoverArt = operation.boxArtData
+                .flatMap { NSImage(data: $0) }
+                .flatMap { CoverArt.coverArt(with: $0) ?? $0 }
+
+            // Nothing to report means nothing to stop for.
+            if model.warnings.isEmpty {
+                finish()
+            } else {
+                model.phase = .converted
+            }
             return
         }
 

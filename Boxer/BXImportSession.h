@@ -128,7 +128,9 @@ typedef NS_ENUM(NSInteger, BXSourceFileImportType) {
 /// import: the session adopts the gamebox, gives it an icon and moves to
 /// \c BXImportSessionFinished, which brings up the same finished panel every
 /// other import ends on.
-- (void) adoptConvertedGameboxAtURL: (NSURL *)URL;
+/// \c coverArt is the game's box front from the eXoDOS media pack, already
+/// rendered as an icon; pass nil and a bootleg cover is generated instead.
+- (void) adoptConvertedGameboxAtURL: (NSURL *)URL coverArt: (nullable NSImage *)coverArt;
 
 /// How far through the current stage we have progressed.
 ///

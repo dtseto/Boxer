@@ -214,7 +214,7 @@
     return YES;
 }
 
-- (void) adoptConvertedGameboxAtURL: (NSURL *)URL
+- (void) adoptConvertedGameboxAtURL: (NSURL *)URL coverArt: (NSImage *)coverArt
 {
     BXGamebox *gamebox = [BXGamebox bundleWithURL: URL];
     if (!gamebox) return;
@@ -226,9 +226,12 @@
     if ([rootDriveURL checkResourceIsReachableAndReturnError: NULL])
         self.rootDriveURL = rootDriveURL;
 
-    //Box art is stage 7 of this workstream; until then a converted gamebox gets
-    //the same generated icon any other import would fall back to.
-    [self generateBootlegIcon];
+    //The media pack has a box front for 99% of the pack's games; the rest get
+    //the same generated cover any other import would fall back to.
+    if (coverArt)
+        self.representedIcon = coverArt;
+    else
+        [self generateBootlegIcon];
 
     self.importStage = BXImportSessionFinished;
     [[NSDocumentController sharedDocumentController] noteNewRecentDocument: self];

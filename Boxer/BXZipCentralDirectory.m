@@ -219,14 +219,25 @@ static BOOL BXZipReadUInt64(NSData *data, NSUInteger offset, uint64_t *outValue)
         if (nameOffset + nameLength > data.length)
             return [self _failWithMalformedDirectory: outError];
 
-        NSString *path = [[NSString alloc] initWithData: [data subdataWithRange: NSMakeRange(nameOffset, nameLength)]
-                                               encoding: NSUTF8StringEncoding];
+        NSData *nameData = [data subdataWithRange: NSMakeRange(nameOffset, nameLength)];
+        NSString *path = [[NSString alloc] initWithData: nameData encoding: NSUTF8StringEncoding];
         // Entry names are UTF-8 only when the archive says so; otherwise the
-        // format specifies IBM Code Page 437. Falling back keeps a game with
-        // an accented title readable rather than dropping the entry.
+        // format specifies IBM Code Page 437, which is what the pack's archives
+        // actually use -- "Prüfung" is stored there as CP437's 0x81.
+        //
+        // The last fallback matters more than it looks: CP437 and CP1252 both
+        // leave some bytes undefined, and -initWithData:encoding: returns nil
+        // for a name containing one. A single undefined byte anywhere in a
+        // central directory would then condemn the whole archive as malformed
+        // -- which is exactly what one German title did to the 4.7GB media
+        // pack, and with it to every game's box art. ISO Latin-1 maps all 256
+        // byte values, so it cannot fail; a name that reaches it is spelled
+        // oddly, but the archive still opens.
         if (!path)
-            path = [[NSString alloc] initWithData: [data subdataWithRange: NSMakeRange(nameOffset, nameLength)]
-                                         encoding: NSWindowsCP1252StringEncoding];
+            path = [[NSString alloc] initWithData: nameData
+                                         encoding: CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingDOSLatinUS)];
+        if (!path)
+            path = [[NSString alloc] initWithData: nameData encoding: NSISOLatin1StringEncoding];
         if (!path) return [self _failWithMalformedDirectory: outError];
 
         unsigned long long uncompressedSize = uncompressedSize32;
@@ -365,14 +376,23 @@ static BOOL BXZipReadUInt64(NSData *data, NSUInteger offset, uint64_t *outValue)
 {
     if (![handle seekToOffset: offset error: outError]) return nil;
 
-    NSData *data = [handle readDataUpToLength: length error: outError];
-    if (!data) return nil;
-    if (data.length < length)
+    //readDataUpToLength: is free to return less than it was asked for, so a
+    //short read is not in itself a truncated file: only a read that returns
+    //nothing at all means the end of it.
+    NSMutableData *collected = [NSMutableData dataWithCapacity: length];
+    while (collected.length < length)
     {
-        [self _failWithMalformedDirectory: outError];
-        return nil;
+        NSData *chunk = [handle readDataUpToLength: length - collected.length
+                                             error: outError];
+        if (!chunk) return nil;
+        if (!chunk.length)
+        {
+            [self _failWithMalformedDirectory: outError];
+            return nil;
+        }
+        [collected appendData: chunk];
     }
-    return data;
+    return collected;
 }
 
 /// Walks an entry's extra-field blocks looking for the zip64 record (id 0x0001).

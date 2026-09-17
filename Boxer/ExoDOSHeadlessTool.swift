@@ -28,7 +28,8 @@ final class ExoDOSHeadlessTool: NSObject {
     static func run(arguments: [String]) -> Bool {
         let planPath = value(of: "--exodosPlan", in: arguments)
         let convertPath = value(of: "--exodosConvert", in: arguments)
-        guard planPath != nil || convertPath != nil else { return false }
+        let boxArtPath = value(of: "--exodosBoxArt", in: arguments)
+        guard planPath != nil || convertPath != nil || boxArtPath != nil else { return false }
 
         let packOverride = value(of: "--exodosPack", in: arguments).map {
             URL(fileURLWithPath: $0, isDirectory: true)
@@ -41,6 +42,8 @@ final class ExoDOSHeadlessTool: NSObject {
             } else {
                 emit(planObject(for: url, packURL: packOverride))
             }
+        } else if let boxArtPath = boxArtPath {
+            reportBoxArt(inPackAt: URL(fileURLWithPath: boxArtPath, isDirectory: true))
         } else if let convertPath = convertPath {
             let output = value(of: "--exodosOutput", in: arguments) ?? FileManager.default.currentDirectoryPath
             convert(URL(fileURLWithPath: convertPath),
@@ -70,6 +73,49 @@ final class ExoDOSHeadlessTool: NSObject {
             plans.append(planObject(for: url, packURL: metadata == nil ? nil : packURL))
         }
         emit(plans)
+    }
+
+    /// Reports which games in a pack have a box front, and by which of the
+    /// three names it was found. The 99.0% in EXODOS-IMPORT.md is this.
+    private static func reportBoxArt(inPackAt packURL: URL) {
+        guard let metadata = BXImportClassifier.metadataArchiveURLInPack(at: packURL) else {
+            emit(["error": "no !DOSmetadata.zip in this pack"])
+            return
+        }
+        guard let media = ExoDOSBoxArt.mediaArchiveURL(besideMetadataArchiveAt: metadata) else {
+            emit(["error": "no XODOSMetadata.zip beside \(metadata.path)"])
+            return
+        }
+        let archive: ZipArchiveReader
+        do {
+            archive = try ZipArchiveReader(url: media)
+        } catch {
+            emit(["error": "could not read \(media.path): \(error.localizedDescription)"])
+            return
+        }
+
+        let gamesFolder = packURL.appendingPathComponent("eXo/eXoDOS", isDirectory: true)
+        let names = ((try? FileManager.default.contentsOfDirectory(atPath: gamesFolder.path)) ?? [])
+            .filter { $0.lowercased().hasSuffix(".zip") }
+            .sorted()
+
+        var found = 0
+        var missing: [String] = []
+        for name in names {
+            let url = gamesFolder.appendingPathComponent(name)
+            guard let verdict = try? BXImportClassifier.classifyArchive(at: url),
+                  verdict.kind == .exoDOSGame,
+                  let shortName = verdict.shortName, let longName = verdict.gameTitle
+            else { continue }
+
+            if ExoDOSBoxArt.imagePath(forShortName: shortName, longName: longName, in: archive) != nil {
+                found += 1
+            } else {
+                missing.append(longName)
+            }
+        }
+        emit(["games": names.count, "with_box_art": found,
+              "without_box_art": missing.count, "missing": missing])
     }
 
     private static func convert(_ gameURL: URL, into destination: URL, packURL: URL?, replacing: Bool) {
@@ -102,6 +148,7 @@ final class ExoDOSHeadlessTool: NSObject {
         } else {
             result["gamebox_path"] = operation.gameboxURL?.path ?? ""
             result["warnings"] = operation.planWarnings
+            result["box_art_bytes"] = operation.boxArtData?.count ?? 0
         }
         emit(result)
     }

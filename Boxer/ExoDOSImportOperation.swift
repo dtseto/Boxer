@@ -38,6 +38,13 @@ final class ExoDOSImportOperation: ADBOperation {
     /// found. Populated once planning is done, which is before any extraction.
     @objc private(set) var planWarnings: [String] = []
 
+    /// The game's box front, as it sits in the media pack, or nil if the pack
+    /// is absent or has none for this game.
+    ///
+    /// Deliberately the raw file rather than an `NSImage`: turning it into
+    /// cover art means drawing, and drawing belongs on the main thread.
+    @objc private(set) var boxArtData: Data?
+
     /// A plan worked out earlier — by the wizard, which shows it to the user
     /// before they commit. Left nil, the operation works one out itself.
     var plan: ExoDOSPlan?
@@ -79,12 +86,24 @@ final class ExoDOSImportOperation: ADBOperation {
                 self?.report(progress)
             }
             gameboxURL = try converter.run()
+            boxArtData = Self.boxArt(for: plan, metadataArchiveURL: metadataArchiveURL)
             progress = 1
         } catch {
             // Cancellation is the user's doing, and ADBOperation has already
             // recorded its own error for it; anything else is ours to report.
             if !isCancelled { self.error = error as NSError }
         }
+    }
+
+    /// Box art is a nicety, not part of the conversion: a media pack that is
+    /// missing, unreadable or simply has no picture of this game must not cost
+    /// the user their gamebox.
+    private static func boxArt(for plan: ExoDOSPlan, metadataArchiveURL: URL) -> Data? {
+        guard let mediaURL = ExoDOSBoxArt.mediaArchiveURL(besideMetadataArchiveAt: metadataArchiveURL)
+        else { return nil }
+        return ExoDOSBoxArt.imageData(forShortName: plan.shortName,
+                                      longName: plan.longName,
+                                      mediaArchiveAt: mediaURL)
     }
 
     private func report(_ update: ExoDOSConverter.Progress) {

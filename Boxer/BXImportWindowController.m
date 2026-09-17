@@ -138,8 +138,8 @@
         //The conversion writes the whole gamebox itself, so what comes back is
         //a finished one: the session adopts it and ends on the same panel every
         //other import ends on.
-        controller.onGameboxReady = ^(NSURL *gameboxURL) {
-            [weakSelf.document adoptConvertedGameboxAtURL: gameboxURL];
+        controller.onGameboxReady = ^(NSURL *gameboxURL, NSImage *coverArt) {
+            [weakSelf.document adoptConvertedGameboxAtURL: gameboxURL coverArt: coverArt];
         };
         
         _classificationPanelController = controller;

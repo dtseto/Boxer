@@ -201,6 +201,7 @@ final class ExoDOSHeadlessTool: NSObject {
             "settings": plan.settings,
             "mt32_roms": plan.mt32ROMs,
             "needs_menu_interpreter": plan.needsMenuInterpreter,
+            "generated_files": plan.generatedFiles,
             "autoexec": plan.autoexec,
             "notes": plan.notes,
             "warnings": plan.warnings,

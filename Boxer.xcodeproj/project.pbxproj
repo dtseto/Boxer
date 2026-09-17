@@ -105,6 +105,7 @@
 		9FE0D05000000000000B0002 /* BXImportClassifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0D05000000000000A0004 /* BXImportClassifier.m */; };
 		9FE0D05000000000000B0003 /* ImportClassificationPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0D05000000000000A0005 /* ImportClassificationPanel.swift */; };
 		9FE0D0500000000000B0011 /* ExoDOSBoxArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0D0500000000000A0011 /* ExoDOSBoxArt.swift */; };
+		9FE0D0500000000000B0012 /* ExoDOSMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0D0500000000000A0012 /* ExoDOSMenu.swift */; };
 		9FE0D0500000000000B0010 /* ExoDOSHeadlessTool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0D0500000000000A0010 /* ExoDOSHeadlessTool.swift */; };
 		9FE0D0500000000000B0009 /* ExoDOSImportOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0D0500000000000A0009 /* ExoDOSImportOperation.swift */; };
 		9FE0D0500000000000B0008 /* ExoDOSConverter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FE0D0500000000000A0008 /* ExoDOSConverter.swift */; };
@@ -1369,6 +1370,7 @@
 		9FE0D05000000000000A0003 /* BXImportClassifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BXImportClassifier.h; sourceTree = "<group>"; };
 		9FE0D05000000000000A0005 /* ImportClassificationPanel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImportClassificationPanel.swift; sourceTree = "<group>"; };
 		9FE0D0500000000000A0011 /* ExoDOSBoxArt.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExoDOSBoxArt.swift; sourceTree = "<group>"; };
+		9FE0D0500000000000A0012 /* ExoDOSMenu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExoDOSMenu.swift; sourceTree = "<group>"; };
 		9FE0D0500000000000A0010 /* ExoDOSHeadlessTool.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExoDOSHeadlessTool.swift; sourceTree = "<group>"; };
 		9FE0D0500000000000A0009 /* ExoDOSImportOperation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExoDOSImportOperation.swift; sourceTree = "<group>"; };
 		9FE0D0500000000000A0008 /* ExoDOSConverter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExoDOSConverter.swift; sourceTree = "<group>"; };
@@ -2500,6 +2502,7 @@
 				9FE0D05000000000000A0004 /* BXImportClassifier.m */,
 				9FE0D05000000000000A0005 /* ImportClassificationPanel.swift */,
 				9FE0D0500000000000A0011 /* ExoDOSBoxArt.swift */,
+				9FE0D0500000000000A0012 /* ExoDOSMenu.swift */,
 				9FE0D0500000000000A0010 /* ExoDOSHeadlessTool.swift */,
 				9FE0D0500000000000A0009 /* ExoDOSImportOperation.swift */,
 				9FE0D0500000000000A0008 /* ExoDOSConverter.swift */,
@@ -4550,6 +4553,7 @@
 				9FE0D05000000000000B0002 /* BXImportClassifier.m in Sources */,
 				9FE0D05000000000000B0003 /* ImportClassificationPanel.swift in Sources */,
 				9FE0D0500000000000B0011 /* ExoDOSBoxArt.swift in Sources */,
+				9FE0D0500000000000B0012 /* ExoDOSMenu.swift in Sources */,
 				9FE0D0500000000000B0010 /* ExoDOSHeadlessTool.swift in Sources */,
 				9FE0D0500000000000B0009 /* ExoDOSImportOperation.swift in Sources */,
 				9FE0D0500000000000B0008 /* ExoDOSConverter.swift in Sources */,

@@ -41,6 +41,11 @@ struct ExoDOSPlan {
     /// from and so nothing has to be re-read to explain a decision.
     var autoexec: [String] = []
 
+    /// Small batch files the converter writes into the gamebox, keyed by their
+    /// path inside it. One per menu branch that has setup to do before the game
+    /// starts — see `ExoDOSMenuInterpreter`.
+    var generatedFiles: [String: String] = [:]
+
     /// Things worth telling the user that are not problems.
     var notes: [String] = []
 
@@ -221,14 +226,18 @@ enum ExoDOSPlanner {
         }
         plan.drives = drives
 
-        let launch = planLaunchers(autoexec: configuration.autoexec, drives: drives, members: members)
+        let launch = planLaunchers(autoexec: configuration.autoexec, drives: drives,
+                                   members: members) { path in
+            try? archive.text(at: root + path)
+        }
         plan.launchers = launch.launchers
         plan.setupCommands = launch.setup
         plan.needsMenuInterpreter = launch.needsInterpreter
+        plan.generatedFiles = launch.generatedFiles
 
         let derived = planSettings(configuration.sections)
         plan.settings = derived.settings
-        plan.notes = derived.notes
+        plan.notes = launch.notes + derived.notes
 
         plan.mt32ROMs = mt32ROMs(in: members)
         if !plan.mt32ROMs.isEmpty {
@@ -508,6 +517,17 @@ enum ExoDOSPlanner {
         var warnings: [String] = []
         var setup: [String] = []
         var needsInterpreter = false
+
+        /// Things worth saying about the menu that are not problems: how many
+        /// ways to start the game it offered, or why it could not be flattened.
+        var notes: [String] = []
+
+        /// Small batch files the converter writes into the gamebox, keyed by
+        /// their path inside it. One per menu branch that has something to do
+        /// before the game starts — switching MIDI device, copying a sound
+        /// driver's files into place, or changing to another drive — none of
+        /// which a launcher's path-and-arguments can express on its own.
+        var generatedFiles: [String: String] = [:]
     }
 
     /// Decides what the gamebox should launch.
@@ -525,7 +545,8 @@ enum ExoDOSPlanner {
     /// some labels fall through to a different executable entirely.
     static func planLaunchers(autoexec: [String],
                               drives: [ExoDOSDrive],
-                              members: Set<String>) -> LaunchPlan {
+                              members: Set<String>,
+                              text: (String) -> String? = { _ in nil }) -> LaunchPlan {
         var plan = LaunchPlan()
         // Last mount of a letter wins, as it does in DOSBox itself.
         var byLetter: [String: ExoDOSDrive] = [:]
@@ -579,9 +600,13 @@ enum ExoDOSPlanner {
             guard !tokens.isEmpty else { continue }
             var target: String? = tokens.removeFirst()
             var arguments = tokens
+            var wasCall = false
 
             while let candidate = target, prefixCommands.contains(candidate.lowercased()) {
-                if candidate.lowercased() == "call" { plan.needsInterpreter = true }
+                if candidate.lowercased() == "call" {
+                    plan.needsInterpreter = true
+                    wasCall = true
+                }
                 // `loadfix` and `loadfix -64` have no program behind them; they
                 // just eat memory for whatever runs next.
                 while let first = arguments.first, isNumericFlag(first) { arguments.removeFirst() }
@@ -597,11 +622,145 @@ enum ExoDOSPlanner {
                 plan.warnings.append("cannot find '\(program)' on drive \(current): \(command)")
                 continue
             }
+
+            // A `call` reaches one of eXo's menus. Where the menu can be read
+            // and accounted for, each of its branches becomes a launcher of its
+            // own; where it cannot, the batch file stays the launcher and eXo's
+            // menu comes up inside Boxer, which is what happened before this and
+            // is still a working game.
+            if wasCall, let source = drive?.source,
+               let text = text(source.isEmpty ? resolved : source + "/" + resolved) {
+                let flattened = flattenMenu(text,
+                                            batchPath: prefix + resolved,
+                                            drive: current,
+                                            workingDirectory: workingDirectory,
+                                            byLetter: byLetter,
+                                            members: members,
+                                            plan: &plan)
+                if flattened { continue }
+            }
+
             plan.launchers.append(ExoDOSLauncher(path: prefix + resolved,
                                                  arguments: arguments,
                                                  title: stripExtension(basename(resolved))))
         }
         return plan
+    }
+
+    /// Turns one of eXo's menu batch files into a launcher per branch.
+    ///
+    /// Returns false when the menu could not be accounted for, which leaves the
+    /// caller to register the batch file itself as the launcher — eXo's own DOS
+    /// menu, inside Boxer, which is what every one of these games did before.
+    private static func flattenMenu(_ text: String,
+                                    batchPath: String,
+                                    drive: String,
+                                    workingDirectory: String,
+                                    byLetter: [String: ExoDOSDrive],
+                                    members: Set<String>,
+                                    plan: inout LaunchPlan) -> Bool {
+        let branches: [ExoDOSMenuBranch]
+        do {
+            branches = try ExoDOSMenuInterpreter.flatten(text, drive: drive,
+                                                         workingDirectory: workingDirectory)
+        } catch let failure as ExoDOSMenuInterpreter.Unflattenable {
+            plan.notes.append("'\(basename(batchPath))' \(failure.reason), so it stays the launcher and its menu comes up in Boxer")
+            return false
+        } catch {
+            return false
+        }
+
+        var launchers: [ExoDOSLauncher] = []
+        var generated: [String: String] = [:]
+        var usedNames = Set<String>()
+
+        for (index, branch) in branches.enumerated() {
+            let title = branch.composedTitle
+            let target = byLetter[branch.drive]
+
+            var tokens = splitCommand(branch.command)
+            guard !tokens.isEmpty else { continue }
+            let program = tokens.removeFirst()
+            let arguments = tokens
+
+            // A branch that ends on an image drive cannot be checked against
+            // anything — the archive ships the disc, not its contents — and a
+            // branch that has to change drive or directory first cannot be said
+            // as a path plus arguments either. Both get a batch file.
+            let resolved = resolveProgram(program, drive: target, members: members,
+                                          workingDirectory: branch.workingDirectory)
+            let needsBatch = !branch.setup.isEmpty
+                || branch.drive != drive
+                || !branch.workingDirectory.isEmpty
+                || resolved == nil
+
+            if !needsBatch, let resolved = resolved, let target = target {
+                launchers.append(ExoDOSLauncher(path: target.target + "/" + resolved,
+                                                arguments: arguments,
+                                                title: title ?? stripExtension(basename(resolved))))
+                continue
+            }
+
+            // A branch ending on an image drive cannot be checked — the archive
+            // ships the disc, not its contents — but one on a folder drive can,
+            // and a program that is not there means the menu has been read
+            // wrongly. Rather than quietly drop that entry and offer the user a
+            // shorter menu than eXo did, give the whole file up and let the
+            // batch stay the launcher.
+            if resolved == nil, let target = target, !target.isImage {
+                plan.notes.append("'\(basename(batchPath))' runs '\(program)', which drive \(branch.drive) does not hold, so it stays the launcher and its menu comes up in Boxer")
+                return false
+            }
+
+            let name = uniqueBatchName(for: title ?? stripExtension(basename(program)),
+                                       index: index, taken: &usedNames)
+            let folder = (batchPath as NSString).deletingLastPathComponent
+            let path = folder.isEmpty ? name : folder + "/" + name
+            generated[path] = renderBranchBatch(branch, program: program, arguments: arguments)
+            launchers.append(ExoDOSLauncher(path: path,
+                                            arguments: [],
+                                            title: title ?? stripExtension(basename(program))))
+        }
+
+        guard !launchers.isEmpty else { return false }
+        plan.launchers.append(contentsOf: launchers)
+        plan.generatedFiles.merge(generated) { _, new in new }
+        plan.notes.append("'\(basename(batchPath))' offered \(launchers.count) way(s) to start the game; each is its own launcher")
+        return true
+    }
+
+    /// Writes out one menu branch as a batch file the gamebox can launch.
+    static func renderBranchBatch(_ branch: ExoDOSMenuBranch,
+                                  program: String,
+                                  arguments: [String]) -> String {
+        var lines = ["@echo off",
+                     "rem Generated by Boxer from this game's eXoDOS menu."]
+        lines.append(contentsOf: branch.setup)
+        lines.append("\(branch.drive):")
+        if !branch.workingDirectory.isEmpty {
+            lines.append("cd \(branch.workingDirectory.replacingOccurrences(of: "/", with: "\\"))")
+        }
+        lines.append(([program] + arguments).joined(separator: " "))
+        // DOS wants CRLF, and wants the file to end with one.
+        return lines.joined(separator: "\r\n") + "\r\n"
+    }
+
+    /// A DOS-safe, unique 8.3 name for a branch's batch file.
+    private static func uniqueBatchName(for title: String, index: Int, taken: inout Set<String>) -> String {
+        let allowed = CharacterSet.alphanumerics
+        var stem = String(title.unicodeScalars.filter { allowed.contains($0) })
+            .uppercased()
+            .prefix(6)
+        if stem.isEmpty { stem = "PLAY" }
+
+        var name = "\(stem)\(index + 1).BAT"
+        var suffix = index + 1
+        while taken.contains(name.lowercased()) {
+            suffix += 1
+            name = "\(stem)\(suffix).BAT"
+        }
+        taken.insert(name.lowercased())
+        return name
     }
 
     /// Applies one `cd` to the tracked working directory.

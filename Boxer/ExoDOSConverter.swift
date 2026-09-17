@@ -88,6 +88,7 @@ final class ExoDOSConverter {
         do {
             try extractMembers(into: gamebox)
             try writeCDMediaDescriptors(into: gamebox)
+            try writeGeneratedBatchFiles(into: gamebox)
             try writeConfiguration(into: gamebox)
             try writeGameInfo(into: gamebox)
         } catch {
@@ -239,6 +240,23 @@ final class ExoDOSConverter {
             output.append("\(leading)FILE \"\(bare)\"\(trailing)")
         }
         return output.joined(separator: "\n")
+    }
+
+    /// Writes the one-line batch files the menu interpreter asked for.
+    ///
+    /// A menu branch that switches MIDI device, copies a sound driver's files
+    /// into place or changes drive before starting the game cannot be said as a
+    /// launcher's path and arguments, so it gets a batch file of its own on the
+    /// drive the menu was called from. These are written after extraction so a
+    /// name clash with the archive's own files resolves in our favour.
+    private func writeGeneratedBatchFiles(into gamebox: URL) throws {
+        for path in plan.generatedFiles.keys.sorted() {
+            let url = gamebox.appendingPathComponent(path)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                    withIntermediateDirectories: true)
+            // CP437 is what DOS reads, and every one of these is ASCII anyway.
+            try plan.generatedFiles[path]!.write(to: url, atomically: true, encoding: .ascii)
+        }
     }
 
     /// Writes the gamebox's `DOSBox Preferences.conf`.

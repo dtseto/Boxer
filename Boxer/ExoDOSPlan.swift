@@ -165,7 +165,14 @@ enum ExoDOSPlanner {
 
     /// Commands that stand in front of the program actually being launched, so
     /// the real target is whatever follows them.
-    static let prefixCommands: Set<String> = ["call", "loadfix", "start"]
+    ///
+    /// `start` is deliberately **not** here. DOSBox-staging implements no such
+    /// command, so in an eXo autoexec `start` is always the game's own
+    /// `START.BAT` or `START.COM` — 124 lines in the pack use it that way.
+    /// Treating it as a prefix swallowed the target and left 115 games with no
+    /// launcher at all, and fed Epic's `start SOUND=S EPIC=C:\` to the resolver
+    /// as though `SOUND=S` were a program.
+    static let prefixCommands: Set<String> = ["call", "loadfix"]
 
     /// Commands that set the machine up rather than start the game. Throwing
     /// them away would lose real behaviour, so they are carried across.
@@ -628,7 +635,12 @@ enum ExoDOSPlanner {
             // own; where it cannot, the batch file stays the launcher and eXo's
             // menu comes up inside Boxer, which is what happened before this and
             // is still a working game.
-            if wasCall, let source = drive?.source,
+            // Only ever interpret a batch file. `call` invokes nothing else in
+            // DOS, but the resolver tries `.com` and `.exe` first, so without
+            // this a `call fleet` that lands on `fleet.exe` reads the binary as
+            // text and "interprets" the machine code.
+            if wasCall, pathExtension(resolved).lowercased() == "bat",
+               let source = drive?.source,
                let text = text(source.isEmpty ? resolved : source + "/" + resolved) {
                 let flattened = flattenMenu(text,
                                             batchPath: prefix + resolved,
@@ -680,8 +692,16 @@ enum ExoDOSPlanner {
 
             var tokens = splitCommand(branch.command)
             guard !tokens.isEmpty else { continue }
-            let program = tokens.removeFirst()
-            let arguments = tokens
+            var program = tokens.removeFirst()
+            var arguments = tokens
+            // `loadfix` and `loadfix -64` stand in front of the real program and
+            // just eat memory for it; the batch replays them either way, but
+            // resolving has to see past them.
+            while prefixCommands.contains(program.lowercased()) {
+                while let first = arguments.first, isNumericFlag(first) { arguments.removeFirst() }
+                guard !arguments.isEmpty else { break }
+                program = arguments.removeFirst()
+            }
 
             // A branch that ends on an image drive cannot be checked against
             // anything — the archive ships the disc, not its contents — and a
@@ -689,9 +709,12 @@ enum ExoDOSPlanner {
             // as a path plus arguments either. Both get a batch file.
             let resolved = resolveProgram(program, drive: target, members: members,
                                           workingDirectory: branch.workingDirectory)
-            let needsBatch = !branch.setup.isEmpty
+            // Only a branch that is one bare program, run where the menu was
+            // called from, can be said as a launcher's path and arguments.
+            // Everything else replays its script from a batch file.
+            let needsBatch = branch.script.count > 1
                 || branch.drive != drive
-                || !branch.workingDirectory.isEmpty
+                || branch.workingDirectory != workingDirectory
                 || resolved == nil
 
             if !needsBatch, let resolved = resolved, let target = target {
@@ -716,7 +739,7 @@ enum ExoDOSPlanner {
                                        index: index, taken: &usedNames)
             let folder = (batchPath as NSString).deletingLastPathComponent
             let path = folder.isEmpty ? name : folder + "/" + name
-            generated[path] = renderBranchBatch(branch, program: program, arguments: arguments)
+            generated[path] = renderBranchBatch(branch)
             launchers.append(ExoDOSLauncher(path: path,
                                             arguments: [],
                                             title: title ?? stripExtension(basename(program))))
@@ -730,17 +753,15 @@ enum ExoDOSPlanner {
     }
 
     /// Writes out one menu branch as a batch file the gamebox can launch.
-    static func renderBranchBatch(_ branch: ExoDOSMenuBranch,
-                                  program: String,
-                                  arguments: [String]) -> String {
+    ///
+    /// The branch's own lines, in its own order, and nothing added: no drive or
+    /// directory prologue, because the file is written beside the batch it
+    /// replaces and Boxer runs a launcher from its own directory — so it starts
+    /// exactly where eXo's menu started.
+    static func renderBranchBatch(_ branch: ExoDOSMenuBranch) -> String {
         var lines = ["@echo off",
                      "rem Generated by Boxer from this game's eXoDOS menu."]
-        lines.append(contentsOf: branch.setup)
-        lines.append("\(branch.drive):")
-        if !branch.workingDirectory.isEmpty {
-            lines.append("cd \(branch.workingDirectory.replacingOccurrences(of: "/", with: "\\"))")
-        }
-        lines.append(([program] + arguments).joined(separator: " "))
+        lines.append(contentsOf: branch.script)
         // DOS wants CRLF, and wants the file to end with one.
         return lines.joined(separator: "\r\n") + "\r\n"
     }

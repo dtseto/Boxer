@@ -17,12 +17,20 @@ struct ExoDOSMenuBranch {
     var drive: String
     var workingDirectory: String
 
-    /// Everything the branch does before starting the game: `CONFIG -set` lines
-    /// that switch sound hardware, and the file copies that drop a driver's
-    /// files into place. Carried in the order they were written.
-    var setup: [String] = []
+    /// Everything the branch does, in the order it does it: `CONFIG -set` lines
+    /// that switch sound hardware, the file copies that drop a driver's files
+    /// into place, drive and directory changes, and the programs themselves.
+    ///
+    /// Kept as one ordered list rather than sorted into buckets, because the
+    /// order is the meaning. A branch that copies files *after* changing drive
+    /// does something different from one that copies before, and replaying a
+    /// reordered version of it is a bug waiting to happen. What goes into the
+    /// generated batch file is this, verbatim.
+    var script: [String] = []
 
-    /// The command that starts the game, with its variables expanded.
+    /// The last program the branch runs, with its variables expanded — the game
+    /// itself, since anything before it is a logo or a driver. Used to resolve
+    /// and title the branch; the batch file replays `script` instead.
     var command: String = ""
 
     /// A title for the launch panel, composed from the prompts above.
@@ -125,9 +133,11 @@ enum ExoDOSMenuInterpreter {
         return branches
     }
 
-    /// Strips the leading `@`, the trailing end-of-file marker, and whitespace.
+    /// Strips the leading `@`, the end-of-file marker, NUL padding and
+    /// whitespace. Some of these `.bat` files are padded to a block boundary.
     private static func cleaned(_ raw: String) -> String {
         var line = raw.replacingOccurrences(of: "\u{1a}", with: "")
+            .replacingOccurrences(of: "\0", with: "")
             .trimmingCharacters(in: .whitespaces)
         while line.hasPrefix("@") {
             line = String(line.dropFirst()).trimmingCharacters(in: .whitespaces)
@@ -250,13 +260,14 @@ enum ExoDOSMenuInterpreter {
             }
 
             if setupCommands.contains(head) {
-                state.setup.append(expand(line, with: variables))
+                state.script.append(expand(line, with: variables))
                 continue
             }
 
             if let letter = ExoDOSPlanner.driveChange(in: lowered) {
                 state.drive = letter
                 state.workingDirectory = ""
+                state.script.append(line)
                 continue
             }
 
@@ -274,17 +285,25 @@ enum ExoDOSMenuInterpreter {
                     }
                 }
                 state.workingDirectory = applyChangeDirectory(state.workingDirectory, argument: argument)
+                state.script.append(line)
                 continue
             }
 
-            // Anything left is a program. Keep walking rather than stopping
-            // here: whether the batch does something *after* the game is a
-            // property of this path, not of the lines that happen to follow in
-            // the file — the labels below usually belong to other branches.
-            guard state.command.isEmpty else {
-                throw Unflattenable(reason: "runs more than one program in sequence")
-            }
-            state.command = expand(line, with: variables)
+            // Anything left is a program. A branch may run several in a row —
+            // Dune's every entry runs `logo` and then `duneprg` — and that is
+            // not a reason to give up: the generated batch replays the sequence
+            // exactly as the branch wrote it. What cannot be flattened is
+            // *branching*, and `if errorlevel` and the loop check above catch
+            // that. The last program is the game; anything before it is a logo
+            // or a driver.
+            //
+            // Keep walking rather than stopping here: whether the batch does
+            // something *after* the game is a property of this path, not of the
+            // lines that happen to follow in the file — the labels below
+            // usually belong to other branches.
+            let program = expand(line, with: variables)
+            state.command = program
+            state.script.append(program)
         }
 
         // Falling off the end of the file ends the path, exactly as `exit` does.

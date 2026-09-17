@@ -26,6 +26,7 @@
 #import "BXFileTypes.h"
 #import "ADBForwardCompatibility.h"
 #import "ADBAppKitVersionHelpers.h"
+#import "Boxer-Swift.h"
 
 
 static NSString * const BXNewSessionParam = @"--openNewSession";
@@ -116,6 +117,13 @@ static NSString * const BXActivateOnLaunchParam = @"--activateOnLaunch";
 
 - (void) applicationWillFinishLaunching: (NSNotification *)notification
 {
+    //The eXoDOS conversion can be driven from the command line, which is how
+    //its plans are diffed against the corpus run that measured them. It has to
+    //happen before anything else: creating a games folder below is exactly the
+    //kind of side effect a headless run should not have.
+    if ([BXExoDOSHeadlessTool runWithArguments: NSProcessInfo.processInfo.arguments])
+        exit(0);
+
     [super applicationWillFinishLaunching: notification];
     
     //Check if we have any games folder, and if not then create one automatically now

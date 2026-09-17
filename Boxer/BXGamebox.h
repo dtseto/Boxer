@@ -76,7 +76,12 @@ extern NSString * const BXLauncherArgsKey;
 
 /// Whether this is the default launcher for this gamebox
 /// (i.e. the launcher that will be executed when the gamebox is first launched.)
-extern NSString * const BXLauncherIsDefaultKey;
+///
+/// Declared here as BXLauncherIsDefaultKey until 2026-09-17, which is not the
+/// name BXGamebox.m defines and nothing ever referenced: using it would have
+/// failed to link. The definition's own spelling is what the rest of the class
+/// uses, so the declaration follows it.
+extern NSString * const BXLauncherDefaultKey;
 
 
 #pragma mark - Filename constants

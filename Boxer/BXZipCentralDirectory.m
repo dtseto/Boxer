@@ -65,6 +65,10 @@ static BOOL BXZipReadUInt64(NSData *data, NSUInteger offset, uint64_t *outValue)
 @interface BXZipEntry ()
 @property (readwrite, copy, nonatomic) NSString *path;
 @property (readwrite, nonatomic) unsigned long long uncompressedSize;
+@property (readwrite, nonatomic) unsigned long long compressedSize;
+@property (readwrite, nonatomic) uint16_t compressionMethod;
+@property (readwrite, nonatomic) unsigned long long localHeaderOffset;
+@property (readwrite, nonatomic) uint32_t CRC32;
 @end
 
 @implementation BXZipEntry
@@ -197,12 +201,16 @@ static BOOL BXZipReadUInt64(NSData *data, NSUInteger offset, uint64_t *outValue)
             return [self _failWithMalformedDirectory: outError];
         }
 
-        uint32_t uncompressedSize32 = 0;
-        uint16_t nameLength = 0, extraLength = 0, commentLength = 0;
-        if (!BXZipReadUInt32(data, offset + 24, &uncompressedSize32) ||
+        uint32_t uncompressedSize32 = 0, compressedSize32 = 0, localOffset32 = 0, crc = 0;
+        uint16_t nameLength = 0, extraLength = 0, commentLength = 0, method = 0;
+        if (!BXZipReadUInt16(data, offset + 10, &method) ||
+            !BXZipReadUInt32(data, offset + 16, &crc) ||
+            !BXZipReadUInt32(data, offset + 20, &compressedSize32) ||
+            !BXZipReadUInt32(data, offset + 24, &uncompressedSize32) ||
             !BXZipReadUInt16(data, offset + 28, &nameLength) ||
             !BXZipReadUInt16(data, offset + 30, &extraLength) ||
-            !BXZipReadUInt16(data, offset + 32, &commentLength))
+            !BXZipReadUInt16(data, offset + 32, &commentLength) ||
+            !BXZipReadUInt32(data, offset + 42, &localOffset32))
         {
             return [self _failWithMalformedDirectory: outError];
         }
@@ -222,17 +230,26 @@ static BOOL BXZipReadUInt64(NSData *data, NSUInteger offset, uint64_t *outValue)
         if (!path) return [self _failWithMalformedDirectory: outError];
 
         unsigned long long uncompressedSize = uncompressedSize32;
-        if (uncompressedSize32 == BXZip64Marker)
+        unsigned long long compressedSize = compressedSize32;
+        unsigned long long localOffset = localOffset32;
+        if (uncompressedSize32 == BXZip64Marker || compressedSize32 == BXZip64Marker ||
+            localOffset32 == BXZip64Marker)
         {
-            [self _readZip64Size: data
-                          offset: nameOffset + nameLength
-                          length: extraLength
-                          into: &uncompressedSize];
+            [self _readZip64Fields: data
+                            offset: nameOffset + nameLength
+                            length: extraLength
+                  uncompressedSize: (uncompressedSize32 == BXZip64Marker) ? &uncompressedSize : NULL
+                    compressedSize: (compressedSize32 == BXZip64Marker) ? &compressedSize : NULL
+                 localHeaderOffset: (localOffset32 == BXZip64Marker) ? &localOffset : NULL];
         }
 
         BXZipEntry *entry = [[BXZipEntry alloc] init];
         entry.path = path;
         entry.uncompressedSize = uncompressedSize;
+        entry.compressedSize = compressedSize;
+        entry.compressionMethod = method;
+        entry.localHeaderOffset = localOffset;
+        entry.CRC32 = crc;
 
         [entries addObject: entry];
         [paths addObject: path];
@@ -358,12 +375,19 @@ static BOOL BXZipReadUInt64(NSData *data, NSUInteger offset, uint64_t *outValue)
     return data;
 }
 
-/// Walks an entry's extra-field blocks looking for the zip64 record (id 0x0001),
-/// whose first value is the real uncompressed size.
-- (void) _readZip64Size: (NSData *)data
-                 offset: (NSUInteger)offset
-                 length: (NSUInteger)length
-                   into: (unsigned long long *)outSize
+/// Walks an entry's extra-field blocks looking for the zip64 record (id 0x0001).
+///
+/// Its values are packed in a fixed order -- uncompressed size, compressed
+/// size, local header offset, start disk -- but each one is present only when
+/// the 32-bit field it replaces was set to all-ones. So the caller says which
+/// of them it is expecting, and they are consumed in order; asking for a field
+/// that is not there would otherwise read the next field's bytes as its own.
+- (void) _readZip64Fields: (NSData *)data
+                   offset: (NSUInteger)offset
+                   length: (NSUInteger)length
+         uncompressedSize: (nullable unsigned long long *)outUncompressed
+           compressedSize: (nullable unsigned long long *)outCompressed
+        localHeaderOffset: (nullable unsigned long long *)outLocalOffset
 {
     NSUInteger end = offset + length;
     while (offset + 4 <= end)
@@ -374,15 +398,23 @@ static BOOL BXZipReadUInt64(NSData *data, NSUInteger offset, uint64_t *outValue)
         {
             return;
         }
-        if (blockID == 0x0001 && blockLength >= 8)
+        if (blockID == 0x0001)
         {
-            BXZipReadUInt64(data, offset + 4, outSize);
+            NSUInteger cursor = offset + 4;
+            NSUInteger blockEnd = cursor + blockLength;
+            unsigned long long *wanted[] = { outUncompressed, outCompressed, outLocalOffset };
+            for (int i = 0; i < 3; i++)
+            {
+                if (!wanted[i]) continue;
+                if (cursor + 8 > blockEnd) return;
+                BXZipReadUInt64(data, cursor, wanted[i]);
+                cursor += 8;
+            }
             return;
         }
         offset += 4 + blockLength;
     }
 }
-
 
 #pragma mark - Accessors
 

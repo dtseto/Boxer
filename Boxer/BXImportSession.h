@@ -120,6 +120,16 @@ typedef NS_ENUM(NSInteger, BXSourceFileImportType) {
 /// if it could not be found. An eXoDOS game cannot be converted without it.
 @property (readonly, strong, nonatomic, nullable) NSURL *eXoDOSMetadataURL;
 
+/// Takes on a gamebox that the eXoDOS conversion has just finished writing,
+/// and ends the import with it.
+///
+/// The conversion builds the whole gamebox itself rather than going through
+/// \c importSourceFiles, so this is where its result rejoins the ordinary
+/// import: the session adopts the gamebox, gives it an icon and moves to
+/// \c BXImportSessionFinished, which brings up the same finished panel every
+/// other import ends on.
+- (void) adoptConvertedGameboxAtURL: (NSURL *)URL;
+
 /// How far through the current stage we have progressed.
 ///
 /// Only relevant during the \c BXImportSessionLoadingSourcePath and \c BXImportSessionImportingSourceFiles stages.

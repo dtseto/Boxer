@@ -214,6 +214,26 @@
     return YES;
 }
 
+- (void) adoptConvertedGameboxAtURL: (NSURL *)URL
+{
+    BXGamebox *gamebox = [BXGamebox bundleWithURL: URL];
+    if (!gamebox) return;
+
+    self.gamebox = gamebox;
+    self.fileURL = URL;
+
+    NSURL *rootDriveURL = [gamebox.resourceURL URLByAppendingPathComponent: @"C.harddisk"];
+    if ([rootDriveURL checkResourceIsReachableAndReturnError: NULL])
+        self.rootDriveURL = rootDriveURL;
+
+    //Box art is stage 7 of this workstream; until then a converted gamebox gets
+    //the same generated icon any other import would fall back to.
+    [self generateBootlegIcon];
+
+    self.importStage = BXImportSessionFinished;
+    [[NSDocumentController sharedDocumentController] noteNewRecentDocument: self];
+}
+
 - (void) installerScanDidFinish: (NSNotification *)notification
 {
     BXInstallerScan *scan = notification.object;

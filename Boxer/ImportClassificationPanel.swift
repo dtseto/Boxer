@@ -23,79 +23,200 @@ struct ArchiveSummary {
     }
 }
 
-/// The first panel of the eXoDOS import wizard: what Boxer believes the dropped
-/// archive to be, and what it intends to do about it.
+
+/// The wizard's state, from "here is what I think this is" through to a
+/// finished gamebox.
 ///
-/// Deliberately a plain SwiftUI view over a value type. The window it lives in
-/// is still NIB-driven, and the panels around it are still `NSView`s from that
-/// NIB — this one is hosted alongside them rather than replacing any of them,
-/// which is what keeps the move to SwiftUI incremental.
-struct ImportClassificationView: View {
+/// Everything the panel does lives here rather than in the window controller:
+/// the window is still the NIB-driven `ADBMultiPanelWindowController`, and the
+/// less it knows about this screen the less there is to unpick when the rest of
+/// the import window follows this one into SwiftUI.
+@MainActor
+final class ImportWizardModel: ObservableObject {
+    enum Phase: Equatable {
+        case confirming
+        case converting
+        case failed(String)
+    }
+
+    @Published var phase: Phase = .confirming
+    @Published var destination: URL
+    @Published var fraction: Double = 0
+    @Published var currentItem: String = ""
+
+    /// What the derivation could not account for, once planning has run. Shown
+    /// after the fact rather than before: they are things to know about the
+    /// finished gamebox, not reasons to stop.
+    @Published var warnings: [String] = []
+
     let summary: ArchiveSummary
+
+    init(summary: ArchiveSummary, destination: URL) {
+        self.summary = summary
+        self.destination = destination
+    }
+}
+
+
+/// The first panel of the eXoDOS import wizard: what Boxer believes the dropped
+/// archive to be, what it intends to do about it, and — once the user says so —
+/// how far through doing it we are.
+///
+/// Deliberately a plain SwiftUI view over an observable model. The window it
+/// lives in is still NIB-driven, and the panels around it are still `NSView`s
+/// from that NIB — this one is hosted alongside them rather than replacing any
+/// of them, which is what keeps the move to SwiftUI incremental.
+struct ImportClassificationView: View {
+    @ObservedObject var model: ImportWizardModel
+
     var onContinue: () -> Void
     var onUnzipAsIs: () -> Void
     var onCancel: () -> Void
+    var onChooseDestination: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(summary.title)
-                    .font(.system(size: 17, weight: .semibold))
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(summary.detail)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            header
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 10) {
-                LabeledContent("Unpacked size", value: summary.formattedSize)
-                LabeledContent("eXoDOS pack") {
-                    Label(summary.packFound ? "Found alongside the game" : "Not found",
-                          systemImage: summary.packFound ? "checkmark.circle" : "exclamationmark.triangle")
-                        .foregroundStyle(summary.packFound ? Color.secondary : Color.orange)
-                }
-            }
-            .font(.callout)
-
-            if let advice = summary.packAdvice {
-                Text(advice)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            switch model.phase {
+            case .confirming:
+                details
+            case .converting:
+                conversion
+            case .failed(let message):
+                failure(message)
             }
 
             Spacer(minLength: 0)
 
-            HStack {
-                Button("Cancel", role: .cancel, action: onCancel)
-                    .keyboardShortcut(.cancelAction)
-                Spacer()
-                Button("Unzip As-Is", action: onUnzipAsIs)
-                Button("Continue", action: onContinue)
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(!summary.canConvert)
-            }
+            buttons
         }
         .padding(24)
-        .frame(minWidth: 480, minHeight: 300, alignment: .topLeading)
+        .frame(minWidth: 480, minHeight: 320, alignment: .topLeading)
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(model.summary.title)
+                .font(.system(size: 17, weight: .semibold))
+                .fixedSize(horizontal: false, vertical: true)
+            Text(model.summary.detail)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            LabeledContent("Unpacked size", value: model.summary.formattedSize)
+            LabeledContent("eXoDOS pack") {
+                Label(model.summary.packFound ? "Found alongside the game" : "Not found",
+                      systemImage: model.summary.packFound ? "checkmark.circle" : "exclamationmark.triangle")
+                    .foregroundStyle(model.summary.packFound ? Color.secondary : Color.orange)
+            }
+            LabeledContent("Import into") {
+                HStack(spacing: 8) {
+                    Text(model.destination.lastPathComponent)
+                        .truncationMode(.middle)
+                        .lineLimit(1)
+                    Button("Change…", action: onChooseDestination)
+                        .buttonStyle(.link)
+                }
+            }
+
+            if let advice = model.summary.packAdvice {
+                Text(advice)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+            }
+        }
+        .font(.callout)
+    }
+
+    private var conversion: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ProgressView(value: model.fraction) {
+                Text("Converting…")
+            }
+            Text(model.currentItem.isEmpty ? " " : model.currentItem)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .truncationMode(.middle)
+                .lineLimit(1)
+        }
+    }
+
+    private func failure(_ message: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("The game could not be converted.", systemImage: "exclamationmark.triangle")
+                .foregroundStyle(Color.orange)
+            Text(message)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var buttons: some View {
+        HStack {
+            Button("Cancel", role: .cancel, action: onCancel)
+                .keyboardShortcut(.cancelAction)
+            Spacer()
+
+            switch model.phase {
+            case .converting:
+                EmptyView()
+            case .confirming, .failed:
+                // Unzipping the archive as-is is the escape hatch for when the
+                // clever path gets something wrong. It is not built yet, and a
+                // button that silently does nothing is worse than one that says
+                // it cannot: see EXODOS-IMPORT.md, stage 7.
+                Button("Unzip As-Is", action: onUnzipAsIs)
+                    .disabled(true)
+                    .help("Not available yet — see the import notes.")
+                Button(model.phase == .confirming ? "Continue" : "Try Again", action: onContinue)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(!model.summary.canConvert)
+            }
+        }
     }
 }
 
+
 /// Bridges the SwiftUI panel to the NIB-driven import window, which swaps plain
-/// `NSView`s in and out. Objective-C asks for `view` and hands it to
-/// `currentPanel`; everything above this line stays Swift.
+/// `NSView`s in and out, and drives the conversion behind it.
+///
+/// Objective-C asks for `view` and hands it to `currentPanel`, and hears back
+/// only when there is a gamebox or the user has given up; everything between
+/// those two points stays in Swift.
+@MainActor
 @objc(BXImportClassificationPanelController)
 final class ImportClassificationPanelController: NSObject {
     @objc var view: NSView { hostingView }
 
+    /// Called with the finished gamebox. The session takes it from there.
+    @objc var onGameboxReady: ((URL) -> Void)?
+
+    /// Called when the user abandons the import altogether.
+    @objc var onCancel: (() -> Void)?
+
+    private let model: ImportWizardModel
+    private let gameArchiveURL: URL
+    private let metadataArchiveURL: URL?
+    private let queue = OperationQueue()
+    private var operation: ExoDOSImportOperation?
+    private var observers: [NSObjectProtocol] = []
+
     private lazy var hostingView: NSView = {
         let root = ImportClassificationView(
-            summary: summary,
-            onContinue: { [weak self] in self?.onContinue?() },
-            onUnzipAsIs: { [weak self] in self?.onUnzipAsIs?() },
-            onCancel: { [weak self] in self?.onCancel?() })
+            model: model,
+            onContinue: { [weak self] in self?.beginConversion() },
+            onUnzipAsIs: {},
+            onCancel: { [weak self] in self?.cancel() },
+            onChooseDestination: { [weak self] in self?.chooseDestination() })
         let view = NSHostingView(rootView: root)
 
         // The window this goes into sizes itself from the panel's frame
@@ -106,25 +227,27 @@ final class ImportClassificationPanelController: NSObject {
         // its SwiftUI fitting size up front.
         var size = view.fittingSize
         if size.width < 1 || size.height < 1 {
-            size = NSSize(width: Self.fallbackSize.width, height: Self.fallbackSize.height)
+            size = Self.fallbackSize
         }
         view.frame = NSRect(origin: .zero, size: size)
         view.autoresizingMask = [.width, .height]
         return view
     }()
 
-    private static let fallbackSize = CGSize(width: 520, height: 340)
-
-    private let summary: ArchiveSummary
-
-    @objc var onContinue: (() -> Void)?
-    @objc var onUnzipAsIs: (() -> Void)?
-    @objc var onCancel: (() -> Void)?
+    private static let fallbackSize = CGSize(width: 520, height: 360)
 
     /// Builds the panel from an Objective-C classification.
-    @objc(initWithClassification:packFound:)
-    init(classification: BXArchiveClassification, packFound: Bool) {
+    ///
+    /// `destinationURL` is where the gamebox will go unless the user says
+    /// otherwise — the games folder, which the app controller owns and this
+    /// class deliberately does not reach for itself.
+    @objc(initWithClassification:gameArchiveURL:metadataArchiveURL:destinationURL:)
+    init(classification: BXArchiveClassification,
+         gameArchiveURL: URL,
+         metadataArchiveURL: URL?,
+         destinationURL: URL) {
         let isGame = classification.kind == .exoDOSGame
+        let packFound = metadataArchiveURL != nil
         var advice: String? = nil
         if isGame && !packFound {
             advice = NSLocalizedString(
@@ -132,7 +255,7 @@ final class ImportClassificationPanelController: NSObject {
                 comment: "Shown when an eXoDOS game's pack could not be found next to it.")
         }
 
-        summary = ArchiveSummary(
+        let summary = ArchiveSummary(
             title: classification.gameTitle ?? NSLocalizedString(
                 "Unrecognised archive",
                 comment: "Title shown for an archive Boxer could not classify."),
@@ -141,6 +264,114 @@ final class ImportClassificationPanelController: NSObject {
             packFound: packFound,
             packAdvice: advice,
             canConvert: isGame && packFound)
+
+        self.model = ImportWizardModel(summary: summary, destination: destinationURL)
+        self.gameArchiveURL = gameArchiveURL
+        self.metadataArchiveURL = metadataArchiveURL
+        self.queue.maxConcurrentOperationCount = 1
         super.init()
+
+        // The same kind of test hook as --importURL, and for the same reason:
+        // a wizard nobody can drive from a script is a wizard that gets tested
+        // by hand every time. Given a folder, this presses Continue itself as
+        // soon as the panel is up and converts into that folder rather than the
+        // user's games folder.
+        if let folder = Self.automaticDestination() {
+            model.destination = folder
+            DispatchQueue.main.async { [weak self] in self?.beginConversion() }
+        }
+    }
+
+    private static func automaticDestination() -> URL? {
+        let flag = "--exodosAutoContinue="
+        for argument in ProcessInfo.processInfo.arguments where argument.hasPrefix(flag) {
+            return URL(fileURLWithPath: String(argument.dropFirst(flag.count)), isDirectory: true)
+        }
+        return nil
+    }
+
+    deinit {
+        observers.forEach(NotificationCenter.default.removeObserver)
+    }
+
+
+    // MARK: - Driving the conversion
+
+    private func chooseDestination() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.directoryURL = model.destination
+        panel.prompt = NSLocalizedString("Choose", comment: "Confirmation button in the import destination picker.")
+        panel.message = NSLocalizedString("Choose where to keep the imported game:",
+                                          comment: "Prompt in the import destination picker.")
+
+        if panel.runModal() == .OK, let url = panel.url {
+            model.destination = url
+        }
+    }
+
+    private func beginConversion() {
+        guard let metadataArchiveURL = metadataArchiveURL else { return }
+
+        let operation = ExoDOSImportOperation(gameArchiveURL: gameArchiveURL,
+                                              metadataArchiveURL: metadataArchiveURL,
+                                              destinationURL: model.destination)
+        self.operation = operation
+
+        model.phase = .converting
+        model.fraction = 0
+        model.currentItem = ""
+
+        let center = NotificationCenter.default
+        observers.append(center.addObserver(forName: .ADBOperationInProgress,
+                                            object: operation, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.model.fraction = Double(operation.currentProgress)
+                self?.model.currentItem = operation.currentItemName
+            }
+        })
+        observers.append(center.addObserver(forName: .ADBOperationDidFinish,
+                                            object: operation, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.conversionDidFinish(operation)
+            }
+        })
+
+        queue.addOperation(operation)
+    }
+
+    private func conversionDidFinish(_ operation: ExoDOSImportOperation) {
+        observers.forEach(NotificationCenter.default.removeObserver)
+        observers.removeAll()
+        self.operation = nil
+
+        model.warnings = operation.planWarnings
+
+        if let gameboxURL = operation.gameboxURL, operation.error == nil {
+            onGameboxReady?(gameboxURL)
+            return
+        }
+
+        // A cancelled operation is not a failure to report back to the user:
+        // they asked for it, and the half-written gamebox has already been
+        // taken away again.
+        if operation.isCancelled {
+            model.phase = .confirming
+            return
+        }
+        model.phase = .failed(operation.error?.localizedDescription
+                              ?? NSLocalizedString("The conversion stopped without saying why.",
+                                                   comment: "Fallback message for a failed eXoDOS conversion."))
+    }
+
+    private func cancel() {
+        if let operation = operation, !operation.isFinished {
+            operation.cancel()
+            return
+        }
+        onCancel?()
     }
 }

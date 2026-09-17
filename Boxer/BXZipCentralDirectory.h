@@ -21,6 +21,21 @@ NS_ASSUME_NONNULL_BEGIN
 /// Whether the entry is a directory rather than a file.
 @property (readonly, nonatomic, getter=isDirectory) BOOL directory;
 
+/// The entry's stored size. Zip64 sizes are resolved.
+@property (readonly, nonatomic) unsigned long long compressedSize;
+
+/// How the entry's data is stored: 0 for stored, 8 for deflated. Nothing else
+/// occurs in the eXoDOS pack, and an extractor is expected to refuse the rest
+/// rather than produce silent rubbish.
+@property (readonly, nonatomic) uint16_t compressionMethod;
+
+/// The offset of the entry's local file header within the archive, from which
+/// its data can be found. Zip64 offsets are resolved.
+@property (readonly, nonatomic) unsigned long long localHeaderOffset;
+
+/// The CRC-32 the archive claims for the entry's inflated contents.
+@property (readonly, nonatomic) uint32_t CRC32;
+
 @end
 
 

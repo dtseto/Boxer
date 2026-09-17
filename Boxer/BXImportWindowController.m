@@ -13,6 +13,7 @@
 #import "ADBGeometry.h"
 #import "NSWindow+ADBWindowDimensions.h"
 #import "ADBAppKitVersionHelpers.h"
+#import "BXAppController+BXGamesFolder.h"
 
 @implementation BXImportWindowController
 {
@@ -120,19 +121,25 @@
     if (!_classificationPanelController ||
         _classifiedArchive != classification)
     {
+        NSURL *destinationURL = [(BXAppController *)[NSApp delegate] gamesFolderURL];
+        if (!destinationURL)
+            destinationURL = [NSURL fileURLWithPath: NSHomeDirectory() isDirectory: YES];
+        
         BXImportClassificationPanelController *controller =
             [[BXImportClassificationPanelController alloc] initWithClassification: classification
-                                                                       packFound: (self.document.eXoDOSMetadataURL != nil)];
+                                                                   gameArchiveURL: classification.sourceURL
+                                                               metadataArchiveURL: self.document.eXoDOSMetadataURL
+                                                                   destinationURL: destinationURL];
         
         __weak BXImportWindowController *weakSelf = self;
         controller.onCancel = ^{
             [weakSelf.document cancelSourceSelection];
         };
-        controller.onUnzipAsIs = ^{
-            NSLog(@"[BXImportWindowController] unzip-as-is is not wired up yet.");
-        };
-        controller.onContinue = ^{
-            NSLog(@"[BXImportWindowController] conversion is not wired up yet.");
+        //The conversion writes the whole gamebox itself, so what comes back is
+        //a finished one: the session adopts it and ends on the same panel every
+        //other import ends on.
+        controller.onGameboxReady = ^(NSURL *gameboxURL) {
+            [weakSelf.document adoptConvertedGameboxAtURL: gameboxURL];
         };
         
         _classificationPanelController = controller;

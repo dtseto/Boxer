@@ -12,3 +12,6 @@
 #import "BXMIDIDevice.h"
 #import "BXBootlegCoverArt.h"
 #import "BXImportClassifier.h"
+#import "BXZipCentralDirectory.h"
+#import "BXGamebox.h"
+#import "ADBOperation.h"

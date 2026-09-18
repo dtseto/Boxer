@@ -99,9 +99,25 @@ final class ZipArchiveReader {
     func text(at path: String) throws -> String {
         let data = try data(at: path)
         return String(data: data, encoding: .utf8)
-            ?? String(data: data, encoding: .windowsCP1252)
+            ?? String(data: data, encoding: Self.dosLatinUS)
+            ?? String(data: data, encoding: .isoLatin1)
             ?? String(decoding: data, as: UTF8.self)
     }
+
+    /// IBM Code Page 437 — what DOS wrote and what these archives hold.
+    ///
+    /// It matters for the batch files the menu interpreter reads, because their
+    /// `echo` lines are full of box-drawing characters, and those now travel
+    /// into the batch files we generate. Decoding them as CP1252 — which the
+    /// first version did — turns CP437's full block (0xDB) into `Û` and its
+    /// box corners into accented vowels: the file still writes, and the game
+    /// still runs, but the banner it prints is mojibake.
+    ///
+    /// ISO Latin-1 sits behind it as a backstop that cannot fail, because it
+    /// maps all 256 byte values. `BXZipCentralDirectory` reads entry *names*
+    /// the same way and for the same reason.
+    static let dosLatinUS = String.Encoding(
+        rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.dosLatinUS.rawValue)))
 
     /// Writes a member straight out to a file, inflating as it goes.
     ///

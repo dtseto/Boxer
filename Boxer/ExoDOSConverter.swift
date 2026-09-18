@@ -255,7 +255,12 @@ final class ExoDOSConverter {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
                                                     withIntermediateDirectories: true)
             // CP437 is what DOS reads, and every one of these is ASCII anyway.
-            try plan.generatedFiles[path]!.write(to: url, atomically: true, encoding: .ascii)
+            // CP437, not ASCII: a branch's `echo` lines carry DOS box-drawing
+            // characters, and `.ascii` cannot encode them — the write throws,
+            // the half-built gamebox is torn down, and the import fails outright
+            // on a game whose only sin is an ASCII-art banner.
+            try plan.generatedFiles[path]!.write(to: url, atomically: true,
+                                                 encoding: ZipArchiveReader.dosLatinUS)
         }
     }
 

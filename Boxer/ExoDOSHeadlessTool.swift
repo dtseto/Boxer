@@ -180,9 +180,13 @@ final class ExoDOSHeadlessTool: NSObject {
                 "source": drive.source,
                 "target": drive.target,
             ]
+            entry["name"] = drive.name
+            entry["insert_folder"] = drive.insertFolder
             if drive.isImage {
                 entry["tracks"] = drive.tracks
                 entry["bundle"] = drive.isBundle
+                entry["descriptor"] = drive.descriptor
+                entry["sector_size"] = drive.sectorSize
             }
             drives.append(entry)
         }
@@ -192,6 +196,8 @@ final class ExoDOSHeadlessTool: NSObject {
             "long_name": plan.longName,
             "gamebox_name": plan.gameboxName,
             "unpacked_size": plan.unpackedSize,
+            "gamebox_autoexec": plan.gameboxAutoexec,
+            "default_launcher": plan.defaultLauncher as Any,
             "source_zip": plan.sourceURL.path,
             "drives": drives,
             "launchers": plan.launchers.map {

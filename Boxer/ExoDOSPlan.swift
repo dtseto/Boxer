@@ -41,6 +41,21 @@ struct ExoDOSPlan {
     /// from and so nothing has to be re-read to explain a decision.
     var autoexec: [String] = []
 
+    /// The autoexec the gamebox gets: eXo's own, line for line, with three
+    /// kinds of line commented out rather than deleted — the mounts, which
+    /// became drives; `exit`, which would end the session when the game
+    /// returns; and the game's own execution line, which the launchers replace
+    /// (decision 16). Everything else is carried through with eXo's
+    /// pack-relative prefix stripped (decision 20).
+    var gameboxAutoexec: [String] = []
+
+    /// Which launcher the gamebox starts by default, if any.
+    ///
+    /// Nil where the autoexec handed off to a menu we flattened: eXo's first
+    /// menu entry tends to be the oldest or most limited way to play, so Boxer
+    /// shows the launch panel instead of picking one (decision 21).
+    var defaultLauncher: Int?
+
     /// Small batch files the converter writes into the gamebox, keyed by their
     /// path inside it. One per menu branch that has setup to do before the game
     /// starts — see `ExoDOSMenuInterpreter`.
@@ -82,8 +97,39 @@ struct ExoDOSDrive {
     /// root folder. Empty means the root itself.
     var source: String
 
-    /// What the drive is called inside the gamebox.
+    /// What the drive is called inside the gamebox. Given its final value by
+    /// `nameDrives`, once every mount is known — the number a queued volume
+    /// carries depends on how many siblings share its letter.
     var target: String
+
+    /// The drive's own name, before a letter and any number are put in front of
+    /// it: a folder's name, or an image's filename. For a folder drive this is
+    /// what reaches DOS as the volume label, which is why the number is only
+    /// added when a letter really does carry a queue (decision 19).
+    var name: String = ""
+
+    /// A folder inserted between the drive and the archive's contents.
+    ///
+    /// Only the 1,521 games that mount the pack's whole games folder use it:
+    /// their C drive is the game folder's *parent*, so the game goes inside a
+    /// folder of its own and the `cd <short>` in the autoexec stays literally
+    /// correct (decision 20).
+    var insertFolder: String = ""
+
+    /// The cue sheet this bundle was built from, if it had one. A bundle
+    /// without one gets a synthesised descriptor instead.
+    var descriptor: String = ""
+
+    /// Bytes of user data per sector, for a descriptor we synthesise.
+    var sectorSize: Int = 2048
+
+    /// Where the game's own files sit inside the gamebox — the drive, plus the
+    /// folder inserted in front of them for the 1,521 games whose C drive is
+    /// the game folder's parent (decision 20). Every path the gamebox records,
+    /// launchers included, is relative to this.
+    var contentRoot: String {
+        insertFolder.isEmpty ? target : target + "/" + insertFolder
+    }
 
     /// For a `.cdmedia` bundle, the track files the descriptor references.
     var tracks: [String] = []
@@ -229,9 +275,17 @@ enum ExoDOSPlanner {
                               sourceURL: gameURL)
         plan.autoexec = configuration.autoexec
 
+        var sizes: [String: UInt64] = [:]
+        for entry in archive.directory.entries where !entry.isDirectory
+            && entry.path.count > root.count
+            && entry.path.lowercased().hasPrefix(root.lowercased()) {
+            sizes[String(entry.path.dropFirst(root.count))] = entry.uncompressedSize
+        }
+
         let (drives, driveWarnings) = planDrives(autoexec: configuration.autoexec,
                                                  shortName: shortName,
-                                                 members: members) { path in
+                                                 members: members,
+                                                 sizeOf: { sizes[$0] }) { path in
             try? archive.text(at: root + path)
         }
         plan.drives = drives
@@ -244,6 +298,11 @@ enum ExoDOSPlanner {
         plan.setupCommands = launch.setup
         plan.needsMenuInterpreter = launch.needsInterpreter
         plan.generatedFiles = launch.generatedFiles
+        plan.defaultLauncher = launch.defaultLauncher
+        plan.gameboxAutoexec = translateAutoexec(configuration.autoexec,
+                                                 shortName: shortName,
+                                                 launchLines: launch.launchLines,
+                                                 mountsParent: drives.contains { !$0.insertFolder.isEmpty })
 
         let derived = planSettings(configuration.sections)
         plan.settings = derived.settings
@@ -259,6 +318,59 @@ enum ExoDOSPlanner {
         if plan.launchers.isEmpty { plan.warnings.append("no launch command was found") }
 
         return plan
+    }
+
+
+    /// Turns eXo's autoexec into the one the gamebox carries.
+    ///
+    /// Decision 16: the autoexec goes across as it was written, and only three
+    /// kinds of line are commented out — never deleted, because the comment is
+    /// the record of what the pack said and is worth having in front of anyone
+    /// debugging the gamebox later.
+    ///
+    ///  - `mount` / `imgmount`, which became drives (decision 17);
+    ///  - `exit`, which would end the session the moment the game returns;
+    ///  - the game's own execution line, which the gamebox's launchers replace.
+    ///
+    /// Every surviving line has eXo's pack-relative prefix stripped (decision
+    /// 20). Which prefix depends on what the C drive turned out to be: normally
+    /// it is the game's folder, so `.\eXoDOS\<short>\` goes; where the config
+    /// mounted the pack's whole games folder, C is the *parent* and only
+    /// `.\eXoDOS\` goes, leaving the `<short>` component the following
+    /// `cd <short>` still needs.
+    static func translateAutoexec(_ autoexec: [String],
+                                  shortName: String,
+                                  launchLines: Set<Int>,
+                                  mountsParent: Bool) -> [String] {
+        var result: [String] = []
+        for (index, raw) in autoexec.enumerated() {
+            let command = stripPrefix(raw)
+            let head = String(command.lowercased().prefix(while: { $0 != " " && $0 != "\t" }))
+
+            if head == "mount" || head == "imgmount" || head == "exit"
+                || launchLines.contains(index) {
+                result.append("rem " + raw)
+                continue
+            }
+            result.append(strippedPackPrefix(raw, shortName: shortName,
+                                             mountsParent: mountsParent))
+        }
+        return result
+    }
+
+    /// Removes eXo's pack-relative prefix from every string in a line.
+    static func strippedPackPrefix(_ line: String, shortName: String,
+                                   mountsParent: Bool) -> String {
+        var prefixes = [".\\eXoDOS\\", "./eXoDOS/"]
+        if !mountsParent {
+            prefixes = [".\\eXoDOS\\\(shortName)\\", "./eXoDOS/\(shortName)/"] + prefixes
+        }
+        for prefix in prefixes {
+            let stripped = line.replacingOccurrences(of: prefix, with: "",
+                                                     options: [.caseInsensitive])
+            if stripped != line { return stripped }
+        }
+        return line
     }
 
 
@@ -353,6 +465,7 @@ enum ExoDOSPlanner {
     static func planDrives(autoexec: [String],
                            shortName: String,
                            members: Set<String>,
+                           sizeOf: ((String) -> UInt64?)? = nil,
                            readMember: ((String) -> String?)? = nil) -> ([ExoDOSDrive], [String]) {
         var drives: [ExoDOSDrive] = []
         var warnings: [String] = []
@@ -375,62 +488,166 @@ enum ExoDOSPlanner {
                 continue
             }
 
-            let media = mediaType(flags: Array(tokens.dropFirst(3)))
-            guard let source = packRelativePath(tokens[2], shortName: shortName, members: members) else {
-                warnings.append("mount path outside the game folder, skipped: \(command)")
+            // Every path argument, not just the first. A multi-disc game says
+            // `imgmount d disc1.cue disc2.cue …` and keeping only `tokens[2]`
+            // is how 112 games came to lose every disc but one, silently — the
+            // rest were not even extracted (decision 19).
+            var paths: [String] = []
+            var flags: [String] = []
+            for token in tokens.dropFirst(2) {
+                if token.hasPrefix("-") || !flags.isEmpty { flags.append(token) }
+                else { paths.append(token) }
+            }
+            guard !paths.isEmpty else {
+                warnings.append("mount command names nothing to mount: \(command)")
                 continue
             }
+            let media = mediaType(flags: flags)
 
-            if verb == "mount" {
-                let kind = media ?? (letter == "a" ? .floppy : .hdd)
-                if !source.isEmpty && !members.contains(source) {
-                    warnings.append("mounts a folder the archive does not ship: \(command)")
+            for path in paths {
+                guard let source = packRelativePath(path, shortName: shortName, members: members) else {
+                    warnings.append("mount path outside the game folder, skipped: \(command)")
+                    continue
                 }
-                drives.append(ExoDOSDrive(isImage: false, letter: letter, kind: kind,
-                                          source: source,
-                                          target: "\(letter.uppercased()).\(kind.folderSuffix)"))
-                continue
-            }
 
-            let ext = pathExtension(source).lowercased()
-            if !knownImageExtensions.contains(ext) {
-                warnings.append("image type .\(ext) is not in Boxer's extension map: \(command)")
-            }
-            if !members.contains(source) {
-                warnings.append("mounts an image the archive does not ship: \(command)")
-            }
+                // The shape of what was named decides what it becomes, not the
+                // verb that named it: `mount` and `imgmount` are one command in
+                // this fork, and the pack uses both for CDs (decision 17).
+                let isDirectory = source.isEmpty || Self.isDirectory(source, in: members)
+                let isFile = !source.isEmpty && members.contains(source)
 
-            if descriptorExtensions.contains(ext), let readMember = readMember,
-               members.contains(source), let text = readMember(source) {
-                // A descriptor plus separate track files goes into a .cdmedia
-                // bundle, which keeps them together and keeps the tracks out of
-                // Boxer's drive scan.
-                var tracks: [String] = []
-                var missing: [String] = []
-                for name in cueTrackNames(in: text) {
-                    if let resolved = resolveTrack(name, cuePath: source, members: members) {
-                        tracks.append(resolved)
-                    } else {
-                        missing.append(name)
+                if isDirectory && !isFile {
+                    let kind = media ?? (letter == "a" ? .floppy : .hdd)
+                    if !source.isEmpty && !members.contains(source)
+                        && !Self.isDirectory(source, in: members) {
+                        warnings.append("mounts a folder the archive does not ship: \(command)")
                     }
+                    // `mount c .\eXoDOS\` with no folder after it mounts the
+                    // pack's whole games folder, so the gamebox's C drive is the
+                    // game folder's *parent* and the `cd <short>` that follows
+                    // stays literally correct (decision 20).
+                    // `.\eXoDOS\dune` and a bare `.\eXoDOS\` both resolve to
+                    // the game's own folder, but they do not mean the same
+                    // thing: the first mounts the game, the second mounts its
+                    // parent and walks in. Only the second inserts a folder.
+                    let mountsPackRoot = namesPackRoot(path)
+                    let name = source.isEmpty ? shortName : basename(source)
+                    drives.append(ExoDOSDrive(isImage: false, letter: letter, kind: kind,
+                                              source: source, target: "", name: name,
+                                              insertFolder: mountsPackRoot ? shortName : ""))
+                    continue
                 }
-                if !missing.isEmpty {
-                    warnings.append("cue sheet references \(missing.count) file(s) the archive does not ship (\(missing.prefix(3).joined(separator: ", "))): \(command)")
+
+                let ext = pathExtension(source).lowercased()
+                if !knownImageExtensions.contains(ext) {
+                    warnings.append("image type .\(ext) is not in Boxer's extension map: \(command)")
                 }
-                drives.append(ExoDOSDrive(isImage: true, letter: letter, kind: media ?? .cdrom,
-                                          source: source,
-                                          target: "\(letter.uppercased()).cdmedia",
-                                          tracks: tracks, isBundle: true))
-            } else {
-                // A self-contained image needs no bundle: Boxer parses the
-                // drive letter back off the filename, so it keeps its own name
-                // behind a "<letter> " prefix.
-                drives.append(ExoDOSDrive(isImage: true, letter: letter, kind: media ?? .hdd,
-                                          source: source,
-                                          target: "\(letter.uppercased()) \(basename(source))"))
+                if !members.contains(source) {
+                    warnings.append("mounts an image the archive does not ship: \(command)")
+                }
+
+                var drive = ExoDOSDrive(isImage: true, letter: letter, kind: media ?? .hdd,
+                                        source: source, target: "", name: basename(source))
+                if descriptorExtensions.contains(ext), let readMember = readMember,
+                   members.contains(source), let text = readMember(source) {
+                    // A descriptor plus separate track files must go into a
+                    // .cdmedia bundle, which keeps them together and keeps the
+                    // tracks out of Boxer's drive scan (FINDINGS.md D68).
+                    var tracks: [String] = []
+                    var missing: [String] = []
+                    for name in cueTrackNames(in: text) {
+                        if let resolved = resolveTrack(name, cuePath: source, members: members) {
+                            tracks.append(resolved)
+                        } else {
+                            missing.append(name)
+                        }
+                    }
+                    if !missing.isEmpty {
+                        warnings.append("cue sheet references \(missing.count) file(s) the archive does not ship (\(missing.prefix(3).joined(separator: ", "))): \(command)")
+                    }
+                    drive.tracks = tracks
+                    drive.isBundle = true
+                    drive.descriptor = source
+                    // A cue sheet is a CD descriptor, so it is a CD unless the
+                    // command said otherwise — `imgmount d <x>.cue` with no
+                    // `-t` is a CD-ROM, not a hard disk.
+                    drive.kind = media ?? .cdrom
+                } else if let sizeOf = sizeOf {
+                    drive.sectorSize = sectorSize(for: source, size: sizeOf(source))
+                }
+                drives.append(drive)
             }
         }
-        return (drives, warnings)
+        return (nameDrives(drives), warnings)
+    }
+
+    /// Gives every drive the filename it will carry inside the gamebox.
+    ///
+    /// Two rules, and they interact, so this happens once all the mounts are
+    /// known rather than as each is read:
+    ///
+    /// - **A letter carrying more than one image bundles every one of them**
+    ///   (decision 18), because a `.cdmedia` holds exactly one `tracks.cue` and
+    ///   so a bundle *is* one disc. A letter carrying a single self-contained
+    ///   image leaves it bare — `D Dune.iso` already works, and a synthesised
+    ///   cue is a guess at a sector size not worth making.
+    /// - **A number orders the queue, and only appears when there is a queue**
+    ///   (decision 19). `-[BXGamebox bundledDrives]` sorts on the filename
+    ///   (`BXGamebox.m:607-610`), so the number is what fixes the order; it is
+    ///   zero-padded because that sort is a plain string compare. Where a letter
+    ///   carries one volume no number is added, because
+    ///   `+[BXDrive labelForContentsOfURL:]` strips only `"<letter> "`
+    ///   (`BXDrive.m:171`) and the number would otherwise reach DOS as part of
+    ///   the volume label.
+    static func nameDrives(_ drives: [ExoDOSDrive]) -> [ExoDOSDrive] {
+        var counts: [String: Int] = [:]
+        var imageCounts: [String: Int] = [:]
+        for drive in drives {
+            counts[drive.letter, default: 0] += 1
+            if drive.isImage { imageCounts[drive.letter, default: 0] += 1 }
+        }
+
+        var seen: [String: Int] = [:]
+        var named: [ExoDOSDrive] = []
+        for var drive in drives {
+            seen[drive.letter, default: 0] += 1
+            let letter = drive.letter.uppercased()
+            let numbered = (counts[drive.letter] ?? 0) > 1
+            let number = numbered ? String(format: "%02d ", seen[drive.letter]!) : ""
+
+            if drive.isImage {
+                // Only a CD becomes a bundle. A queue of floppies stays a queue
+                // of plain images — `A 01 Disk1.ima`, `A 02 Disk2.ima` — because
+                // a `.cdmedia` is a CD-ROM to Boxer's drive scan
+                // (`BXFileTypes.m:233`) and would mount a floppy as one.
+                if drive.kind == .cdrom && (imageCounts[drive.letter] ?? 0) > 1 {
+                    drive.isBundle = true
+                }
+                drive.target = drive.isBundle
+                    ? "\(letter) \(number)\(stripExtension(drive.name)).cdmedia"
+                    : "\(letter) \(number)\(drive.name)"
+            } else {
+                drive.target = "\(letter) \(number)\(drive.name).\(drive.kind.folderSuffix)"
+            }
+            named.append(drive)
+        }
+        return named
+    }
+
+    /// The sector size to write into a cue we synthesise for a bare image.
+    ///
+    /// An ISO9660 image holds 2,048-byte user data per sector; a raw dump holds
+    /// 2,352. Nothing in the file says which, so the extension decides and the
+    /// file's own size is the tie-break: a raw dump divides by 2,352 and an
+    /// ISO does not.
+    static func sectorSize(for path: String, size: UInt64?) -> Int {
+        let raw = ["bin", "img", "mdf", "raw"].contains(pathExtension(path).lowercased())
+        var chosen = raw ? 2352 : 2048
+        if let size = size, size > 0, size % UInt64(chosen) != 0 {
+            let other = chosen == 2048 ? 2352 : 2048
+            if size % UInt64(other) == 0 { chosen = other }
+        }
+        return chosen
     }
 
     /// Resolves one of eXo's pack-root-relative paths against the game folder.
@@ -471,6 +688,20 @@ enum ExoDOSPlanner {
             if let hit = caseInsensitiveLookup(candidate, in: members) { return hit }
         }
         return nil
+    }
+
+    /// Is this the pack's whole games folder, rather than one game in it?
+    ///
+    /// 1,521 games write `mount c .\eXoDOS\` and then `cd <short>`. It
+    /// resolves to the same place as `mount c .\eXoDOS\<short>` once the game
+    /// is on its own, which is why this asks the *written* path rather than the
+    /// resolved one (decision 20).
+    static func namesPackRoot(_ dosPath: String) -> Bool {
+        let parts = dosPath.replacingOccurrences(of: "\\", with: "/")
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\""))
+            .components(separatedBy: "/")
+            .filter { !$0.isEmpty && $0 != "." }
+        return parts.count == 1 && parts[0].lowercased() == "exodos"
     }
 
     /// Reads the media type off a mount command's `-t` flag.
@@ -533,6 +764,16 @@ enum ExoDOSPlanner {
         var notes: [String] = []
 
         /// Small batch files the converter writes into the gamebox, keyed by
+        /// The indices, into the autoexec, of the lines that start the game.
+        /// Decision 16 comments these out; decision 21 reads the default
+        /// launcher off them.
+        var launchLines: Set<Int> = []
+
+        /// The launcher the autoexec's own execution line named, if it named
+        /// one directly rather than handing off to a menu.
+        var defaultLauncher: Int?
+
+        /// Small batch files the converter writes into the gamebox, keyed by
         /// their path inside it. One per menu branch that has something to do
         /// before the game starts — switching MIDI device, copying a sound
         /// driver's files into place, or changing to another drive — none of
@@ -566,7 +807,7 @@ enum ExoDOSPlanner {
         var current = drives.first(where: { $0.kind == .hdd })?.letter ?? "c"
         var workingDirectory = ""
 
-        for raw in autoexec {
+        for (index, raw) in autoexec.enumerated() {
             let command = stripPrefix(raw)
             if command.isEmpty || command.hasPrefix(":") { continue }
             let lowered = command.lowercased()
@@ -627,7 +868,7 @@ enum ExoDOSPlanner {
             guard let program = target else { continue }
 
             let drive = byLetter[current]
-            let prefix = (drive != nil && !drive!.isImage) ? drive!.target + "/" : ""
+            let prefix = (drive != nil && !drive!.isImage) ? drive!.contentRoot + "/" : ""
             guard let resolved = resolveProgram(program, drive: drive,
                                                 members: members, workingDirectory: workingDirectory) else {
                 plan.warnings.append("cannot find '\(program)' on drive \(current): \(command)")
@@ -654,9 +895,21 @@ enum ExoDOSPlanner {
                                             members: members,
                                             shortName: shortName,
                                             plan: &plan)
-                if flattened { continue }
+                if flattened {
+                    // A menu we flattened names no default: its first entry is
+                    // usually the oldest or most limited way to play.
+                    plan.launchLines.insert(index)
+                    plan.defaultLauncher = nil
+                    continue
+                }
             }
 
+            // `%1 %2 %3` and friends are the batch parameters eXo's own Windows
+            // launcher passed in; inside a gamebox they are always empty, and
+            // they must not reach BXLauncherArgsKey (decision 21).
+            arguments = arguments.filter { !isBatchParameter($0) }
+            plan.launchLines.insert(index)
+            plan.defaultLauncher = plan.launchers.count
             plan.launchers.append(ExoDOSLauncher(path: prefix + resolved,
                                                  arguments: arguments,
                                                  title: stripExtension(basename(resolved))))
@@ -725,7 +978,7 @@ enum ExoDOSPlanner {
                 || resolved == nil
 
             if !needsBatch, let resolved = resolved, let target = target {
-                launchers.append(ExoDOSLauncher(path: target.target + "/" + resolved,
+                launchers.append(ExoDOSLauncher(path: target.contentRoot + "/" + resolved,
                                                 arguments: arguments,
                                                 title: title ?? stripExtension(basename(resolved))))
                 continue
@@ -897,6 +1150,16 @@ enum ExoDOSPlanner {
             notes.append("cycles=\(cycles) carried across as cpu_cycles (0.83 renamed it)")
         }
 
+        // FluidSynth is gated out of this fork (`C_FLUIDSYNTH 0`, FINDINGS.md
+        // D9), so asking for it names a device Boxer cannot provide. Dropping
+        // the key leaves Boxer's own MIDI handling in charge rather than
+        // substituting a value eXo never wrote (decision 22).
+        if settings["midi"]?["mididevice"] == "fluidsynth" {
+            settings["midi"]?.removeValue(forKey: "mididevice")
+            if settings["midi"]?.isEmpty == true { settings.removeValue(forKey: "midi") }
+            notes.append("asks for FluidSynth, which Boxer does not provide; using Boxer's own MIDI")
+        }
+
         if settings["midi"]?["mididevice"] == "mt32" {
             notes.append("game asks for MT-32")
         }
@@ -986,6 +1249,13 @@ enum ExoDOSPlanner {
         var argument = rest.trimmingCharacters(in: .whitespaces)
         if argument.hasPrefix("\\") { argument = String(argument.dropFirst()) }
         return argument.trimmingCharacters(in: .whitespaces)
+    }
+
+    /// `%1` … `%9`, and `%0`. A batch parameter, never an argument.
+    static func isBatchParameter(_ token: String) -> Bool {
+        guard token.count == 2, token.hasPrefix("%"),
+              let digit = token.last, digit.isNumber else { return false }
+        return true
     }
 
     private static func isNumericFlag(_ token: String) -> Bool {

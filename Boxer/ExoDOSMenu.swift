@@ -11,6 +11,13 @@ struct ExoDOSMenuBranch {
     /// The menu prompts that led here, outermost first.
     var titles: [String] = []
 
+    /// The label the last `choice` jumped to on the way here — `etandy`,
+    /// `cdmt32`, `talkie`. This is what names the generated batch file, because
+    /// it is eXo's own name for this way of playing, it is already 8.3-shaped,
+    /// and it is unique per branch in a way the *last* label walked is not:
+    /// Monkey Island's four EGA branches all end at the shared `:elaunch`.
+    var label: String?
+
     /// The drive the branch ends up on, and the directory within it. Both start
     /// as the caller's, because a branch that changes neither runs where the
     /// autoexec left off.
@@ -26,6 +33,14 @@ struct ExoDOSMenuBranch {
     /// does something different from one that copies before, and replaying a
     /// reordered version of it is a bug waiting to happen. What goes into the
     /// generated batch file is this, verbatim.
+    ///
+    /// These are the branch's **own lines**, unexpanded: its `set`s travel with
+    /// it and DOS does the substituting, rather than us rewriting the command
+    /// and dropping the `set`. Its `echo`, `cls` and `pause` travel with it too,
+    /// since a branch may have something to say to the player before the game
+    /// starts. Only the menu's own furniture — the prompt block above a
+    /// `choice`, the `choice` itself, the labels and the `goto`s — is left
+    /// behind, because that is the part the launcher replaces.
     var script: [String] = []
 
     /// The last program the branch runs, with its variables expanded — the game
@@ -102,6 +117,14 @@ enum ExoDOSMenuInterpreter {
                                                      "attrib", "type", "path", "keyb",
                                                      "mode", "loadhigh", "lh", "config"]
 
+    /// `mount` and its deprecated alias.
+    ///
+    /// These appear *inside* a menu branch in 11 of the pack's games — a branch
+    /// that mounts its own disc before starting. Without this they fall through
+    /// to "anything left is a program", which makes the mount command itself the
+    /// branch's program and resolves it against the drive.
+    private static let mountCommands: Set<String> = ["mount", "imgmount"]
+
     /// How deep a menu may nest before we stop believing it is a menu.
     private static let maximumDepth = 8
 
@@ -109,7 +132,8 @@ enum ExoDOSMenuInterpreter {
     ///
     /// - Throws: `Unflattenable` when the file's shape cannot be accounted for,
     ///   which is the signal to leave the batch registered as the launcher.
-    static func flatten(_ text: String, drive: String, workingDirectory: String) throws -> [ExoDOSMenuBranch] {
+    static func flatten(_ text: String, drive: String, workingDirectory: String,
+                        shortName: String) throws -> [ExoDOSMenuBranch] {
         let lines = text.replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
             .components(separatedBy: "\n")
@@ -126,12 +150,53 @@ enum ExoDOSMenuInterpreter {
         var branches: [ExoDOSMenuBranch] = []
         let start = ExoDOSMenuBranch(drive: drive, workingDirectory: workingDirectory)
         try walk(lines: lines, labels: labels, from: 0, state: start,
-                 into: &branches, visited: [], depth: 0)
+                 into: &branches, visited: [], depth: 0, variables: [:],
+                 shortName: shortName)
 
         guard !branches.isEmpty else {
             throw Unflattenable(reason: "no path through it reaches a program")
         }
         return branches
+    }
+
+    /// Rewrites a `mount` line so it still means something inside a gamebox.
+    ///
+    /// Two changes, and only two:
+    ///
+    /// - **`imgmount` becomes `mount`.** They are one program in this fork —
+    ///   `dos_programs.cpp:102-104` registers `IMGMOUNT.COM` as `MOUNT` "for
+    ///   backward compatibility (with a deprecation warning)" — and `MOUNT::Run`
+    ///   prints that warning on every invocation when called by the old name
+    ///   (`mount.cpp:1319-1324`).
+    /// - **eXo's `.\eXoDOS\<game>\` prefix is stripped**, which is decision 20
+    ///   applied to the path argument. What is left resolves as a *DOS* path:
+    ///   `MOUNT::ProcessPaths` runs every path through `GetDosMappedHostPath`
+    ///   (`mount.cpp:988`, `:1029`), which is `DOS_MakeName` plus the local
+    ///   drive's host mapping, and `DOS_MakeName` prefixes the drive's current
+    ///   directory when the path is not rooted (`dos_files.cpp:256`). The game
+    ///   folder is the C drive, so the path lands inside the gamebox — and it
+    ///   keeps working when the gamebox is moved, which a host path would not.
+    ///
+    /// **Decided 2026-09-18: the path is left relative, not qualified with the
+    /// branch's drive letter.** It then means what it meant at that point in
+    /// eXo's script, which is the same rule the rest of the branch follows. The
+    /// alternative — emitting `C:\cd\disc.cue` from the drive and directory the
+    /// interpreter is tracking — is immune to a branch that changed drive before
+    /// mounting, and is what to reach for if this is ever found wanting.
+    static func rewrittenMountCommand(_ line: String, shortName: String) -> String {
+        var result = line
+        // The verb, at the head of the line, and only there.
+        if let space = result.firstIndex(where: { $0 == " " || $0 == "\t" }),
+           result[result.startIndex..<space].lowercased() == "imgmount" {
+            result = "mount" + result[space...]
+        }
+        for prefix in [".\\eXoDOS\\\(shortName)\\", "./eXoDOS/\(shortName)/",
+                       ".\\eXoDOS\\", "./eXoDOS/"] {
+            let stripped = result.replacingOccurrences(of: prefix, with: "",
+                                                       options: [.caseInsensitive])
+            if stripped != result { return stripped }
+        }
+        return result
     }
 
     /// Strips the leading `@`, the end-of-file marker, NUL padding and
@@ -152,7 +217,9 @@ enum ExoDOSMenuInterpreter {
                              state: ExoDOSMenuBranch,
                              into branches: inout [ExoDOSMenuBranch],
                              visited: Set<String>,
-                             depth: Int) throws {
+                             depth: Int,
+                             variables inherited: [String: String],
+                             shortName: String) throws {
         if depth > maximumDepth {
             throw Unflattenable(reason: "its menus nest more than \(maximumDepth) deep")
         }
@@ -163,7 +230,21 @@ enum ExoDOSMenuInterpreter {
         // The text of the echo block above a `choice`, which is the only
         // description these menus carry for their branches.
         var prompts: [String] = []
-        var variables: [String: String] = [:]
+        // Carried down into each branch, because DOS carries them: a `set`
+        // before the first `choice` is in scope for every branch below it.
+        var variables = inherited
+
+        // `echo`, `cls` and `pause` are held here rather than written straight
+        // into the script, because the same three commands do two different
+        // jobs in these files. Above a `choice` they are the menu's own
+        // furniture — the prompt block the launcher replaces — and a `choice`
+        // discards them. Anywhere else they are the branch talking to the
+        // player, and the first real command flushes them into the script.
+        var pending: [String] = []
+        func flush() {
+            state.script.append(contentsOf: pending)
+            pending.removeAll()
+        }
 
         while index < lines.count {
             let line = lines[index]
@@ -178,12 +259,17 @@ enum ExoDOSMenuInterpreter {
 
             if head == "echo" {
                 if let prompt = menuPrompt(in: line) { prompts.append(prompt) }
+                pending.append(line)
+                continue
+            }
+            if head == "cls" || head == "pause" {
+                pending.append(line)
                 continue
             }
             if ignored.contains(head) && head != "choice" { continue }
 
             if head == "exit" {
-                if !state.command.isEmpty { branches.append(state) }
+                if !state.command.isEmpty { flush(); branches.append(state) }
                 return
             }
 
@@ -197,7 +283,7 @@ enum ExoDOSMenuInterpreter {
                     // `goto end`/`goto quit`/`goto eof` with nothing to land on
                     // is how a good many of these simply stop.
                     if ["eof", "end", "quit", "exit"].contains(name) {
-                        if !state.command.isEmpty { branches.append(state) }
+                        if !state.command.isEmpty { flush(); branches.append(state) }
                         return
                     }
                     throw Unflattenable(reason: "jumps to ':\(name)', which it does not define")
@@ -215,6 +301,9 @@ enum ExoDOSMenuInterpreter {
                 guard !targets.isEmpty else {
                     throw Unflattenable(reason: "offers a choice with nothing to branch to")
                 }
+                // Whatever was on screen above the choice is the menu's own
+                // prompt block, and the launch panel replaces it.
+                pending.removeAll()
                 for key in targets.keys.sorted() {
                     let name = targets[key]!
                     guard let destination = labels[name] else {
@@ -226,9 +315,13 @@ enum ExoDOSMenuInterpreter {
                     if key >= 1 && key <= prompts.count {
                         branch.titles.append(prompts[key - 1])
                     }
+                    // The deepest fork names the branch, so a nested menu ends
+                    // up named for the entry that was actually chosen.
+                    branch.label = name
                     try walk(lines: lines, labels: labels, from: destination + 1,
                              state: branch, into: &branches,
-                             visited: visited.union([name]), depth: depth + 1)
+                             visited: visited.union([name]), depth: depth + 1,
+                             variables: variables, shortName: shortName)
                 }
                 return
             }
@@ -250,6 +343,12 @@ enum ExoDOSMenuInterpreter {
             }
 
             if head == "set" {
+                // The `set` travels with the branch rather than being consumed:
+                // DOS does the substituting, so nothing has to be rewritten.
+                // It is still recorded, because `command` — which titles and
+                // resolves the branch — needs the expanded form.
+                flush()
+                state.script.append(line)
                 if let separator = line.dropFirst(3).firstIndex(of: "=") {
                     let name = line[line.index(line.startIndex, offsetBy: 3)..<separator]
                         .trimmingCharacters(in: .whitespaces).lowercased()
@@ -260,14 +359,26 @@ enum ExoDOSMenuInterpreter {
                 continue
             }
 
+            // A branch that mounts its own disc. Rewritten rather than treated
+            // as a program: left alone it becomes the branch's `command` and is
+            // then resolved against the drive, which is how one game came to be
+            // refused for "runs 'mount', which drive c does not hold".
+            if mountCommands.contains(head) {
+                flush()
+                state.script.append(rewrittenMountCommand(line, shortName: shortName))
+                continue
+            }
+
             if setupCommands.contains(head) {
-                state.script.append(expand(line, with: variables))
+                flush()
+                state.script.append(line)
                 continue
             }
 
             if let letter = ExoDOSPlanner.driveChange(in: lowered) {
                 state.drive = letter
                 state.workingDirectory = ""
+                flush()
                 state.script.append(line)
                 continue
             }
@@ -286,6 +397,7 @@ enum ExoDOSMenuInterpreter {
                     }
                 }
                 state.workingDirectory = applyChangeDirectory(state.workingDirectory, argument: argument)
+                flush()
                 state.script.append(line)
                 continue
             }
@@ -302,13 +414,15 @@ enum ExoDOSMenuInterpreter {
             // something *after* the game is a property of this path, not of the
             // lines that happen to follow in the file — the labels below
             // usually belong to other branches.
-            let program = expand(line, with: variables)
-            state.command = program
-            state.script.append(program)
+            // The script keeps the line as the branch wrote it; `command` is the
+            // expanded form, used only to title and resolve the branch.
+            state.command = expand(line, with: variables)
+            flush()
+            state.script.append(line)
         }
 
         // Falling off the end of the file ends the path, exactly as `exit` does.
-        if !state.command.isEmpty { branches.append(state) }
+        if !state.command.isEmpty { flush(); branches.append(state) }
     }
 
     /// Maps a `choice`'s one-based index onto the label it jumps to.

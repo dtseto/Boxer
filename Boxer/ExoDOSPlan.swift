@@ -234,7 +234,7 @@ enum ExoDOSPlanner {
         plan.drives = drives
 
         let launch = planLaunchers(autoexec: configuration.autoexec, drives: drives,
-                                   members: members) { path in
+                                   members: members, shortName: shortName) { path in
             try? archive.text(at: root + path)
         }
         plan.launchers = launch.launchers
@@ -553,6 +553,7 @@ enum ExoDOSPlanner {
     static func planLaunchers(autoexec: [String],
                               drives: [ExoDOSDrive],
                               members: Set<String>,
+                              shortName: String = "",
                               text: (String) -> String? = { _ in nil }) -> LaunchPlan {
         var plan = LaunchPlan()
         // Last mount of a letter wins, as it does in DOSBox itself.
@@ -648,6 +649,7 @@ enum ExoDOSPlanner {
                                             workingDirectory: workingDirectory,
                                             byLetter: byLetter,
                                             members: members,
+                                            shortName: shortName,
                                             plan: &plan)
                 if flattened { continue }
             }
@@ -670,11 +672,13 @@ enum ExoDOSPlanner {
                                     workingDirectory: String,
                                     byLetter: [String: ExoDOSDrive],
                                     members: Set<String>,
+                                    shortName: String,
                                     plan: inout LaunchPlan) -> Bool {
         let branches: [ExoDOSMenuBranch]
         do {
             branches = try ExoDOSMenuInterpreter.flatten(text, drive: drive,
-                                                         workingDirectory: workingDirectory)
+                                                         workingDirectory: workingDirectory,
+                                                         shortName: shortName)
         } catch let failure as ExoDOSMenuInterpreter.Unflattenable {
             plan.notes.append("'\(basename(batchPath))' \(failure.reason), so it stays the launcher and its menu comes up in Boxer")
             return false
@@ -686,7 +690,7 @@ enum ExoDOSPlanner {
         var generated: [String: String] = [:]
         var usedNames = Set<String>()
 
-        for (index, branch) in branches.enumerated() {
+        for branch in branches {
             let title = branch.composedTitle
             let target = byLetter[branch.drive]
 
@@ -735,8 +739,9 @@ enum ExoDOSPlanner {
                 return false
             }
 
-            let name = uniqueBatchName(for: title ?? stripExtension(basename(program)),
-                                       index: index, taken: &usedNames)
+            let name = uniqueBatchName(label: branch.label,
+                                       title: title ?? stripExtension(basename(program)),
+                                       taken: &usedNames)
             let folder = (batchPath as NSString).deletingLastPathComponent
             let path = folder.isEmpty ? name : folder + "/" + name
             generated[path] = renderBranchBatch(branch)
@@ -767,18 +772,29 @@ enum ExoDOSPlanner {
     }
 
     /// A DOS-safe, unique 8.3 name for a branch's batch file.
-    private static func uniqueBatchName(for title: String, index: Int, taken: inout Set<String>) -> String {
+    ///
+    /// The menu's own label for the branch is the name to use: it is eXo's word
+    /// for this way of playing, it is already 8.3-shaped, and it survives into
+    /// the gamebox as something a person can read — Dune's six become `SB16`,
+    /// `MT32`, `GOLD`, `CDSB16`, `CDMT32` and `CDGOLD` rather than `PLAYDU1`
+    /// through `PLAYDU6`, which say nothing and only differ by their number
+    /// because all six titles happen to begin "play Dune".
+    ///
+    /// The title is the fallback for a branch no `choice` forked to.
+    private static func uniqueBatchName(label: String?, title: String, taken: inout Set<String>) -> String {
         let allowed = CharacterSet.alphanumerics
-        var stem = String(title.unicodeScalars.filter { allowed.contains($0) })
+        let source = (label?.isEmpty == false) ? label! : title
+        var stem = String(String(source.unicodeScalars.filter { allowed.contains($0) })
             .uppercased()
-            .prefix(6)
+            .prefix(8))
         if stem.isEmpty { stem = "PLAY" }
 
-        var name = "\(stem)\(index + 1).BAT"
-        var suffix = index + 1
+        var name = stem + ".BAT"
+        var suffix = 1
         while taken.contains(name.lowercased()) {
             suffix += 1
-            name = "\(stem)\(suffix).BAT"
+            let digits = String(suffix)
+            name = String(stem.prefix(8 - digits.count)) + digits + ".BAT"
         }
         taken.insert(name.lowercased())
         return name

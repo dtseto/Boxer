@@ -98,10 +98,19 @@ enum ExoDOSMenuInterpreter {
         var reason: String
     }
 
-    /// Commands that are pure presentation or control, and mean nothing here.
-    private static let ignored: Set<String> = ["echo", "cls", "rem", "pause", "choice",
-                                               "title", "prompt", "ver", "verify",
-                                               "break", "shift", "color"]
+    /// Commands that say something, or set the screen up to say it.
+    ///
+    /// All of these travel with the branch rather than being dropped: they cost
+    /// nothing to keep and a branch may have something to tell the player. They
+    /// are buffered rather than written straight out, because above a `choice`
+    /// they are the menu's own furniture — the prompt block the launch panel
+    /// replaces — and the `choice` discards them.
+    ///
+    /// `choice` is not here: it has its own case below, and it is the one piece
+    /// of the menu the launch panel actually replaces.
+    private static let presentation: Set<String> = ["echo", "cls", "pause", "rem",
+                                                    "title", "prompt", "ver", "verify",
+                                                    "break", "shift", "color"]
 
     /// DOS file commands, not programs.
     ///
@@ -262,11 +271,10 @@ enum ExoDOSMenuInterpreter {
                 pending.append(line)
                 continue
             }
-            if head == "cls" || head == "pause" {
+            if presentation.contains(head) {
                 pending.append(line)
                 continue
             }
-            if ignored.contains(head) && head != "choice" { continue }
 
             if head == "exit" {
                 if !state.command.isEmpty { flush(); branches.append(state) }

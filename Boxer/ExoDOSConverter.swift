@@ -152,9 +152,13 @@ final class ExoDOSConverter {
     /// longest-source-first, so a drive mounted on a subfolder beats the one
     /// mounted on everything.
     func destination(for member: String) -> String? {
-        if plan.mt32ROMs.contains(member) {
-            return ExoDOSPlanner.mt32ROMDirectory + "/" + ExoDOSPlanner.basename(member)
-        }
+        // MT-32 ROMs are deliberately *not* relocated into the gamebox
+        // (decision 25). Boxer keeps its own in Application Support and reads
+        // those first — `<gamebox>/MT-32 ROMs/` is only the fallback
+        // (`BXSession+BXAudioControls.m:124-131`) — so a copy per gamebox is
+        // 1.5 MB of duplicate ROM for every one of the 1,639 games that ask for
+        // MT-32. They stay where the archive puts them and travel onto the C
+        // drive like any other file, so nothing is dropped.
 
         for drive in plan.drives where drive.isImage {
             if drive.isBundle {

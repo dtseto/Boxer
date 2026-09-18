@@ -185,8 +185,11 @@ enum ExoDOSPlanner {
                                                "rem", "pause", "set", "choice", "if",
                                                "goto", "aspect"]
 
-    /// The folder Boxer searches for MT-32 ROMs, matching filenames against
-    /// `control` and `pcm` (`BXSession+BXAudioControls.m:255`).
+    /// The folder Boxer searches inside a gamebox for MT-32 ROMs, matching
+    /// filenames against `control` and `pcm` (`BXSession+BXAudioControls.m:255`).
+    ///
+    /// Nothing is written here any more — decision 25 — but it is the name to
+    /// use if that is ever reversed.
     static let mt32ROMDirectory = "MT-32 ROMs"
 
 
@@ -248,7 +251,7 @@ enum ExoDOSPlanner {
 
         plan.mt32ROMs = mt32ROMs(in: members)
         if !plan.mt32ROMs.isEmpty {
-            plan.notes.append("relocating \(plan.mt32ROMs.count) MT-32 ROM(s) into '\(mt32ROMDirectory)'")
+            plan.notes.append("ships \(plan.mt32ROMs.count) MT-32 ROM(s); Boxer uses its own, from Preferences")
         }
 
         plan.warnings = driveWarnings + launch.warnings

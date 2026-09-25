@@ -1,966 +1,966 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "3.title" : {
-      "comment" : "Class = \"NSWindow\"; title = \"Import a Game\"; ObjectID = \"3\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Import a Game"
+  "sourceLanguage": "en",
+  "strings": {
+    "3.title": {
+      "comment": "Class = \"NSWindow\"; title = \"Import a Game\"; ObjectID = \"3\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Import a Game"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importar un juego"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar un juego"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importer un jeu"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importer un jeu"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Importar um Jogo"
-          }
-        }
-      }
-    },
-    "15.title" : {
-      "comment" : "Class = \"NSButtonCell\"; title = \"Close\"; ObjectID = \"15\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Close"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cerrar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fermer"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fechar"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar um Jogo"
           }
         }
       }
     },
-    "37.title" : {
-      "comment" : "Class = \"NSButtonCell\"; title = \"Launch installer\"; ObjectID = \"37\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Launch installer"
+    "15.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Close\"; ObjectID = \"15\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Close"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ejecutar instalador"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lancer l’installation"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Executar instalador"
-          }
-        }
-      }
-    },
-    "47.title" : {
-      "comment" : "Class = \"NSButtonCell\"; title = \"Back\"; ObjectID = \"47\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Back"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Atrás"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retour"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voltar"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechar"
           }
         }
       }
     },
-    "50.title" : {
-      "comment" : "Class = \"NSButtonCell\"; title = \"Skip installer\"; ObjectID = \"50\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Skip installer"
+    "37.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Launch installer\"; ObjectID = \"37\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Launch installer"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Omitir instalador"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ejecutar instalador"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignorer l’installation"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer l’installation"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pular instalação"
-          }
-        }
-      }
-    },
-    "54.title" : {
-      "comment" : "Class = \"NSMenu\"; title = \"OtherViews\"; ObjectID = \"54\";",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OtherViews"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OtherViews"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OtherViews"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "OtherViews"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Executar instalador"
           }
         }
       }
     },
-    "57.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Other…\"; ObjectID = \"57\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Other…"
+    "47.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Back\"; ObjectID = \"47\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Back"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otro…"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atrás"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Autre…"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retour"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Outro…"
-          }
-        }
-      }
-    },
-    "70.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Choose game folder…\"; ObjectID = \"70\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Choose game folder…"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elegir carpeta de juego…"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisir le dossier de jeu…"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escolha a pasta do Jogo…"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voltar"
           }
         }
       }
     },
-    "141.title" : {
-      "comment" : "Class = \"NSButtonCell\"; title = \"Launch game\"; ObjectID = \"141\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Launch game"
+    "50.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Skip installer\"; ObjectID = \"50\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Skip installer"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Iniciar juego"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir instalador"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lancer le jeu"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorer l’installation"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Executar jogo"
-          }
-        }
-      }
-    },
-    "172.title" : {
-      "comment" : "Class = \"NSButtonCell\"; title = \"[Stop importing]\"; ObjectID = \"172\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "[Stop importing]"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "[Stop importing]"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "[Stop importing]"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "[Parar importação]"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pular instalação"
           }
         }
       }
     },
-    "185.title" : {
-      "comment" : "Class = \"NSButtonCell\"; title = \"Show in Finder\"; ObjectID = \"185\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Show in Finder"
+    "54.title": {
+      "comment": "Class = \"NSMenu\"; title = \"OtherViews\"; ObjectID = \"54\";",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OtherViews"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar en Finder"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OtherViews"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher dans le Finder"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OtherViews"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exibir no Finder"
-          }
-        }
-      }
-    },
-    "188.title" : {
-      "comment" : "Class = \"NSButtonCell\"; title = \"Close\"; ObjectID = \"188\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Close"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cerrar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fermer"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fechar"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OtherViews"
           }
         }
       }
     },
-    "229.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"[Gamebox name]\"; ObjectID = \"229\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "[Gamebox name]"
+    "57.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Other…\"; ObjectID = \"57\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Other…"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "[Gamebox name]"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otro…"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "[Gamebox name]"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autre…"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "[Nome da Gamebox]"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outro…"
           }
         }
       }
     },
-    "249.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Show gamebox in Finder\"; ObjectID = \"249\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Show gamebox in Finder"
+    "70.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Choose game folder…\"; ObjectID = \"70\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Choose game folder…"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar gamebox en Finder"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir carpeta de juego…"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher la gamebox dans le Finder"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir le dossier de jeu…"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exibir gamebox no Finder"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha a pasta do Jogo…"
           }
         }
       }
     },
-    "250.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Launch game\"; ObjectID = \"250\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Launch game"
+    "141.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Launch game\"; ObjectID = \"141\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Launch game"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Iniciar juego"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar juego"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lancer le jeu"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer le jeu"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Executar jogo"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Executar jogo"
           }
         }
       }
     },
-    "282.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Show gamebox in Finder\"; ObjectID = \"282\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Show gamebox in Finder"
+    "172.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"[Stop importing]\"; ObjectID = \"172\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "[Stop importing]"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mostrar gamebox en Finder"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Stop importing]"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Afficher la gamebox dans le Finder"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Stop importing]"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exibir gamebox no Finder"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Parar importação]"
           }
         }
       }
     },
-    "284.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Clear icon\"; ObjectID = \"284\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Clear icon"
+    "185.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Show in Finder\"; ObjectID = \"185\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Show in Finder"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vaciar icono"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar en Finder"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Effacer l’icône"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher dans le Finder"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remover ícone"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exibir no Finder"
           }
         }
       }
     },
-    "285.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Paste as icon\"; ObjectID = \"285\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Paste as icon"
+    "188.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Close\"; ObjectID = \"188\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Close"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pegar como icono"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Coller comme icône"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Colar como ícone"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechar"
           }
         }
       }
     },
-    "286.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Copy icon\"; ObjectID = \"286\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Copy icon"
+    "229.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"[Gamebox name]\"; ObjectID = \"229\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "[Gamebox name]"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiar icono"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Gamebox name]"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copier l’icône"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Gamebox name]"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copiar ícone"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Nome da Gamebox]"
           }
         }
       }
     },
-    "293.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Launch game\"; ObjectID = \"293\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Launch game"
+    "249.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Show gamebox in Finder\"; ObjectID = \"249\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Show gamebox in Finder"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Iniciar juego"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar gamebox en Finder"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lancer le jeu"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher la gamebox dans le Finder"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Executar jogo"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exibir gamebox no Finder"
           }
         }
       }
     },
-    "320.title" : {
-      "comment" : "Class = \"NSButtonCell\"; title = \"Close\"; ObjectID = \"320\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Close"
+    "250.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Launch game\"; ObjectID = \"250\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Launch game"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cerrar"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar juego"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fermer"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer le jeu"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fechar"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Executar jogo"
           }
         }
       }
     },
-    "442.title" : {
-      "comment" : "Class = \"NSMenuItem\"; title = \"Search for cover art\"; ObjectID = \"442\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Search for cover art"
+    "282.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Show gamebox in Finder\"; ObjectID = \"282\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Show gamebox in Finder"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Buscar carátula"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar gamebox en Finder"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rechercher la jaquette"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher la gamebox dans le Finder"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Procurar por capa"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exibir gamebox no Finder"
           }
         }
       }
     },
-    "450.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Please wait while Boxer\\nscans your game.\"; ObjectID = \"450\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Please wait while Boxer\nscans your game."
+    "284.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Clear icon\"; ObjectID = \"284\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Clear icon"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Por favor espere mientras Boxer\nescanea su juego."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vaciar icono"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veuillez patienter pendant que\nBoxer analyse votre jeu."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer l’icône"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Espere enquanto o Boxer\nlê seu jogo."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover ícone"
           }
         }
       }
     },
-    "452.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Drop your game here.\"; ObjectID = \"452\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Drop your game here."
+    "285.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Paste as icon\"; ObjectID = \"285\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Paste as icon"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arrastre su juego aquí."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar como icono"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Déposez ici votre jeu."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller comme icône"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arraste seu jogo aqui."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Colar como ícone"
           }
         }
       }
     },
-    "454.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Drop a CD-ROM, game folder or disc image\\nand Boxer will import it into a new gamebox. \"; ObjectID = \"454\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Drop a CD-ROM, game folder or disc image\nand Boxer will import it into a new gamebox. "
+    "286.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Copy icon\"; ObjectID = \"286\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Copy icon"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arrastre un CD-ROM, carpeta de juego o imagen de disco\ny Boxer lo importará en un nuevo gamebox. "
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar icono"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Déposez un CD-ROM, un dossier de jeu ou une image disque\net Boxer l’importera en tant que nouvelle gamebox. "
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copier l’icône"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arraste o CD-ROM, pasta do jogo ou imagem de disco\ne o Boxer importará para uma nova gamebox. "
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar ícone"
           }
         }
       }
     },
-    "456.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Boxer will now launch an\\ninstaller to set up this game.\"; ObjectID = \"456\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Boxer will now launch an\ninstaller to set up this game."
+    "293.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Launch game\"; ObjectID = \"293\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Launch game"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Boxer ejecutará ahora un\ninstalador para configurar este juego."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar juego"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Boxer va maintenant lancer un\nprogramme d’installation pour configurer ce jeu."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lancer le jeu"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O Boxer vai executar agora\no instalador deste jogo."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Executar jogo"
           }
         }
       }
     },
-    "458.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Choose installer:\"; ObjectID = \"458\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Choose installer:"
+    "320.title": {
+      "comment": "Class = \"NSButtonCell\"; title = \"Close\"; ObjectID = \"320\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Close"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elegir instalador:"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choix du programme d’installation :"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escolha o instalador:"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechar"
           }
         }
       }
     },
-    "460.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"You can skip the installer if the game is\\nalready installed and ready to play.\"; ObjectID = \"460\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "You can skip the installer if the game is\nalready installed and ready to play."
+    "442.title": {
+      "comment": "Class = \"NSMenuItem\"; title = \"Search for cover art\"; ObjectID = \"442\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Search for cover art"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Puede omitir el instalador si el juego está\nya instalado y listo para jugar."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar carátula"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vous pouvez ignorer le programme d’installation\nsi le jeu est déjà installé et prêt à être lancé."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher la jaquette"
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Voce pode pular a instalação do jogo\nse já estiver instalado."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Procurar por capa"
           }
         }
       }
     },
-    "462.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"If your game has more than one CD, you can import the\\nothers later from the Drives Inspector while you play.\"; ObjectID = \"462\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "If your game has more than one CD, you can import the\nothers later from the Drives Inspector while you play."
+    "450.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Please wait while Boxer\\nscans your game.\"; ObjectID = \"450\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Please wait while Boxer\nscans your game."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Si su juego tiene más de un CD, puede importar los\notros después desde el inspector de unidades al jugar."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por favor espere mientras Boxer\nescanea su juego."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Si le jeu possède plus d’un CD, vous pouvez importer les\nautres plus tard à partir de l’inspecteur de lecteurs."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veuillez patienter pendant que\nBoxer analyse votre jeu."
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se seu jogo exigir mais CDs, você pode\nimportar através do Inspetor de Discos enquanto jogar."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espere enquanto o Boxer\nlê seu jogo."
           }
         }
       }
     },
-    "467.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"[Current import stage]\"; ObjectID = \"467\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "[Current import stage]"
+    "452.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Drop your game or zip here.\"; ObjectID = \"452\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Drop your game or zip here."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "[Current import stage]"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrastre su juego o ZIP aquí."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "[Current import stage]"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déposez ici votre jeu ou ZIP."
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "[Estágio atual]"
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arraste seu jogo ou ZIP aqui."
           }
         }
       }
     },
-    "471.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Please wait while Boxer\\nfinishes importing your game.\"; ObjectID = \"471\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Please wait while Boxer\nfinishes importing your game."
+    "454.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Drop a CD-ROM, game folder, disc image or eXoDOS ZIP game\\nand Boxer will import it into a new gamebox. \"; ObjectID = \"454\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Drop a CD-ROM, game folder, disc image or eXoDOS ZIP game\nand Boxer will import it into a new gamebox. "
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Por favor espere mientras Boxer\nfinaliza la importación de su juego."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrastre un CD-ROM, carpeta, imagen de disco o un ZIP de eXoDOS\ny Boxer lo importará en un nuevo gamebox. "
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Veuillez patienter pendant que\nBoxer termine l’importation."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déposez un CD-ROM, un dossier, une image disque ou un ZIP eXoDOS\net Boxer l’importera en tant que nouvelle gamebox. "
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aguarde enquanto o Boxer\ntermina de importar."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arraste o CD-ROM, pasta, imagem de disco ou um ZIP do eXoDOS\ne o Boxer importará para uma nova gamebox. "
           }
         }
       }
     },
-    "473.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"Congratulations! Your new gamebox is ready to play.\"; ObjectID = \"473\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Congratulations! Your new gamebox is ready to play."
+    "456.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Boxer will now launch an\\ninstaller to set up this game.\"; ObjectID = \"456\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Boxer will now launch an\ninstaller to set up this game."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¡Felicidades! Su nuevo gamebox está listo para jugar."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boxer ejecutará ahora un\ninstalador para configurar este juego."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Félicitations ! Votre nouvelle gamebox est prête."
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boxer va maintenant lancer un\nprogramme d’installation pour configurer ce jeu."
           }
         },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parabéns! Seu novo gamebox está pronto."
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Boxer vai executar agora\no instalador deste jogo."
+          }
+        }
+      }
+    },
+    "458.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Choose installer:\"; ObjectID = \"458\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Choose installer:"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir instalador:"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choix du programme d’installation :"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escolha o instalador:"
+          }
+        }
+      }
+    },
+    "460.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"You can skip the installer if the game is\\nalready installed and ready to play.\"; ObjectID = \"460\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "You can skip the installer if the game is\nalready installed and ready to play."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puede omitir el instalador si el juego está\nya instalado y listo para jugar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pouvez ignorer le programme d’installation\nsi le jeu est déjà installé et prêt à être lancé."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voce pode pular a instalação do jogo\nse já estiver instalado."
+          }
+        }
+      }
+    },
+    "462.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"If your game has more than one CD, you can import the\\nothers later from the Drives Inspector while you play.\"; ObjectID = \"462\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "If your game has more than one CD, you can import the\nothers later from the Drives Inspector while you play."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si su juego tiene más de un CD, puede importar los\notros después desde el inspector de unidades al jugar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si le jeu possède plus d’un CD, vous pouvez importer les\nautres plus tard à partir de l’inspecteur de lecteurs."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se seu jogo exigir mais CDs, você pode\nimportar através do Inspetor de Discos enquanto jogar."
+          }
+        }
+      }
+    },
+    "467.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"[Current import stage]\"; ObjectID = \"467\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "[Current import stage]"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Current import stage]"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Current import stage]"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[Estágio atual]"
+          }
+        }
+      }
+    },
+    "471.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Please wait while Boxer\\nfinishes importing your game.\"; ObjectID = \"471\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Please wait while Boxer\nfinishes importing your game."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por favor espere mientras Boxer\nfinaliza la importación de su juego."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veuillez patienter pendant que\nBoxer termine l’importation."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aguarde enquanto o Boxer\ntermina de importar."
+          }
+        }
+      }
+    },
+    "473.title": {
+      "comment": "Class = \"NSTextFieldCell\"; title = \"Congratulations! Your new gamebox is ready to play.\"; ObjectID = \"473\";",
+      "extractionState": "extracted_with_value",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Congratulations! Your new gamebox is ready to play."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¡Felicidades! Su nuevo gamebox está listo para jugar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Félicitations ! Votre nouvelle gamebox est prête."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parabéns! Seu novo gamebox está pronto."
           }
         }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

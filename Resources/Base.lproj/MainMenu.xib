@@ -608,7 +608,7 @@
                                     <action selector="performRestart:" target="-1" id="2269"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Restart at Launch Panel" alternate="YES" keyEquivalent="R" id="2273">
+                            <menuItem title="Restart at Launch Panel" keyEquivalent="R" id="2273">
                                 <connections>
                                     <action selector="performRestartAtLaunchPanel:" target="-1" id="2275"/>
                                 </connections>
@@ -859,8 +859,7 @@
                                 </connections>
                             </menuItem>
                             <menuItem isSeparatorItem="YES" id="1448"/>
-                            <menuItem title="Welcome to Boxer" id="1871">
-                                <modifierMask key="keyEquivalentModifierMask"/>
+                            <menuItem title="Welcome to Boxer" keyEquivalent="0" id="1871">
                                 <connections>
                                     <action selector="orderFrontWelcomePanel:" target="-1" id="1873"/>
                                 </connections>

@@ -13,6 +13,8 @@
 #import "BXBlueprintPanel.h"
 #import "BXAppController.h"
 
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+
 
 @implementation BXImportDropzonePanelController
 
@@ -43,13 +45,29 @@
     openPanel.canChooseFiles = YES;
     openPanel.canChooseDirectories = YES;
     openPanel.treatsFilePackagesAsDirectories = NO;
-    openPanel.message = NSLocalizedString(@"Choose a DOS game folder, CD-ROM or disc image to import:",
+    openPanel.message = NSLocalizedString(@"Choose a DOS game folder, CD-ROM, disc image or zipped eXoDOS game to import:",
                                           @"Help text shown at the top of choose-a-folder-to-import panel.");
     
     openPanel.prompt = NSLocalizedString(@"Import",
                                          @"Label shown on accept button in choose-a-folder-to-import panel.");
 	
-    openPanel.allowedFileTypes = [BXImportSession acceptedSourceTypes].allObjects;
+    //allowedFileTypes has been deprecated since macOS 12 in favour of content
+    //types, and it is the reason a zipped eXoDOS game could not be selected
+    //here even though the importer accepts one: the drop target and this panel
+    //are gated by the same +acceptedSourceTypes, so what one takes the other
+    //should offer.
+    NSMutableArray<UTType *> *contentTypes = [NSMutableArray array];
+    for (NSString *identifier in [BXImportSession acceptedSourceTypes])
+    {
+        //Not every identifier the importer accepts is declared on the system:
+        //com.apple.disk-image-ndif resolves to nil here, and dropping it would
+        //quietly stop offering NDIF images that the old API accepted as a bare
+        //string. An imported type stands in for one nothing has declared.
+        UTType *type = [UTType typeWithIdentifier: identifier];
+        if (!type) type = [UTType importedTypeWithIdentifier: identifier];
+        if (type) [contentTypes addObject: type];
+    }
+    openPanel.allowedContentTypes = contentTypes;
     
     [openPanel beginSheetModalForWindow: self.view.window
                       completionHandler: ^(NSInteger result) {
@@ -83,12 +101,13 @@
 		NSArray *droppedURLs = [pboard readObjectsForClasses: dragClasses
                                                      options: dragOptions];
         
-        BXImportSession *importer = self.controller.document;
-        
 		for (NSURL *URL in droppedURLs)
 		{
-			//If any of the dropped files cannot be imported, reject the drop
-			if (![importer.class canImportFromSourceURL: URL])
+			//If any of the dropped files cannot be imported, reject the drop.
+			//Asked of the class, as the welcome window's drop target does: via
+			//`self.controller.document.class` this would silently reject every
+			//drop if the session were ever missing.
+			if (![BXImportSession canImportFromSourceURL: URL])
                 return NSDragOperationNone;
 		}
 		
@@ -109,7 +128,7 @@
     BXImportSession *importer = self.controller.document;
     for (NSURL *URL in droppedURLs)
     {
-        if ([importer.class canImportFromSourceURL: URL])
+        if ([BXImportSession canImportFromSourceURL: URL])
         {
             //Defer import to give the drag operation and animations time to clean up
             [importer performSelector: @selector(importFromSourceURL:) withObject: URL afterDelay: 0.5];

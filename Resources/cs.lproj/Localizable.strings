@@ -138,7 +138,7 @@ na vlastních osách.";
 "Cancelling…" = "Ruším...";
 
 /* Help text shown at the top of choose-a-folder-to-import panel. */
-"Choose a DOS game folder, CD-ROM or disc image to import:" = "Určete, jakou složku s DOSovou hrou, disk CD nebo obraz disku importovat:";
+"Choose a DOS game folder, CD-ROM, disc image or zipped eXoDOS game to import:" = "Určete, jakou složku s DOSovou hrou, disk CD, obraz disku nebo hru eXoDOS v ZIPu importovat:";
 
 /* Help text shown at the top of mount-a-new-drive panel. */
 "Choose a folder, CD-ROM or disc image to add as a DOS drive." = "Určete, jakou složku, disk CD nebo obraz disku přidat jako DOSový disk.";

@@ -114,7 +114,7 @@ To mount it as a floppy drive, add [32;1m-t floppy[0m.
 [34;1mThe following drives are currently mounted:[0m
 ";
 
-"PROGRAM_MOUNT_STATUS_2" = "%c: is mounted as %s
+"PROGRAM_MOUNT_STATUS_2" = "%s is mounted as %c:
 ";
 
 "PROGRAM_MOUNT_STATUS_FORMAT" = "%-5s  %-58s %-12s\n";

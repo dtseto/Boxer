@@ -138,7 +138,7 @@ en ejes separados.";
 "Cancelling…" = "Cancelando…";
 
 /* Help text shown at the top of choose-a-folder-to-import panel. */
-"Choose a DOS game folder, CD-ROM or disc image to import:" = "Elija una carpeta de juegos DOS, CD-ROM o imagen de disco para importar:";
+"Choose a DOS game folder, CD-ROM, disc image or zipped eXoDOS game to import:" = "Elija una carpeta de juegos DOS, CD-ROM, imagen de disco o juego eXoDOS en ZIP para importar:";
 
 /* Help text shown at the top of mount-a-new-drive panel. */
 "Choose a folder, CD-ROM or disc image to add as a DOS drive." = "Elija una carpeta, CD-ROM o imagen de disco para añadir como unidad DOS.";

@@ -136,7 +136,7 @@
 "Cancelling…" = "Annulation…";
 
 /* Help text shown at the top of choose-a-folder-to-import panel. */
-"Choose a DOS game folder, CD-ROM or disc image to import:" = "Choisissez un dossier de jeu DOS, un CD-ROM ou une image disque à importer :";
+"Choose a DOS game folder, CD-ROM, disc image or zipped eXoDOS game to import:" = "Choisissez un dossier de jeu DOS, un CD-ROM, une image disque ou un jeu eXoDOS en ZIP à importer :";
 
 /* Help text shown at the top of mount-a-new-drive panel. */
 "Choose a folder, CD-ROM or disc image to add as a DOS drive." = "Choisissez un dossier, un CD-ROM ou une image disque à ajouter en tant que lecteur DOS.";

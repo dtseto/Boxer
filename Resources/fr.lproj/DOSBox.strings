@@ -115,7 +115,7 @@ Pour monter en tant que lecteur de disquettes, ajoutez [32;1m-t floppy[0m.
 [34;1mLes lecteurs suivants sont actuellement montés :[0m
 ";
 
-"PROGRAM_MOUNT_STATUS_2" = "%c: est monté en tant que %s
+"PROGRAM_MOUNT_STATUS_2" = "%s est monté en tant que %c:
 ";
 
 "PROGRAM_MOUNT_STATUS_FORMAT" = "%-5s  %-58s %-12s\n";

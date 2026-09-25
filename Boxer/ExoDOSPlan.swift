@@ -220,6 +220,22 @@ enum ExoDOSPlanner {
     /// as though `SOUND=S` were a program.
     static let prefixCommands: Set<String> = ["call", "loadfix"]
 
+    /// Commands that wait for the user, which the gamebox's autoexec must not.
+    ///
+    /// Boxer runs the autoexec behind a loading veil and lifts it when a
+    /// *program* starts (`-[BXSession emulatorWillStartProgram:]`, which arms
+    /// `_showDOSViewAfterProgramStart`). `pause` and `choice` are shell
+    /// builtins, not programs, so nothing fires: the veil stays up, the
+    /// keypress they are waiting for can never be given, and the session hangs
+    /// on its spinner forever. 261 games in the pack `pause` in their autoexec
+    /// and 2 `choice`.
+    ///
+    /// They are commented out rather than dropped, like every other line the
+    /// gamebox cannot run (decision 16). Inside a *generated batch* the same
+    /// commands are kept and run normally — that batch runs in front of the
+    /// user, after the veil has lifted.
+    static let interactiveCommands: Set<String> = ["pause", "choice"]
+
     /// Commands that set the machine up rather than start the game. Throwing
     /// them away would lose real behaviour, so they are carried across.
     static let setupCommands: Set<String> = ["mixer", "path", "ver", "keyb", "loadrom",
@@ -348,6 +364,7 @@ enum ExoDOSPlanner {
             let head = String(command.lowercased().prefix(while: { $0 != " " && $0 != "\t" }))
 
             if head == "mount" || head == "imgmount" || head == "exit"
+                || interactiveCommands.contains(head)
                 || launchLines.contains(index) {
                 result.append("rem " + raw)
                 continue

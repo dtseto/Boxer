@@ -23,6 +23,75 @@
 > unchanged, so some of it (build requirements, supported macOS versions)
 > doesn't apply to this branch.
 
+## Building this branch
+
+This replaces "Build requirements" below, which describes the original
+project. It has been tested on **Apple Silicon (arm64) only**, with Xcode 26.6
+and Xcode 27.0.
+
+### Install first
+
+- **macOS 13 or later**, and **Xcode 26 or later**.
+- **Xcode's Metal toolchain.** Since Xcode 26 it is a separate download
+  (about 700 MB), and every Xcode update removes it again:
+  `xcodebuild -downloadComponent MetalToolchain`
+- **[Homebrew](https://brew.sh)**, installed at `/opt/homebrew` (the Apple
+  Silicon default). The project looks for asio's headers at that exact path.
+- **asio** (headers only, not linked into the app) and **CMake** (builds
+  OpenEmuShaders' SPIR-V and glslang tools): `brew install asio cmake`
+- *Optional:* **SwiftLint**. The build only prints a warning without it.
+
+The finished app is self-contained; it needs nothing from Homebrew at run
+time.
+
+### Steps
+
+```bash
+git clone --branch DosBox_Staging_0.83 https://github.com/eduo/Boxer.git
+cd Boxer
+git submodule update --init --recursive --force
+```
+
+The DOSBox Staging submodule comes from
+[eduo/dosbox-staging](https://github.com/eduo/dosbox-staging/tree/boxer-0.83).
+If any `Vendor/` folder ends up containing only `.git`, run the same
+`git submodule update` command on that folder again. Always use the commits
+the submodules are pinned to: OpenEmuShaders' latest commit is not
+compatible with Boxer's shader code.
+
+Build OpenEmuShaders' tools once, before the first Xcode build. They declare
+a CMake version so old that CMake 4 refuses them, and a failed attempt leaves
+a stale cache behind. Xcode then reports it as the misleading
+``No rule to make target `SPIRV-Tools-opt'``.
+
+```bash
+printf '#!/bin/sh\nexec cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 "$@"\n' > /tmp/cmake-compat
+chmod +x /tmp/cmake-compat
+cd Vendor/OpenEmuShaders/3rdparty
+rm -rf SPIRV-Tools/build glslang/build
+make CMAKE=/tmp/cmake-compat all
+cd ../../..
+```
+
+Then build with the **`Boxer CI`** scheme. The plain `Boxer` scheme signs
+with the original developer's Developer ID. The deployment-target override
+is needed because the vendored submodules declare older macOS versions than
+current Xcode accepts. Without it the build fails before any Boxer code
+compiles:
+
+```bash
+xcodebuild -workspace Boxer.xcworkspace -scheme "Boxer CI" \
+  -configuration Release -arch arm64 \
+  MACOSX_DEPLOYMENT_TARGET=13.0 \
+  CODE_SIGN_IDENTITY="-" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+  build
+```
+
+The app ends up in
+`~/Library/Developer/Xcode/DerivedData/Boxer-*/Build/Products/Release/`.
+
+---
+
 ![Boxer](http://boxerapp.com/static/images/gloves_96.png)
 
 #### Some notes on building Boxer

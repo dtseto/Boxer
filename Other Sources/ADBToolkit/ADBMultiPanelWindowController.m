@@ -90,6 +90,18 @@
             
 			[animation startAnimation];
 			
+            //Assert the final frame rather than trusting the animation to land
+            //on it. NSViewAnimation can be cut short -- a drop happens during
+            //event tracking, alongside AppKit's own drag animation -- and when
+            //it is, the window stops partway and the panel is left narrower
+            //than it asked to be, with its controls clipped by the window edge.
+            //The non-animated branch below sets the frame outright and never
+            //has this problem, which is why the same panel arrives at the right
+            //size when the window is created for it and the wrong one when it
+            //replaces a panel in a window already on screen.
+            if (!NSEqualRects(self.window.frame, newFrame))
+                [self.window setFrame: newFrame display: YES];
+
 			//Reset the properties of the original panel once the animation is complete
 			[oldPanel removeFromSuperview];
             oldPanel.frameSize = oldSize;
@@ -114,6 +126,16 @@
 			[self.panelContainer addSubview: newPanel];
 		}
 		
+        //Pin the new panel to the container it now lives in.
+        //
+        //The animated branch adds the panel as a subview *before* the window
+        //resizes, so an autoresizing panel grows by the same delta the window
+        //does: swapping a 480pt panel for a 575pt one in a visible window left
+        //the panel 670pt wide inside a 575pt container, with its right-hand
+        //controls clipped by the window edge. The non-animated branch never saw
+        //this because it sets the frame first and adds the subview afterwards.
+        newPanel.frame = self.panelContainer.bounds;
+
 		//Activate the designated first responder for this panel after switching
 		//(Currently this is piggybacking off NSView's nextKeyView, which is kinda not good)
 		[self.window makeFirstResponder: newPanel.nextKeyView];

@@ -380,10 +380,34 @@ enum ExoDOSPlanner {
                 result.append("rem " + raw)
                 continue
             }
-            result.append(strippedPackPrefix(raw, shortName: shortName,
-                                             mountsParent: mountsParent))
+            result.append(retargetedDiscSwapKeys(
+                strippedPackPrefix(raw, shortName: shortName, mountsParent: mountsParent)))
         }
         return result
+    }
+
+    /// Rewrites DOSBox's disc-swap shortcut into the one Boxer actually uses.
+    ///
+    /// 68 games print an instruction like *"This game is comprised of 2 CD's.
+    /// Press Ctrl-F4 to switch discs when prompted"* — and inside Boxer that is
+    /// simply wrong: Ctrl-F4 does nothing, and the menu item is **Next Disc**,
+    /// ⇧⌘→ (`mountNextDrivesInQueues:`, right arrow with shift and command).
+    /// An instruction naming a key that does nothing is worse than none.
+    ///
+    /// Six spellings occur in the pack — `Ctrl+F4`, `Ctrl-F4`, `ctrl-F4`,
+    /// `CTRL-F4`, `ctrl+F4`, `ctrl-f4` — so the match is deliberately loose
+    /// about case, separator and spacing.
+    ///
+    /// Note this lengthens the line, which can nudge a framed block of `echo`
+    /// art out of alignment. Saying the right thing is worth more.
+    static let discSwapShortcut = "Shift-Cmd-Right"
+
+    static func retargetedDiscSwapKeys(_ line: String) -> String {
+        guard line.range(of: "f *4", options: [.regularExpression, .caseInsensitive]) != nil
+        else { return line }
+        let pattern = "\\b(?:ctrl|control|ctl) *[-+ ]? *f *4\\b"
+        return line.replacingOccurrences(of: pattern, with: discSwapShortcut,
+                                         options: [.regularExpression, .caseInsensitive])
     }
 
     /// Removes eXo's pack-relative prefix from every string in a line.

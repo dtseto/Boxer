@@ -181,15 +181,23 @@ static void BXLogGeometryEvent(NSString *format, ...)
 	[self setProgramPanelShown: NO
                        animate: NO];
     
-    //Display the loading panel by default — unless the gamebox has asked to
-    //start at the DOS view. The veil hides an autoexec nobody is meant to read;
-    //a gamebox whose autoexec prints instructions and then waits on `pause`
-    //needs the player to see it, and would otherwise hang behind the veil
-    //waiting for a keypress that can never arrive.
+    //Display the loading panel by default.
+    [self switchToPanel: BXDOSWindowLoadingPanel animate: NO];
+
+    //...but leave it again immediately if the gamebox has asked to start at the
+    //DOS view. The veil hides an autoexec nobody is meant to read; a gamebox
+    //whose autoexec prints instructions and then waits on `pause` needs the
+    //player to see it, and would otherwise hang behind the veil waiting for a
+    //keypress that can never arrive.
+    //
+    //This goes *through* the loading panel rather than straight to the DOS
+    //view, because -switchToPanel: only ever hides the view of the panel it is
+    //leaving. Switching from no panel at all leaves the loading view on screen
+    //with its spinner drawn over the DOS view — stopped, since the switch does
+    //stop the animation, but still visible.
     BXGamebox *startupGamebox = [(BXSession *)self.document gamebox];
-    BOOL startAtDOSView = [[startupGamebox gameInfoForKey: BXShowDOSViewAtStartupGameInfoKey] boolValue];
-    [self switchToPanel: (startAtDOSView ? BXDOSWindowDOSView : BXDOSWindowLoadingPanel)
-                animate: NO];
+    if ([[startupGamebox gameInfoForKey: BXShowDOSViewAtStartupGameInfoKey] boolValue])
+        [self switchToPanel: BXDOSWindowDOSView animate: NO];
 
     NSString *savedShaderPresetPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"shaderPresetPath"];
     if (savedShaderPresetPath.length > 0)

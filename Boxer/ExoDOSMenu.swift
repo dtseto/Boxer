@@ -301,11 +301,11 @@ enum ExoDOSMenuInterpreter {
 
             if head == "echo" {
                 if let prompt = menuPrompt(in: line) { prompts.append(prompt) }
-                pending.append(line)
+                pending.append(ExoDOSPlanner.retargetedDiscSwapKeys(line))
                 continue
             }
             if presentation.contains(head) {
-                pending.append(line)
+                pending.append(ExoDOSPlanner.retargetedDiscSwapKeys(line))
                 continue
             }
 

@@ -31,6 +31,7 @@ NSString * const BXGameIdentifierTypeGameInfoKey    = @"BXGameIdentifierType";
 NSString * const BXTargetProgramGameInfoKey         = @"BXDefaultProgramPath";
 NSString * const BXLaunchersGameInfoKey             = @"BXLaunchers";
 NSString * const BXCloseOnExitGameInfoKey           = @"BXCloseAfterDefaultProgram";
+NSString * const BXShowDOSViewAtStartupGameInfoKey  = @"BXShowDOSViewAtStartup";
 
 NSString * const BXTargetSymlinkName			= @"DOSBox Target";
 NSString * const BXConfigurationFileName		= @"DOSBox Preferences";

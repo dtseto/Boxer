@@ -343,6 +343,10 @@ final class ExoDOSConverter {
             BXGameIdentifierGameInfoKey: UUID().uuidString,
             BXGameIdentifierTypeGameInfoKey: BXGameIdentifierType.UUID.rawValue,
         ]
+        if plan.showsDOSViewAtStartup {
+            info[BXShowDOSViewAtStartupGameInfoKey] = true
+        }
+
         guard !plan.launchers.isEmpty else { return info }
 
         var entries: [[String: Any]] = []

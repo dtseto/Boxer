@@ -198,6 +198,7 @@ final class ExoDOSHeadlessTool: NSObject {
             "unpacked_size": plan.unpackedSize,
             "gamebox_autoexec": plan.gameboxAutoexec,
             "default_launcher": plan.defaultLauncher as Any,
+            "shows_dos_view_at_startup": plan.showsDOSViewAtStartup,
             "source_zip": plan.sourceURL.path,
             "drives": drives,
             "launchers": plan.launchers.map {

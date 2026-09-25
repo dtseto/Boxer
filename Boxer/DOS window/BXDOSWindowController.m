@@ -181,8 +181,15 @@ static void BXLogGeometryEvent(NSString *format, ...)
 	[self setProgramPanelShown: NO
                        animate: NO];
     
-    //Display the loading panel by default.
-    [self switchToPanel: BXDOSWindowLoadingPanel animate: NO];
+    //Display the loading panel by default — unless the gamebox has asked to
+    //start at the DOS view. The veil hides an autoexec nobody is meant to read;
+    //a gamebox whose autoexec prints instructions and then waits on `pause`
+    //needs the player to see it, and would otherwise hang behind the veil
+    //waiting for a keypress that can never arrive.
+    BXGamebox *startupGamebox = [(BXSession *)self.document gamebox];
+    BOOL startAtDOSView = [[startupGamebox gameInfoForKey: BXShowDOSViewAtStartupGameInfoKey] boolValue];
+    [self switchToPanel: (startAtDOSView ? BXDOSWindowDOSView : BXDOSWindowLoadingPanel)
+                animate: NO];
 
     NSString *savedShaderPresetPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"shaderPresetPath"];
     if (savedShaderPresetPath.length > 0)

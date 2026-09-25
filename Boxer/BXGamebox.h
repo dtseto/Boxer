@@ -54,6 +54,15 @@ extern NSString * const BXLaunchersGameInfoKey;
 /// The gameInfo key under which we store the close-on-exit toggle flag as an `NSNumber`.
 extern NSString * const BXCloseOnExitGameInfoKey;
 
+/// The gameInfo key, an `NSNumber`, under which a gamebox asks to start at the
+/// DOS view rather than behind the loading veil.
+///
+/// The veil exists to hide an autoexec nobody is meant to read. A gamebox whose
+/// autoexec is *addressed to the player* — one that prints instructions and then
+/// waits on `pause` for a keypress — needs the opposite, and would otherwise
+/// hang forever behind the veil waiting for a key that cannot be pressed.
+extern NSString * const BXShowDOSViewAtStartupGameInfoKey;
+
 
 #pragma mark - Launcher dictionary constants.
 

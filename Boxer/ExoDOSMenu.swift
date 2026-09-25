@@ -142,7 +142,7 @@ enum ExoDOSMenuInterpreter {
     /// - Throws: `Unflattenable` when the file's shape cannot be accounted for,
     ///   which is the signal to leave the batch registered as the launcher.
     static func flatten(_ text: String, drive: String, workingDirectory: String,
-                        shortName: String) throws -> [ExoDOSMenuBranch] {
+                        shortName: String, hostPrefix: String) throws -> [ExoDOSMenuBranch] {
         let lines = text.replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
             .components(separatedBy: "\n")
@@ -160,7 +160,7 @@ enum ExoDOSMenuInterpreter {
         let start = ExoDOSMenuBranch(drive: drive, workingDirectory: workingDirectory)
         try walk(lines: lines, labels: labels, from: 0, state: start,
                  into: &branches, visited: [], depth: 0, variables: [:],
-                 shortName: shortName)
+                 shortName: shortName, hostPrefix: hostPrefix)
 
         guard !branches.isEmpty else {
             throw Unflattenable(reason: "no path through it reaches a program")
@@ -192,20 +192,52 @@ enum ExoDOSMenuInterpreter {
     /// alternative — emitting `C:\cd\disc.cue` from the drive and directory the
     /// interpreter is tracking — is immune to a branch that changed drive before
     /// mounting, and is what to reach for if this is ever found wanting.
-    static func rewrittenMountCommand(_ line: String, shortName: String) -> String {
-        var result = line
-        // The verb, at the head of the line, and only there.
-        if let space = result.firstIndex(where: { $0 == " " || $0 == "\t" }),
-           result[result.startIndex..<space].lowercased() == "imgmount" {
-            result = "mount" + result[space...]
+    static func rewrittenMountCommand(_ line: String, shortName: String,
+                                      hostPrefix: String) -> String {
+        var tokens = ExoDOSPlanner.splitCommand(line)
+        guard !tokens.isEmpty else { return line }
+
+        // `imgmount` is a deprecated alias for `mount` in this fork and prints a
+        // banner on every invocation (`dos_programs.cpp:102-104`,
+        // `mount.cpp:1319-1324`).
+        if tokens[0].lowercased() == "imgmount" { tokens[0] = "mount" }
+
+        var rebuilt = [tokens[0]]
+        var index = 1
+        // The drive letter, then paths until the first flag.
+        if tokens.count > 1 { rebuilt.append(tokens[1]); index = 2 }
+        var seenFlag = false
+        while index < tokens.count {
+            let token = tokens[index]
+            index += 1
+            if token.hasPrefix("-") { seenFlag = true }
+            if seenFlag { rebuilt.append(token); continue }
+            rebuilt.append("\"" + hostPath(token, shortName: shortName, hostPrefix: hostPrefix) + "\"")
         }
+        return rebuilt.joined(separator: " ")
+    }
+
+    /// Turns one of eXo's pack-relative mount paths into a gamebox-relative one.
+    ///
+    /// `mount` wants a **host** path, and Boxer points the emulator's working
+    /// directory at the gamebox itself (`BXSession.m:1855-1866`), so a path
+    /// relative to the gamebox root is the form that keeps working when the
+    /// gamebox is moved or copied to another machine.
+    ///
+    /// It is quoted because these names have spaces in them, and it is a host
+    /// path rather than a DOS one because a host path has no 8.3 limit:
+    /// `CARMAGEDDON.CUE` is eleven characters and `SPLAT PACK.CUE` has a space,
+    /// and neither can be said as a DOS name at all.
+    static func hostPath(_ dosPath: String, shortName: String, hostPrefix: String) -> String {
+        var path = dosPath.trimmingCharacters(in: CharacterSet(charactersIn: "\""))
         for prefix in [".\\eXoDOS\\\(shortName)\\", "./eXoDOS/\(shortName)/",
                        ".\\eXoDOS\\", "./eXoDOS/"] {
-            let stripped = result.replacingOccurrences(of: prefix, with: "",
-                                                       options: [.caseInsensitive])
-            if stripped != result { return stripped }
+            let stripped = path.replacingOccurrences(of: prefix, with: "",
+                                                     options: [.caseInsensitive])
+            if stripped != path { path = stripped; break }
         }
-        return result
+        path = path.replacingOccurrences(of: "\\", with: "/")
+        return hostPrefix.isEmpty ? path : hostPrefix + "/" + path
     }
 
     /// Strips the leading `@`, the end-of-file marker, NUL padding and
@@ -228,7 +260,8 @@ enum ExoDOSMenuInterpreter {
                              visited: Set<String>,
                              depth: Int,
                              variables inherited: [String: String],
-                             shortName: String) throws {
+                             shortName: String,
+                             hostPrefix: String) throws {
         if depth > maximumDepth {
             throw Unflattenable(reason: "its menus nest more than \(maximumDepth) deep")
         }
@@ -329,7 +362,8 @@ enum ExoDOSMenuInterpreter {
                     try walk(lines: lines, labels: labels, from: destination + 1,
                              state: branch, into: &branches,
                              visited: visited.union([name]), depth: depth + 1,
-                             variables: variables, shortName: shortName)
+                             variables: variables, shortName: shortName,
+                             hostPrefix: hostPrefix)
                 }
                 return
             }
@@ -373,7 +407,8 @@ enum ExoDOSMenuInterpreter {
             // refused for "runs 'mount', which drive c does not hold".
             if mountCommands.contains(head) {
                 flush()
-                state.script.append(rewrittenMountCommand(line, shortName: shortName))
+                state.script.append(rewrittenMountCommand(line, shortName: shortName,
+                                                          hostPrefix: hostPrefix))
                 continue
             }
 

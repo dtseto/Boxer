@@ -49,6 +49,10 @@ struct ExoDOSPlan {
     /// pack-relative prefix stripped (decision 20).
     var gameboxAutoexec: [String] = []
 
+    /// Whether the gamebox should open at the DOS view rather than behind the
+    /// loading veil, because its autoexec stops to talk to the player.
+    var showsDOSViewAtStartup = false
+
     /// Which launcher the gamebox starts by default, if any.
     ///
     /// Nil where the autoexec handed off to a menu we flattened: eXo's first
@@ -220,20 +224,21 @@ enum ExoDOSPlanner {
     /// as though `SOUND=S` were a program.
     static let prefixCommands: Set<String> = ["call", "loadfix"]
 
-    /// Commands that wait for the user, which the gamebox's autoexec must not.
+    /// Commands that wait for the player, and so decide what the window shows.
     ///
     /// Boxer runs the autoexec behind a loading veil and lifts it when a
     /// *program* starts (`-[BXSession emulatorWillStartProgram:]`, which arms
     /// `_showDOSViewAfterProgramStart`). `pause` and `choice` are shell
-    /// builtins, not programs, so nothing fires: the veil stays up, the
-    /// keypress they are waiting for can never be given, and the session hangs
-    /// on its spinner forever. 261 games in the pack `pause` in their autoexec
-    /// and 2 `choice`.
+    /// builtins, not programs, so nothing fires and the veil stays up — the
+    /// keypress can never be given and the session hangs on its spinner.
     ///
-    /// They are commented out rather than dropped, like every other line the
-    /// gamebox cannot run (decision 16). Inside a *generated batch* the same
-    /// commands are kept and run normally — that batch runs in front of the
-    /// user, after the veil has lifted.
+    /// These lines are **kept**, because the message above a `pause` is
+    /// addressed to the player and the `pause` is what makes it readable —
+    /// eXo's own "press Ctrl-F4 to switch discs", say. What changes instead is
+    /// the window: a gamebox whose autoexec waits asks Boxer to start at the
+    /// DOS view rather than behind the veil
+    /// (`BXShowDOSViewAtStartupGameInfoKey`). 261 games in the pack `pause` in
+    /// their autoexec and 2 `choice`.
     static let interactiveCommands: Set<String> = ["pause", "choice"]
 
     /// Commands that set the machine up rather than start the game. Throwing
@@ -319,10 +324,17 @@ enum ExoDOSPlanner {
                                                  shortName: shortName,
                                                  launchLines: launch.launchLines,
                                                  mountsParent: drives.contains { !$0.insertFolder.isEmpty })
+        plan.showsDOSViewAtStartup = plan.gameboxAutoexec.contains { line in
+            let head = String(stripPrefix(line).lowercased().prefix(while: { $0 != " " && $0 != "\t" }))
+            return interactiveCommands.contains(head)
+        }
 
         let derived = planSettings(configuration.sections)
         plan.settings = derived.settings
         plan.notes = launch.notes + derived.notes
+        if plan.showsDOSViewAtStartup {
+            plan.notes.append("its autoexec stops to talk to you, so the gamebox opens at the DOS view")
+        }
 
         plan.mt32ROMs = mt32ROMs(in: members)
         if !plan.mt32ROMs.isEmpty {
@@ -364,7 +376,6 @@ enum ExoDOSPlanner {
             let head = String(command.lowercased().prefix(while: { $0 != " " && $0 != "\t" }))
 
             if head == "mount" || head == "imgmount" || head == "exit"
-                || interactiveCommands.contains(head)
                 || launchLines.contains(index) {
                 result.append("rem " + raw)
                 continue
@@ -951,7 +962,8 @@ enum ExoDOSPlanner {
         do {
             branches = try ExoDOSMenuInterpreter.flatten(text, drive: drive,
                                                          workingDirectory: workingDirectory,
-                                                         shortName: shortName)
+                                                         shortName: shortName,
+                                                         hostPrefix: byLetter[drive]?.contentRoot ?? "")
         } catch let failure as ExoDOSMenuInterpreter.Unflattenable {
             plan.notes.append("'\(basename(batchPath))' \(failure.reason), so it stays the launcher and its menu comes up in Boxer")
             return false

@@ -9,4 +9,4 @@
 	url = https://github.com/OpenEmu/OpenEmu-Shaders.git
 [submodule "DOSBox-Staging"]
 	path = DOSBox-Staging
-	url = https://github.com/MaddTheSane/dosbox-staging.git
+	url = https://github.com/eduo/dosbox-staging.git

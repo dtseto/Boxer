@@ -1,3 +1,27 @@
+> [!NOTE]
+> **About the `DosBox_Staging_0.83` branch**
+>
+> This branch is an experimental, unofficial fork of
+> [MaddTheSane/Boxer](https://github.com/MaddTheSane/Boxer)'s `maddsV2` branch.
+> It has two aims:
+>
+> - **Move Boxer's embedded emulator onto DOSBox Staging v0.83.0.** Boxer's
+>   fork was based on DOSBox Staging 0.78.1 (last synced with upstream in
+>   2021). The matching emulator changes are on the `boxer-0.83` branch of
+>   [eduo/dosbox-staging](https://github.com/eduo/dosbox-staging), and the
+>   `DOSBox-Staging` submodule is pinned to a commit on that branch. Where
+>   upstream now provides extension points (`RenderBackend`, `MidiDevice`),
+>   Boxer builds on them instead of patching DOSBox directly.
+> - **Import eXoDOS collections.** Games packed as eXoDOS `.zip` archives can
+>   be imported as Boxer gameboxes. The importer is written in Swift and
+>   SwiftUI.
+>
+> The minimum macOS version rises from 10.14.4 to **12.0**, to match DOSBox
+> Staging 0.83. This is a work in progress and is not affiliated with or
+> endorsed by the Boxer or DOSBox Staging maintainers. The rest of this README
+> is the upstream `maddsV2` text, unchanged, so some of it (build requirements,
+> supported macOS versions) doesn't apply to this branch.
+
 ![Boxer](http://boxerapp.com/static/images/gloves_96.png)
 
 #### Some notes on building Boxer

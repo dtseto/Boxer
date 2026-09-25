@@ -343,7 +343,9 @@ enum ExoDOSPlanner {
 
         plan.warnings = driveWarnings + launch.warnings
         if drives.isEmpty { plan.warnings.append("no drives were mounted by the autoexec") }
-        if plan.launchers.isEmpty { plan.warnings.append("no launch command was found") }
+        if plan.launchers.isEmpty && !launch.autoexecStartsGame {
+            plan.warnings.append("no launch command was found")
+        }
 
         return plan
     }
@@ -825,6 +827,11 @@ enum ExoDOSPlanner {
         /// one directly rather than handing off to a menu.
         var defaultLauncher: Int?
 
+        /// Whether a command we deliberately left to the autoexec starts the
+        /// game. Such a game has no launcher and needs none, so it must not be
+        /// warned about as though nothing starts it.
+        var autoexecStartsGame = false
+
         /// Small batch files the converter writes into the gamebox, keyed by
         /// their path inside it. One per menu branch that has something to do
         /// before the game starts — switching MIDI device, copying a sound
@@ -921,6 +928,35 @@ enum ExoDOSPlanner {
 
             let drive = byLetter[current]
             let prefix = (drive != nil && !drive!.isImage) ? drive!.contentRoot + "/" : ""
+
+            // A drive-qualified program — Dunjonquest's `c:\gwbasic inn.bas`,
+            // run while standing on A — is checked on the drive it *names*.
+            // Looking for it on the current drive is how that game came to be
+            // told "cannot find 'c:\gwbasic' on drive a" about a command that
+            // is perfectly valid.
+            //
+            // It is checked, and deliberately not turned into a launcher. A
+            // launcher runs from its own program's directory, and these
+            // commands mean "run the program on that drive, from where I am
+            // standing" — gwbasic is on C and `inn.bas` is on A, so a launcher
+            // pointing at gwbasic would start in the wrong place and fail. The
+            // game works because the line stays in the autoexec, which it does:
+            // only a line that produced a launcher is commented out.
+            if let (letter, rest) = driveQualifier(in: program) {
+                let named = byLetter[letter]
+                if resolveProgram(rest, drive: named, members: members) != nil {
+                    plan.autoexecStartsGame = true
+                    plan.notes.append("'\(program)' runs from drive \(letter); the autoexec starts it rather than a launcher")
+                } else if named == nil {
+                    plan.warnings.append("names drive \(letter), which nothing mounts: \(command)")
+                } else if named!.isImage {
+                    plan.notes.append("'\(program)' runs from drive \(letter), an image this cannot look inside")
+                } else {
+                    plan.warnings.append("cannot find '\(program)' on drive \(letter): \(command)")
+                }
+                continue
+            }
+
             guard let resolved = resolveProgram(program, drive: drive,
                                                 members: members, workingDirectory: workingDirectory) else {
                 plan.warnings.append("cannot find '\(program)' on drive \(current): \(command)")
@@ -1275,6 +1311,20 @@ enum ExoDOSPlanner {
             index = end
         }
         return tokens
+    }
+
+    /// Splits `c:\gwbasic` into the drive it names and the path on it.
+    ///
+    /// Returns nil for a bare drive change (`c:`), which has its own handling,
+    /// and for anything not of the form `<letter>:<path>`.
+    static func driveQualifier(in program: String) -> (String, String)? {
+        let characters = Array(program)
+        guard characters.count > 2, characters[1] == ":",
+              let letter = characters.first?.lowercased().first,
+              letter >= "a", letter <= "x" else { return nil }
+        let rest = String(characters[2...]).drop(while: { $0 == "\\" || $0 == "/" })
+        guard !rest.isEmpty else { return nil }
+        return (String(letter), String(rest))
     }
 
     /// `c:` or `d:\` — a bare drive change and nothing else.

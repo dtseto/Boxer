@@ -110,20 +110,20 @@ struct ImportClassificationView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .fixedSize(horizontal: false, vertical: true)
             Text(model.summary.detail)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var details: some View {
         VStack(alignment: .leading, spacing: 10) {
-            LabeledContent("Unpacked size", value: model.summary.formattedSize)
-            LabeledContent("eXoDOS pack") {
+            BackportLabeledContent("Unpacked size", value: model.summary.formattedSize)
+            BackportLabeledContent("eXoDOS pack") {
                 Label(model.summary.packFound ? "Found alongside the game" : "Not found",
                       systemImage: model.summary.packFound ? "checkmark.circle" : "exclamationmark.triangle")
-                    .foregroundStyle(model.summary.packFound ? Color.secondary : Color.orange)
+                    .foregroundColor(model.summary.packFound ? Color.secondary : Color.orange)
             }
-            LabeledContent("Import into") {
+            BackportLabeledContent("Import into") {
                 DestinationPathControl(url: $model.destination, recents: model.recentDestinations)
                     .frame(height: 22)
                     .frame(maxWidth: 260, alignment: .leading)
@@ -131,7 +131,7 @@ struct ImportClassificationView: View {
 
             if let advice = model.summary.packAdvice {
                 Text(advice)
-                    .foregroundStyle(.secondary)
+                    .foregroundColor(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 4)
             }
@@ -146,7 +146,7 @@ struct ImportClassificationView: View {
             }
             Text(model.currentItem.isEmpty ? " " : model.currentItem)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .truncationMode(.middle)
                 .lineLimit(1)
         }
@@ -163,11 +163,7 @@ struct ImportClassificationView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 6) {
                     ForEach(Array(model.warnings.enumerated()), id: \.offset) { _, warning in
-                        Text("• " + warning)
-                            .font(.callout)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .textSelection(.enabled)
+                        SelectableWarningText(warning: warning)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -179,18 +175,18 @@ struct ImportClassificationView: View {
     private func failure(_ message: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("The game could not be converted.", systemImage: "exclamationmark.triangle")
-                .foregroundStyle(Color.orange)
+                .foregroundColor(Color.orange)
             Text(message)
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .foregroundColor(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private var buttons: some View {
         HStack {
-            Button("Cancel", role: .cancel, action: onCancel)
-                .keyboardShortcut(.cancelAction)
+            Button("Cancel", action: onCancel)
+                .keyboardShortcut(.escape)
             Spacer()
 
             switch model.phase {
@@ -198,7 +194,7 @@ struct ImportClassificationView: View {
                 EmptyView()
             case .converted:
                 Button("Done", action: onContinue)
-                    .keyboardShortcut(.defaultAction)
+                    .keyboardShortcut(.return)
             case .confirming, .failed:
                 // Unzipping the archive as-is is the escape hatch for when the
                 // clever path gets something wrong. It is not built yet, and a
@@ -208,9 +204,74 @@ struct ImportClassificationView: View {
                     .disabled(true)
                     .help("Not available yet — see the import notes.")
                 Button(model.phase == .confirming ? "Continue" : "Try Again", action: onContinue)
-                    .keyboardShortcut(.defaultAction)
+                    .keyboardShortcut(.return)
                     .disabled(!model.summary.canConvert)
             }
+        }
+    }
+}
+
+
+/// Selectable text is macOS 13+. On 12 the warnings just show as labels.
+private struct SelectableWarningText: View {
+    let warning: String
+
+    var body: some View {
+        Group {
+            if #available(macOS 13, *) {
+                Text("• " + warning)
+                    .font(.callout)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+            } else {
+                Text("• " + warning)
+                    .font(.callout)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+
+/// LabeledContent is macOS 13+. This renders as LabeledContent where
+/// available and falls back to an HStack label/value row on macOS 12,
+/// so the panel builds and runs with a macOS 12 deployment target.
+/// (The `if #available` needs the `Group` wrapper so both branches share
+/// one opaque `some View` type.)
+private struct BackportLabeledContent<Content: View>: View {
+    private let title: String
+    private let content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        Group {
+            if #available(macOS 13, *) {
+                LabeledContent(title) {
+                    content
+                }
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(title)
+                        .foregroundColor(.secondary)
+                        .frame(width: 110, alignment: .trailing)
+                    content
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
+    }
+}
+
+extension BackportLabeledContent where Content == Text {
+    init(_ title: String, value: String) {
+        self.init(title) {
+            Text(value)
         }
     }
 }

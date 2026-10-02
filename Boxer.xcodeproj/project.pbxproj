@@ -4334,7 +4334,8 @@
 			comments = "REGARDING --mstackrealign\nBoxer will crash with a dyld_misaligned_stack_error if dynamic core mode is on when the session starts.\n\ndyld is the dynamic linker, so this may be some peculiar interaction of threading and dynamically-loaded frameworks: the crash also happens in our non-XCode, SDL-framework-using build, and it *doesn't* happen if a sleep() delay is introduced before DOSBox_main is called, which implies a race condition.\n\nAdding -mstackrealign to the C flags for Intel seems to have made the problem go away. Which doesn't explain why it's happening in the first place.";
 			dependencies = (
 				55EB73EA27ED72CA00D5F7E0 /* PBXTargetDependency */,
-				55D431F625044D50008515E1 /* PBXTargetDependency */,
+				55540E642546B87300B88BE3 /* PBXTargetDependency */,
+				55D431F625044D50008515E1 /* PBXTargetDependency */, 
 				55E6A0B91C00C86200285593 /* PBXTargetDependency */,
 				55E6A0BD1C00C86200285593 /* PBXTargetDependency */,
 			);
@@ -4361,7 +4362,8 @@
 			);
 			comments = "REGARDING --mstackrealign\nBoxer will crash with a dyld_misaligned_stack_error if dynamic core mode is on when the session starts.\n\ndyld is the dynamic linker, so this may be some peculiar interaction of threading and dynamically-loaded frameworks: the crash also happens in our non-XCode, SDL-framework-using build, and it *doesn't* happen if a sleep() delay is introduced before DOSBox_main is called, which implies a race condition.\n\nAdding -mstackrealign to the C flags for Intel seems to have made the problem go away. Which doesn't explain why it's happening in the first place.";
 			dependencies = (
-				55D431F825044D56008515E1 /* PBXTargetDependency */,
+				55540E6F2546B87E00B88BE3 /* PBXTargetDependency */,
+				55D431F825044D56008515E1 /* PBXTargetDependency */, 
 				55E6A0C51C00C88A00285593 /* PBXTargetDependency */,
 				55E6A0C91C00C88A00285593 /* PBXTargetDependency */,
 			);
@@ -5575,7 +5577,15 @@
 		};
 		55EB73EA27ED72CA00D5F7E0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			productRef = 55EB73E927ED72CA00D5F7E0 /* Sparkle */;
+			productRef = 55EB73DF27ED729F00D5F7E0 /* Sparkle */;
+		};
+		55540E642546B87300B88BE3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 55540E622546B87200B88BE3 /* CwlDemangle */;
+		};
+		55540E6F2546B87E00B88BE3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 55540E6D2546B87D00B88BE3 /* CwlDemangle */;
 		};
 		9FB453B616442DA200BCF63B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -6563,11 +6573,6 @@
 			productName = CwlDemangle;
 		};
 		55EB73DF27ED729F00D5F7E0 /* Sparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 55EB73DE27ED729F00D5F7E0 /* XCRemoteSwiftPackageReference "Sparkle" */;
-			productName = Sparkle;
-		};
-		55EB73E927ED72CA00D5F7E0 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 55EB73DE27ED729F00D5F7E0 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;

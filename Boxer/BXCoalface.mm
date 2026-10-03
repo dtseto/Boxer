@@ -171,6 +171,11 @@ Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double s
     // focus changes. Boxer replaces that frontend and gates input itself.
 	MOUSE_NotifyReadyGFX();
 
+    // v0.81 no longer calls the legacy Mouse_AutoLock hook that Boxer used
+    // to remap. Mark the Cocoa mouse active when the DOS graphics session is
+    // initialized so BXEmulatedMouse forwards host events to the core.
+	emulator.mouse.active = YES;
+
 	NSSize outputSize	= NSMakeSize((CGFloat)width, (CGFloat)height);
 	NSSize scale		= NSMakeSize((CGFloat)scalex, (CGFloat)scaley);
 	boxer_canvas_width = static_cast<int>(width);

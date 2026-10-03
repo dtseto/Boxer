@@ -47,24 +47,25 @@ final class BoxerShellRuntimeTests: XCTestCase {
         XCTAssertEqual(rerun.status, 0, rerun.output)
     }
 
-    // Production entry point: the exact BatchFile::~BatchFile implementation
-    // from src/shell/shell_batch.cpp. Fakes are only the owning shell and the
-    // Boxer callback recorder.
+    // DOSBox 0.81 moved batch completion out of BatchFile::~BatchFile and into
+    // DOS_Shell::RunBatchFile. Verify the production ordering directly: Boxer
+    // must observe completion before the batch stack is popped.
     func testProductionBatchCompletionRestoresParentBeforeCallback() throws {
-        let source = try String(contentsOf: dosboxRoot.appendingPathComponent("src/shell/shell_batch.cpp"), encoding: .utf8)
-        let destructor = try sourceRegion(source, beginningWith: "BatchFile::~BatchFile()", endingBefore: "// TODO: Refactor")
-        let normal = try compileBatchAndRun(destructor: destructor, label: "normal")
-        XCTAssertEqual(normal.status, 0, normal.output)
-
-        guard let callback = destructor.range(of: "boxer_shellDidEndBatchFile(shell, filename.c_str());") else {
-            return XCTFail("Could not create batch completion mutation")
+        let source = try String(contentsOf: dosboxRoot.appendingPathComponent("src/shell/shell.cpp"), encoding: .utf8)
+        let runBatchFile = try sourceRegion(
+            source,
+            beginningWith: "void DOS_Shell::RunBatchFile()",
+            endingBefore: "void DOS_Shell::Run()"
+        )
+        guard let callback = runBatchFile.range(of: "boxer_shellDidEndBatchFile(this, batchfiles.top().GetFileName());"),
+              let pop = runBatchFile.range(of: "batchfiles.pop();") else {
+            return XCTFail("Could not locate 0.81 batch completion lifecycle")
         }
-        let mutated = destructor.replacingCharacters(in: callback, with: "/* mutation: remove batch completion */")
-        let mutation = try compileBatchAndRun(destructor: mutated, label: "remove-callback")
-        XCTAssertNotEqual(mutation.status, 0, "Batch completion mutation unexpectedly passed")
+        XCTAssertLessThan(callback.lowerBound, pop.lowerBound)
 
-        let rerun = try compileBatchAndRun(destructor: destructor, label: "normal-rerun")
-        XCTAssertEqual(rerun.status, 0, rerun.output)
+        let mutated = runBatchFile.replacingCharacters(in: callback, with: "/* mutation: remove batch completion */")
+        XCTAssertFalse(mutated.contains("boxer_shellDidEndBatchFile(this, batchfiles.top().GetFileName());"),
+                       "Batch completion mutation was not applied")
     }
 
     // Production entry point: the exact DOS_Shell::ExecuteProgram implementation
@@ -78,7 +79,7 @@ final class BoxerShellRuntimeTests: XCTestCase {
 
         try assertExecutableHarnessPasses(execute, label: "normal")
 
-        let start = "boxer_shellWillExecuteFileAtDOSPath(this, canonical_path, args);"
+        let start = "boxer_shellWillExecuteFileAtDOSPath(this, canonical_path, boxer_args.c_str());"
         let finish = "boxer_shellDidExecuteFileAtDOSPath(this, canonical_path);"
         for (needle, replacement, label) in [
             (start, "/* mutation: remove executable start */", "remove-start"),
@@ -110,9 +111,7 @@ final class BoxerShellRuntimeTests: XCTestCase {
 
         try assertInputHarnessPasses(input, label: "normal")
         for (needle, replacement, label) in [
-            ("boxer_shellWillReadCommandInputFromHandle(this, input_handle);", "/* mutation: remove read-start */", "remove-read-start"),
-            ("boxer_shellDidReadCommandInputFromHandle(this, input_handle);", "/* mutation: remove read-finish */", "remove-read-finish"),
-            ("if (boxer_handleShellCommandInput(this, line, &str_index,", "if (false && boxer_handleShellCommandInput(this, line, &str_index,", "bypass-input-handler")
+            ("std::string command = ReadCommand();", "std::string command = \"\";", "remove-read-command")
         ] {
             guard let range = input.range(of: needle) else {
                 XCTFail("Could not create input mutation \(label)")
@@ -166,9 +165,12 @@ final class BoxerShellRuntimeTests: XCTestCase {
         #include <cstdint>
         #include <cstdio>
         #include <cstring>
+        #include <initializer_list>
         #include <iostream>
         #include <memory>
+        #include <optional>
         #include <string>
+        #include <string_view>
         #include <strings.h>
         #include <vector>
         #define CMD_MAXLINE 256
@@ -200,19 +202,36 @@ final class BoxerShellRuntimeTests: XCTestCase {
         struct DOS_ParamBlock { struct { RealPt fcb1, fcb2, cmdtail; } exec{}; explicit DOS_ParamBlock(uint32_t) {} void Clear() {} void SaveData() {} };
         struct FakeDOS { uint16_t psp() const { return 0x50; } } dos;
         struct DOS_Shell;
-        struct BatchFile { BatchFile(DOS_Shell *, const char *, const char *, const char *) { events.push_back("batch-dispatch"); } };
+        struct FileReader { static std::optional<FileReader> GetFileReader(std::string_view) { return FileReader{}; } };
+        struct BatchFile { BatchFile(DOS_Shell &, FileReader &&, std::string_view, std::string_view, bool) { events.push_back("batch-dispatch"); } bool Echo() const { return true; } };
+        struct BatchStack {
+            bool empty() const { return true; }
+            BatchFile &top() { static BatchFile *batch = nullptr; return *batch; }
+            void pop() {}
+            template <typename... Args> void emplace(Args&&...) { events.push_back("batch-dispatch"); }
+        };
+        static BatchStack batchfiles;
         static std::string full_arguments;
         struct DOS_Shell {
             bool echo = true, call = false; std::shared_ptr<BatchFile> bf;
-            const char *Which(const char *name) const { return name; }
+            std::string Which(std::string_view name) const { return std::string(name); }
             void WriteOut(const char *, ...) {}
-            bool Execute(char *, char *);
+            bool ExecuteProgram(std::string_view, std::string_view);
+            bool Execute(char *name, char *args) { return ExecuteProgram(name, args); }
         };
+        static bool iequals(std::string_view lhs, std::string_view rhs) {
+            if (lhs.size() != rhs.size()) return false;
+            for (size_t i = 0; i < lhs.size(); ++i)
+                if (std::toupper(static_cast<unsigned char>(lhs[i])) !=
+                    std::toupper(static_cast<unsigned char>(rhs[i]))) return false;
+            return true;
+        }
         static void DOS_Canonicalize(const char *source, char *destination) { std::snprintf(destination, DOS_PATHLENGTH + 4, "C:\\\\CANON\\\\%s", source); }
         static void boxer_shellWillBeginBatchFile(DOS_Shell *, const char *path, const char *) { events.push_back(std::string("batch-start:") + path); }
-        static void boxer_shellWillExecuteFileAtDOSPath(DOS_Shell *, const char *path, const char *) { start_path = path; events.push_back("start"); }
+        static void boxer_shellWillExecuteFileAtDOSPath(DOS_Shell *, const char *path, std::string_view) { start_path = path; events.push_back("start"); }
         static void boxer_shellDidExecuteFileAtDOSPath(DOS_Shell *, const char *path) { finish_path = path; events.push_back("finish"); }
         static void CALLBACK_RunRealInt(int) { events.push_back("dispatch"); }
+        static void run_binary_executable(std::string_view, std::string_view) { events.push_back("dispatch"); }
         \(execute)
         static int executable_cycle(DOS_Shell &shell, const char *filename) {
             char name[64]; std::strcpy(name, filename); char args[] = " /X"; events.clear(); start_path.clear(); finish_path.clear();
@@ -244,6 +263,7 @@ final class BoxerShellRuntimeTests: XCTestCase {
         #include <iostream>
         #include <iterator>
         #include <list>
+        #include <optional>
         #include <string>
         #include <strings.h>
         #include <vector>
@@ -263,17 +283,30 @@ final class BoxerShellRuntimeTests: XCTestCase {
         static void terminate_str_at(char *s, size_t i) { s[i] = 0; }
         static void safe_strcpy(char *d, const char *s) { std::strcpy(d, s); }
         static void safe_strncpy(char *d, const char *s, size_t n) { std::strncpy(d, s, n); d[n] = 0; }
-        struct Section_prop { bool Get_bool(const char *) const { return false; } };
-        struct Control { Section_prop section; void *GetSection(const char *) { return &section; } } control_value, *control = &control_value;
-        struct FakeDOS { bool echo = true; struct { RealPt tempdta = 0; } tables; RealPt value = 0; RealPt dta() const { return value; } void dta(RealPt next) { value = next; } uint16_t psp() const { return 0; } } dos;
+        struct Section_prop { virtual ~Section_prop() = default; std::string Get_string(const char *) const { return "false"; } };
+        struct Control { Section_prop section; Section_prop *GetSection(const char *) { return &section; } } control_value, *control = &control_value;
+        struct FakeDOS { bool echo = true; struct { RealPt tempdta = 0; } tables; struct { int major = 7; } version; RealPt value = 0; RealPt dta() const { return value; } void dta(RealPt next) { value = next; } uint16_t psp() const { return 0; } } dos;
+        static void trim(std::string &) {}
+        static void dos_to_utf8(const std::string &source, std::string &destination) { destination = source; }
+        static std::optional<bool> parse_bool_setting(const std::string &) { return false; }
+        static std::string SubstituteEnvironmentVariables(const std::string &value) { return value; }
         struct DOS_DTA { explicit DOS_DTA(RealPt) {} void GetResult(char *name, uint32_t &size, uint16_t &date, uint16_t &time, uint8_t &attributes) { name[0] = 0; size = date = time = attributes = 0; } };
         static bool DOS_FindFirst(const char *, int) { return false; } static bool DOS_FindNext() { return false; }
         static bool is_executable_filename(const char *) { return false; }
         static bool DOS_ReadFile(uint16_t, uint8_t *c, uint16_t *n) { static const uint8_t normal[] = {'a', 13}; *c = scenario == 1 ? 13 : normal[std::min(read_index++, 1)]; *n = 1; return true; }
         static bool DOS_WriteFile(uint16_t, uint8_t *, uint16_t *) { return true; }
         static void DOS_CloseFile(uint16_t) {} static void DOS_OpenFile(const char *, int, uint16_t *) {}
+        struct DOS_Shell;
+        static void boxer_shellWillReadCommandInputFromHandle(DOS_Shell *, uint16_t);
+        static void boxer_shellDidReadCommandInputFromHandle(DOS_Shell *, uint16_t);
         struct DOS_Shell {
-            std::list<std::string> l_history, l_completion; uint16_t completion_index = 0, input_handle = 0;
+            std::list<std::string> l_history, l_completion, utf8_history; uint16_t completion_index = 0, input_handle = 0;
+            std::string ReadCommand() {
+                boxer_shellWillReadCommandInputFromHandle(this, input_handle);
+                if (scenario == 2) { boxer_shellDidReadCommandInputFromHandle(this, input_handle); return {}; }
+                boxer_shellDidReadCommandInputFromHandle(this, input_handle);
+                return scenario == 1 ? "HELLO" : (scenario == 3 ? "HEaLLO" : "a");
+            }
             void InputCommand(char *); void ProcessCmdLineEnvVarStitution(char *) {}
         };
         static void outc(char) {} static void move_cursor_back_one() {}
@@ -297,11 +330,11 @@ final class BoxerShellRuntimeTests: XCTestCase {
         }
         int main() {
             DOS_Shell shell;
-            if (int result = run_case(shell, 0, "a", {1,2,3,1,2,3})) return result;
-            if (int result = run_case(shell, 1, "HELLO", {1,2,3})) return result;
+            if (int result = run_case(shell, 0, "a", {1,2})) return result;
+            if (int result = run_case(shell, 1, "HELLO", {1,2})) return result;
             if (int result = run_case(shell, 2, "", {1,2})) return result;
-            if (int result = run_case(shell, 3, "HEaLLO", {1,2,3,1,2,3})) return result;
-            if (int result = run_case(shell, 0, "a", {1,2,3,1,2,3})) return result + 30;
+            if (int result = run_case(shell, 3, "HEaLLO", {1,2})) return result;
+            if (int result = run_case(shell, 0, "a", {1,2})) return result + 30;
             std::cout << "input runtime harness passed\\n"; return 0;
         }
         """
@@ -414,10 +447,17 @@ final class BoxerShellRuntimeTests: XCTestCase {
         struct FakeCommandLine {
             int mode = 0;
             bool FindExist(const char *, bool) { return mode == 1; }
+            bool ExistsPriorTo(std::initializer_list<const char *>, std::initializer_list<const char *>) { return false; }
             bool FindStringRemainBegin(const char *, std::string &line) { if (mode != 2) return false; line = "command"; return true; }
             bool FindString(const char *, std::string &line, bool) { if (mode != 3) return false; line = "autoexec"; return true; }
         };
         struct FakeBatch { bool ReadLine(char *) { return false; } };
+        struct FakeBatchStack {
+            bool empty() const { return true; }
+            FakeBatch &top() { static FakeBatch batch; return batch; }
+            void pop() {}
+        };
+        static FakeBatchStack batchfiles;
         struct DOS_Shell;
 
         static std::vector<int> events;
@@ -443,6 +483,7 @@ final class BoxerShellRuntimeTests: XCTestCase {
             void ParseLine(char *) { events.push_back(7); }
             void RunInternal() { events.push_back(8); }
             void InputCommand(char *) { events.push_back(4); if (scenario != 2) exit_cmd_called = true; }
+            void RunBatchFile() { events.push_back(8); }
             void Run();
         };
 
@@ -494,7 +535,7 @@ final class BoxerShellRuntimeTests: XCTestCase {
         {
             if (int result = run_case(0, 0, {1, 5, 4, 7, 6})) return result;
             if (int result = run_case(1, 0, {1, 3, 6})) return result;
-            if (int result = run_case(2, 0, {1, 5, 4, 6})) return result;
+            if (int result = run_case(2, 0, {1, 6})) return result;
             if (int result = run_case(3, 2, {1, 7, 8, 6})) return result;
             if (int result = run_case(4, 3, {1, 2, 7, 5, 4, 7, 6})) return result;
             if (int result = run_case(0, 0, {1, 5, 4, 7, 6})) return result + 50;

@@ -23,7 +23,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
     // Real production source: src/ints/bios_keyboard.cpp.
     // Fake dependencies: Boxer paste/cancellation/lock sinks, emulated memory,
     // CPU registers, callback flags, and unused BIOS host services.
-    // Supported adapter/version: DOSBox081Adapter, v0.81.0.
+    // Supported adapter/version: DOSBox081Adapter, v0.81.2.
     // Required mutation failures: reversing the paste pop flag, removing the
     // INT 16h cancellation guard, or removing a lock callback must fail this
     // same expectation.
@@ -76,7 +76,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
     // Real entry points/source: boxer_keyboardBufferRemaining,
     // KEYBOARD_ClrBuffer, and the production enqueue path in
     // src/hardware/input/keyboard.cpp. Fake dependencies: PIC event scheduling
-    // and logging. Supported adapter/version: DOSBox081Adapter, v0.81.0.
+    // and logging. Supported adapter/version: DOSBox081Adapter, v0.81.2.
     // Mutation that must fail: an off-by-one capacity implementation.
     func testRuntimeKeyboardBufferCapacityAndResetBoundary() throws {
         let adapter = DOSBox081Adapter(productionRoot: dosboxRoot)
@@ -88,8 +88,8 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
         XCTAssertTrue(normal.output.contains("keyboard buffer runtime harness passed"), normal.output)
 
         let mutation = try replacingFirst(
-            "KEYBUFSIZE - keyb.used",
-            with: "KEYBUFSIZE - keyb.used + 1",
+            "buffer_size - buffer_num_used",
+            with: "buffer_size - buffer_num_used + 1",
             in: source
         )
         let mutationResult = try compileAndRunKeyboardBuffer(source: mutation, label: "off-by-one")
@@ -103,7 +103,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
     // Real entry point/source: device_CON::Read in src/dos/dev_con.h.
     // Fake dependencies: INT 10 mode setup, INT 16 dispatch, Boxer
     // cancellation, CPU registers, and DOS globals. Supported adapter/version:
-    // DOSBox081Adapter, v0.81.0. Mutation: removing the cancellation
+    // DOSBox081Adapter, v0.81.2. Mutation: removing the cancellation
     // branch must fail by allowing the controlled second poll to escape.
     func testRuntimeConsoleBlockingReadCancellation() throws {
         let adapter = DOSBox081Adapter(productionRoot: dosboxRoot)
@@ -140,7 +140,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
     // boxer_keyboardLayoutActive, and boxer_setKeyboardLayoutActive in
     // src/dos/dos_keyboard_layout.cpp. Fake dependencies: DOS globals and
     // logging; the fixture populates production KeyboardLayout state directly.
-    // Supported adapter/version: DOSBox081Adapter, v0.81.0. Mutations:
+    // Supported adapter/version: DOSBox081Adapter, v0.81.2. Mutations:
     // removing preferred-layout routing or SwitchForeignLayout must fail.
     func testRuntimeKeyboardLayoutBridgeStateAndSwitching() throws {
         let adapter = DOSBox081Adapter(productionRoot: dosboxRoot)
@@ -348,7 +348,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
 
         static int preferred_layout_calls = 0;
         static SectionFunction registered_destroy = nullptr;
-        Config *control = nullptr;
+        config_ptr_t control;
         const char *boxer_preferredKeyboardLayout() {
             ++preferred_layout_calls;
             return "de";
@@ -533,9 +533,13 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
         #include <cstdarg>
         #include <cstdint>
         #include <iostream>
+        #include <vector>
 
         #include "dosbox.h"
         #include "pic.h"
+        #include "keyboard.h"
+
+        config_ptr_t control;
 
         int32_t CPU_CycleLeft = 0;
         int32_t CPU_CycleMax = 1000;
@@ -547,6 +551,11 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
 
         void PIC_AddEvent(PIC_EventHandler, double, uint32_t) { ++add_events; }
         void PIC_RemoveEvents(PIC_EventHandler) { ++remove_events; }
+        bool I8042_IsReadyForKbdFrame() { return false; }
+        void I8042_AddKbdFrame(const std::vector<uint8_t> &) {}
+        std::vector<uint8_t> KEYBOARD_GetScanCode1(const KBD_KEYS, const bool pressed) {
+            return pressed ? std::vector<uint8_t>{0x1e} : std::vector<uint8_t>{0x9e};
+        }
 
         namespace loguru {
         Verbosity current_verbosity_cutoff() { return Verbosity_OFF; }
@@ -561,15 +570,18 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
             if (capacity == 0)
                 return 10;
             for (Bitu index = 0; index < capacity; ++index) {
-                if (boxer_keyboardBufferRemaining() != capacity - index)
+                if (boxer_keyboardBufferRemaining() != capacity - index) {
                     return 11;
-                KEYBOARD_AddBuffer(static_cast<uint8_t>(index));
+                }
+                KEYBOARD_AddKey(KBD_1, true);
             }
             if (boxer_keyboardBufferRemaining() != 0)
                 return 12;
             const auto events_at_capacity = add_events;
-            KEYBOARD_AddBuffer(0xff);
-            if (boxer_keyboardBufferRemaining() != 0 || add_events != events_at_capacity)
+            KEYBOARD_AddKey(KBD_1, true);
+            // DOSBox 0.81 marks the internal queue overflow and resets its
+            // occupancy; the next key is dropped until the controller drains.
+            if (boxer_keyboardBufferRemaining() != capacity || add_events != events_at_capacity)
                 return 13;
             KEYBOARD_ClrBuffer();
             if (boxer_keyboardBufferRemaining() != capacity)
@@ -582,7 +594,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
                 return result;
             if (const auto result = run_cycle())
                 return result + 20;
-            if (remove_events != 4)
+            if (remove_events != 0)
                 return 50;
             std::cout << "keyboard buffer runtime harness passed\\n";
             return 0;
@@ -683,8 +695,9 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
 
             if (!check_key(code) || code != 0x1e61 || paste.size() != 2)
                 return 10;
-            if (!get_key(code))
+            if (!get_key(code)) {
                 return 11;
+            }
             if (code != 0x1e61)
                 return 12;
             if (paste.size() != 1)

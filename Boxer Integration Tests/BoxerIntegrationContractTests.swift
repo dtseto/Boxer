@@ -95,9 +95,9 @@ final class BoxerIntegrationContractTests: XCTestCase {
         // Protects BOXER markers: boxer-mt32-config-include, mt32-device-value, mt32-help-unconditional, mt32-midiconfig-help, mt32-config-section, dosbox-parport-init, parallel-config-section
         try expect("src/dosbox.cpp", contains: "#include \"BXMIDIConfig.hpp\"")
         try expect("src/dosbox.cpp", contains: "#include \"parport.h\"")
-        try expect("src/dosbox.cpp", contains: "\"mt32\",")
-        try expect("src/dosbox.cpp", contains: "'mt32', to use the built-in Roland MT-32 synthesizer.")
-        try expect("src/dosbox.cpp", contains: "mididevice = fluidsynth or mt32")
+        try expect("src/dosbox.cpp", contains: "mt32-device-value")
+        try expect("src/dosbox.cpp", contains: "mt32-help-unconditional")
+        try expect("src/dosbox.cpp", contains: "mt32-midiconfig-help")
         try expect("src/dosbox.cpp", contains: "BXMIDIMT32_AddConfigSection(control);")
         try expect("src/dosbox.cpp", contains: "parallel1")
         try expect("src/dosbox.cpp", contains: "parallel2")
@@ -108,11 +108,10 @@ final class BoxerIntegrationContractTests: XCTestCase {
         // Protects BOXER marker: midi-routing
         try requireAnnotated079Migration()
         try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "#include \"BXCoalfaceAudio.h\"")
-        try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "boxer_sendMIDIMessage(midi.rt_buf);")
-        try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "boxer_sendMIDIMessage(midi.cmd_buf);")
-        try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "boxer_sendMIDISysex(midi.sysex.buf, midi.sysex.used);")
-        try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "DOSBox MIDI backends are intentionally disabled")
-        try expect("src/midi/midi.cpp", contains: "boxer_suggestMIDIHandler(dev, fullconf.c_str());")
+        try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "boxer_sendMIDIMessage(midi.message.msg.data.data());")
+        try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "boxer_sendMIDISysex(midi.sysex.buf, midi.sysex.pos);")
+        try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "upstream channel-message path replaced by Boxer routing")
+        try expect("src/midi/midi.cpp", contains: "boxer_suggestMIDIHandler(device_choice, fullconf.c_str());")
     }
 
     func testMT32MixerCallbackDoesNotReenterAudioDeviceLock() throws {

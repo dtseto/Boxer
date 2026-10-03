@@ -79,7 +79,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         XCTAssertEqual(bypassResult.status, 10, "Directory policy bypass did not fail behaviorally: \(bypassResult.output)")
 
         let removedRoute = try replacingFirst(
-            "const bool created = boxer_createLocalDir(dirCache.GetExpandName(newdir), this);",
+            "const bool created = boxer_createLocalDir(\n\t        dirCache.GetExpandNameAndNormaliseCase(newdir), this);",
             with: "const bool created = false;",
             in: function
         )
@@ -287,7 +287,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             in: source
         )
         let filePointer = try productionFunction(
-            beginningWith: "FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const type)",
+            beginningWith: "FILE* localDrive::GetSystemFilePtr(const char* const name, const char* const type)",
             in: source
         )
         let fragment = "\(filePointer)\n\n\(filename)"
@@ -296,7 +296,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         XCTAssertTrue(normal.output.contains("host backing path runtime harness passed"), normal.output)
 
         let mutation = try replacingFirst(
-            "dirCache.ExpandName(sysName);",
+            "dirCache.ExpandNameAndNormaliseCase(sysName);",
             with: "/* mutation: backing path expansion removed */",
             in: fragment
         )
@@ -625,6 +625,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         """
         #include <cstdint>
         #include <cstdio>
+        #include <filesystem>
         #include <iostream>
         #include <utime.h>
         #include "cross.h"
@@ -633,6 +634,16 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         #include "inout.h"
         #include "string_utils.h"
         #include "support.h"
+
+        #define LOG_DEBUG(...) do {} while (0)
+
+        static uint16_t local_drive_get_attributes(const std_fs::path &, FatAttributeFlags &attributes) {
+            attributes = {};
+            return DOSERR_FILE_NOT_FOUND;
+        }
+        static uint16_t local_drive_set_attributes(const std_fs::path &, const FatAttributeFlags) {
+            return DOSERR_NONE;
+        }
 
         static uint16_t last_error = 0;
         void DOS_SetError(uint16_t error) { last_error = error; }
@@ -657,7 +668,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             FILE *handle = tmpfile();
             if (!handle)
                 return 10;
-            localFile file("SAVE.DAT", handle, "/tmp/");
+            localFile file("SAVE.DAT", std_fs::path("/tmp/SAVE.DAT"), handle, "/tmp/");
             file.flags = OPEN_READWRITE;
             file.willBecomeUnavailable();
 
@@ -695,6 +706,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         #include <cstdint>
         #include <cstdio>
         #include <cstring>
+        #include <filesystem>
         #include <iostream>
         #include <string>
         #include <sys/stat.h>
@@ -703,6 +715,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         #define CROSS_LEN 4096
         #define CROSS_FILENAME(path) replace_slashes(path)
         #define LOG_MSG(...) do {} while (0)
+        namespace std_fs = std::filesystem;
         static void replace_slashes(char *path) {
             for (; *path; ++path) if (*path == '\\\\') *path = '/';
         }
@@ -736,6 +749,8 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
                 safe_strcpy(expanded, path);
                 return expanded;
             }
+            char *GetExpandNameAndNormaliseCase(char *path) { return GetExpandName(path); }
+            void ExpandNameAndNormaliseCase(char *path) { GetExpandName(path); }
             void CacheOut(char *, bool) { ++cache_calls; }
         };
         class localDrive {
@@ -858,6 +873,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         #include <cstdint>
         #include <cstdio>
         #include <cstring>
+        #include <filesystem>
         #include <iostream>
         #include <string>
         #include <sys/stat.h>
@@ -865,6 +881,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         #define CROSS_LEN 4096
         #define CROSS_FILENAME(path) replace_slashes(path)
         #define LOG_MSG(...) do {} while (0)
+        namespace std_fs = std::filesystem;
         constexpr uint16_t DOSERR_ACCESS_DENIED = 5;
         constexpr uint32_t OPEN_READWRITE = 2;
         static void replace_slashes(char *path) {
@@ -878,6 +895,24 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         }
         static FILE *fopen_wrap(const char *path, const char *mode) { return std::fopen(path, mode); }
 
+        struct FatAttributeFlags {
+            uint8_t _data = 0;
+            bool read_only = false;
+            bool hidden = false;
+            bool system = false;
+            bool directory = false;
+            bool archive = false;
+            FatAttributeFlags() = default;
+            FatAttributeFlags(uint8_t data) : _data(data) {}
+        };
+        static uint16_t local_drive_get_attributes(const std::string &, FatAttributeFlags &attributes) {
+            attributes = {};
+            return 2;
+        }
+        static FILE *local_drive_create_file(const std::string &path, const FatAttributeFlags) {
+            return std::fopen(path.c_str(), "wb+");
+        }
+
         class localDrive;
         class DOS_File {
         public:
@@ -886,7 +921,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         };
         class localFile final : public DOS_File {
         public:
-            localFile(const char *, FILE *handle, const char *) : file(handle) {}
+            localFile(const char *, const std_fs::path &, FILE *handle, const char *) : file(handle) {}
             ~localFile() override { if (file) std::fclose(file); }
             FILE *file;
         };
@@ -894,12 +929,19 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             int additions = 0;
             char expanded[CROSS_LEN] = {};
             char *GetExpandName(char *path) { safe_strcpy(expanded, path); return expanded; }
+            char *GetExpandNameAndNormaliseCase(char *path) { return GetExpandName(path); }
+            void ExpandNameAndNormaliseCase(char *path) { GetExpandName(path); }
             void AddEntry(char *, bool) { ++additions; }
         };
         class localDrive {
         public:
             explicit localDrive(const char *root) { safe_strcpy(basedir, root); }
-            bool FileCreate(DOS_File **file, char *name, uint16_t attributes);
+            bool FileCreate(DOS_File **file, char *name, FatAttributeFlags attributes);
+            bool GetFileAttr(char *, FatAttributeFlags *);
+            bool FileExists(const char *name) {
+                struct stat info = {};
+                return stat(name, &info) == 0;
+            }
             char basedir[CROSS_LEN] = {};
             FakeCache dirCache;
         };
@@ -914,6 +956,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         }
         void boxer_didCreateLocalFile(const char *, localDrive *) { ++create_notifications; }
         void DOS_SetError(uint16_t error) { last_error = error; }
+        bool localDrive::GetFileAttr(char *, FatAttributeFlags *) { return false; }
 
         #include "\(sourcePath)"
 
@@ -982,6 +1025,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         #define CROSS_LEN 4096
         #define CROSS_FILENAME(path) replace_slashes(path)
         #define DEBUG_LOG_MSG(...) do {} while (0)
+        #define LOG_DEBUG(...) do {} while (0)
         constexpr uint16_t DOSERR_ACCESS_DENIED = 5;
         constexpr uint16_t DOSERR_FILE_NOT_FOUND = 2;
         constexpr size_t DOS_FILES = 127;
@@ -995,6 +1039,20 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             std::strncat(destination, source, CROSS_LEN - std::strlen(destination) - 1);
         }
 
+        struct FatAttributeFlags {
+            uint8_t _data = 0;
+            bool read_only = false;
+            bool hidden = false;
+            bool system = false;
+            bool directory = false;
+            bool archive = false;
+        };
+        static uint16_t local_drive_get_attributes(const std::string &, FatAttributeFlags &attributes) {
+            attributes = {};
+            return 2;
+        }
+        static uint16_t local_drive_set_attributes(const std::string &, const FatAttributeFlags) { return 0; }
+
         class localDrive;
         class DOS_File {
         public:
@@ -1006,12 +1064,15 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             int deletions = 0;
             char expanded[CROSS_LEN] = {};
             char *GetExpandName(char *path) { safe_strcpy(expanded, path); return expanded; }
+            char *GetExpandNameAndNormaliseCase(char *path) { return GetExpandName(path); }
+            void ExpandNameAndNormaliseCase(char *path) { GetExpandName(path); }
             void DeleteEntry(char *) { ++deletions; }
         };
         class localDrive {
         public:
             explicit localDrive(const char *root) { safe_strcpy(basedir, root); }
             bool FileUnlink(char *name);
+            bool GetFileAttr(char *, FatAttributeFlags *);
             bool FileExists(const char *name) {
                 char path[CROSS_LEN] = {};
                 safe_strcpy(path, basedir);
@@ -1034,6 +1095,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         }
         void boxer_didRemoveLocalFile(const char *, localDrive *) { ++removal_notifications; }
         void DOS_SetError(uint16_t error) { last_error = error; }
+        bool localDrive::GetFileAttr(char *, FatAttributeFlags *) { return false; }
 
         #include "\(sourcePath)"
 
@@ -1091,12 +1153,14 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         #include <cstdint>
         #include <cstdio>
         #include <cstring>
+        #include <filesystem>
         #include <iostream>
         #include <string>
 
         #define CROSS_LEN 4096
         #define CROSS_FILENAME(path) do {} while (0)
         #define LOG_MSG(...) do {} while (0)
+        namespace std_fs = std::filesystem;
         constexpr uint16_t DOSERR_ACCESS_DENIED = 5;
         constexpr uint16_t DOSERR_ACCESS_CODE_INVALID = 12;
         constexpr uint16_t DOSERR_INVALID_HANDLE = 6;
@@ -1104,6 +1168,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         constexpr uint32_t OPEN_WRITE = 1;
         constexpr uint32_t OPEN_READWRITE = 2;
         constexpr uint32_t OPEN_READ_NO_MOD = 3;
+        static bool always_open_ro_files = false;
         static void safe_strcpy(char *destination, const char *source) {
             std::snprintf(destination, CROSS_LEN, "%s", source);
         }
@@ -1114,6 +1179,12 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         static bool IsFirstEncounter(const char *) { return true; }
         static std::string get_basename(const char *path) { return path; }
 
+        struct FatAttributeFlags {
+            uint8_t _data = 0;
+            bool read_only = false;
+            FatAttributeFlags() = default;
+        };
+
         class localDrive;
         class DOS_File {
         public:
@@ -1122,17 +1193,22 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         };
         class localFile final : public DOS_File {
         public:
-            localFile(const char *, FILE *handle, const char *) : file(handle) {}
+            localFile(const char *, const std_fs::path &, FILE *handle, const char *) : file(handle) {}
             ~localFile() override { if (file) std::fclose(file); }
             void Flush() { ++flushes; }
             FILE *file;
             int flushes = 0;
         };
-        struct FakeCache { void ExpandName(char *) { ++expansions; } int expansions = 0; };
+        struct FakeCache {
+            void ExpandName(char *) { ++expansions; }
+            void ExpandNameAndNormaliseCase(char *) { ++expansions; }
+            int expansions = 0;
+        };
         class localDrive {
         public:
             explicit localDrive(const char *root) { safe_strcpy(basedir, root); }
             bool FileOpen(DOS_File **file, char *name, uint32_t flags);
+            bool GetFileAttr(char *, FatAttributeFlags *);
             char basedir[CROSS_LEN] = {};
             FakeCache dirCache;
         };
@@ -1141,6 +1217,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         static uint16_t last_error = 0;
         bool boxer_shouldAllowWriteAccessToPath(const char *, localDrive *) { ++policy_calls; return allow_write; }
         void DOS_SetError(uint16_t error) { last_error = error; }
+        bool localDrive::GetFileAttr(char *, FatAttributeFlags *) { return false; }
         DOS_File *FindOpenFile(localDrive *, const char *) { return nullptr; }
 
         #include "\(sourcePath)"
@@ -1215,12 +1292,13 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
                     safe_strcpy(path, expanded.c_str());
                 }
             }
+            void ExpandNameAndNormaliseCase(char *path) { ExpandName(path); }
         };
         class localDrive {
         public:
             explicit localDrive(const char *root) { safe_strcpy(basedir, root); }
-            FILE *GetSystemFilePtr(const char *name, const char *type);
-            bool GetSystemFilename(char *system_name, const char *dos_name);
+            FILE *GetSystemFilePtr(const char *const name, const char *const type);
+            bool GetSystemFilename(char *system_name, const char *const dos_name);
             char basedir[CROSS_LEN] = {};
             FakeCache dirCache;
         };
@@ -1349,7 +1427,10 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             drive->reset();
             if (!drive->reset_state_is_clean() || DOS_Drive_Cache::CFileInfo::live_count != 2)
                 return 11;
-            if (drive->UnMount() != 0 || DOS_Drive_Cache::CFileInfo::live_count != 0)
+            if (drive->UnMount() != 0)
+                return 12;
+            delete drive;
+            if (DOS_Drive_Cache::CFileInfo::live_count != 0)
                 return 12;
             return 0;
         }

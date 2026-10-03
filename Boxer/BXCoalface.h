@@ -19,6 +19,13 @@
 #include <cstdint>
 #include <stdio.h>
 
+// video.h reaches dosbox.h, which reaches this bridge header.  Forward
+// declare the v0.81 callback types so that cycle does not expose a partially
+// parsed video.h to the bridge declarations below.
+enum GFX_CallBackFunctions_t : int;
+using GFX_CallBack_t = void (*)(GFX_CallBackFunctions_t);
+enum class MouseHint;
+
 #if __cplusplus
 extern "C" {
 #endif
@@ -58,7 +65,7 @@ FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtensi
 	Bitu boxer_idealOutputMode(Bitu flags);
 	
 	void boxer_applyRenderingStrategy(void);
-	Bitu boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue);
+	uint32_t boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue);
     void boxer_setShader(const char* src);
 	
     /// Defined in vga_other.cpp to give Boxer access to Hercules and CGA graphics mode options.
@@ -152,7 +159,7 @@ FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtensi
 #pragma mark - Runloop and event loop handling
     
 	void boxer_handleDOSBoxTitleChange(int32_t cycles, bool paused);
-    void boxer_refreshDOSBoxTitle(void);
+    void boxer_refreshDOSBoxTitle(bool isPaused);
     void boxer_setMouseHint(MouseHint hint);
     void boxer_setMouseCapture(bool captured);
     void boxer_setMouseRawInput(bool rawInput);

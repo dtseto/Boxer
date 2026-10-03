@@ -41,7 +41,6 @@ BXDriveGeometry BXCDROMGeometry			= {2048, 1, 65535, 0};		//~650MB, no free spac
 
 //Defined in dos_files.cpp
 extern DOS_File * Files[DOS_FILES];
-extern DOS_Drive * Drives[DOS_DRIVES];
 
 //Defined in dos_mscdex.cpp
 void MSCDEX_SetCDInterface(int intNr, int forceCD);
@@ -940,7 +939,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	if (Drives[index]) return NO;
 	
 	Drives[index] = drive;
-	mem_writeb(Real2Phys(dos.tables.mediaid)+((PhysPt)index)*2, drive->GetMediaByte());
+	mem_writeb(RealToPhysical(dos.tables.mediaid) +
+	           static_cast<PhysPt>(index) * 9,
+	           drive->GetMediaByte());
 	
 	return YES;
 }

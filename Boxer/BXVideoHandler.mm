@@ -377,7 +377,8 @@
 	
 	
 	//Finally, apply the values to DOSBox
-	render.aspect		= NO; //We apply our own aspect correction separately
+	// DOSBox Staging 0.81 removed the legacy Render_t::aspect flag. Boxer
+	// applies its own aspect correction in the presentation layer.
     render.scale.size = (Bitu)filterScale;
     
     

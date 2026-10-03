@@ -103,9 +103,9 @@ void boxer_handleDOSBoxTitleChange(int32_t newCycles, bool newPaused)
     [emulator _didChangeEmulationState];
 }
 
-void boxer_refreshDOSBoxTitle(void)
+void boxer_refreshDOSBoxTitle(bool isPaused)
 {
-    boxer_handleDOSBoxTitleChange(-1, false);
+	boxer_handleDOSBoxTitleChange(-1, isPaused);
 }
 
 void boxer_setMouseHint(MouseHint hint)
@@ -163,8 +163,7 @@ Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double s
 
     // The SDL frontend normally sends these notifications during startup and
     // focus changes. Boxer replaces that frontend and gates input itself.
-    MOUSE_NotifyReadyGFX();
-    MOUSE_NotifyHasFocus(true);
+	MOUSE_NotifyReadyGFX();
 
 	NSSize outputSize	= NSMakeSize((CGFloat)width, (CGFloat)height);
 	NSSize scale		= NSMakeSize((CGFloat)scalex, (CGFloat)scaley);
@@ -193,7 +192,7 @@ void boxer_finishFrame(const uint16_t *dirtyBlocks)
 	[[emulator videoHandler] finishFrameWithChanges: dirtyBlocks];	
 }
 
-Bitu boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue)
+uint32_t boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
 	return [[emulator videoHandler] paletteEntryWithRed: red green: green blue: blue];
@@ -671,6 +670,11 @@ void MAPPER_AddHandler(MAPPER_Handler *handler, SDL_Scancode key, uint32_t mods,
 void MAPPER_Init(void) {}
 void MAPPER_StartUp(Section * sec) {}
 void MAPPER_Run(bool pressed) {}
+void MAPPER_BindKeys(Section *sec) {}
+void MAPPER_DisplayUI() {}
+bool MAPPER_IsUsingJoysticks() { return false; }
+void MAPPER_CheckEvent(SDL_Event *event) {}
+void MAPPER_UpdateJoysticks(void) {}
 void MAPPER_RunInternal() {}
 void MAPPER_LosingFocus(void) {}
 void MAPPER_AutoType(std::vector<std::string> &sequence,

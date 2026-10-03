@@ -114,7 +114,7 @@
 	{
 		if (pressed)
 		{
-			MOUSE_EventButton(button, true);
+			MOUSE_EventButton(static_cast<MouseButtonId>(button), true);
             self.pressedButtons |= buttonMask;
             
             _lastButtonDown[button] = [NSDate timeIntervalSinceReferenceDate];
@@ -141,7 +141,7 @@
             }
             else
             {
-				MOUSE_EventButton(button, false);
+				MOUSE_EventButton(static_cast<MouseButtonId>(button), false);
                 self.pressedButtons &= ~buttonMask;
                 
                 _lastButtonDown[button] = 0;

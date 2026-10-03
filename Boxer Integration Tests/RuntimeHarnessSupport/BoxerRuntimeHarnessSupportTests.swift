@@ -46,4 +46,26 @@ final class BoxerRuntimeHarnessSupportTests: XCTestCase {
         XCTAssertTrue(adapter.productionSources(for: .mouse).isEmpty)
         XCTAssertTrue(adapter.entryPoints(for: .mouse).isEmpty)
     }
+
+    func test081AdapterMapsMovedProductionSourcesAndCaptureEntryPoint() {
+        let root = URL(fileURLWithPath: "/tmp/official-081")
+        let adapter = DOSBox081Adapter(productionRoot: root)
+
+        XCTAssertEqual(adapter.identifier, "dosbox-0.81")
+        XCTAssertEqual(adapter.supportedVersions, ["0.81.0"])
+        XCTAssertEqual(
+            adapter.productionSources(for: .keyboard),
+            [
+                root.appendingPathComponent("src/hardware/input/keyboard.cpp"),
+                root.appendingPathComponent("src/ints/bios_keyboard.cpp"),
+                root.appendingPathComponent("src/dos/dev_con.h"),
+                root.appendingPathComponent("src/dos/dos_keyboard_layout.cpp")
+            ]
+        )
+        XCTAssertEqual(
+            adapter.productionSources(for: .capture),
+            [root.appendingPathComponent("src/capture/capture.cpp")]
+        )
+        XCTAssertEqual(adapter.entryPoints(for: .capture), ["CAPTURE_CreateFile"])
+    }
 }

@@ -67,14 +67,14 @@ final class BoxerShellRuntimeTests: XCTestCase {
         XCTAssertEqual(rerun.status, 0, rerun.output)
     }
 
-    // Production entry point: the exact DOS_Shell::Execute implementation from
-    // DOSBox-Staging/src/shell/shell_misc.cpp. Fakes: DOS path lookup and
+    // Production entry point: the exact DOS_Shell::ExecuteProgram implementation
+    // from DOSBox-Staging/src/shell/shell_misc.cpp. Fakes: DOS path lookup and
     // canonicalization, batch construction, DOS process structures/registers,
     // interrupt dispatch, output, and Boxer callback sinks. Extension routing,
     // canonical-path selection, and callback/dispatch ordering are production.
     func testProductionExecutableCallbackOrderingAndRouting() throws {
         let source = try String(contentsOf: dosboxRoot.appendingPathComponent("src/shell/shell_misc.cpp"), encoding: .utf8)
-        let execute = try sourceRegion(source, beginningWith: "bool DOS_Shell::Execute(char * name,char * args)", endingBefore: "static char which_ret")
+        let execute = try sourceRegion(source, beginningWith: "bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)", endingBefore: "std::string DOS_Shell::Which")
 
         try assertExecutableHarnessPasses(execute, label: "normal")
 
@@ -99,14 +99,14 @@ final class BoxerShellRuntimeTests: XCTestCase {
         }
     }
 
-    // Production entry point: the exact DOS_Shell::InputCommand implementation
+    // Production entry point: the exact v0.81 DOS_Shell::InputCommand implementation
     // from DOSBox-Staging/src/shell/shell_misc.cpp. Fakes: keyboard reads and
     // writes, completion/history filesystem services, DOS configuration, cursor
     // output, and Boxer callback sinks. The input loop and mutation retention,
     // immediate-execution, cancellation, and callback ordering are production.
     func testProductionCommandInputOrderingAndMutation() throws {
         let source = try String(contentsOf: dosboxRoot.appendingPathComponent("src/shell/shell_misc.cpp"), encoding: .utf8)
-        let input = try sourceRegion(source, beginningWith: "void DOS_Shell::InputCommand(char * line)", endingBefore: "// BOXER-END: shell-input-injection")
+        let input = try sourceRegion(source, beginningWith: "void DOS_Shell::InputCommand(char* line)", endingBefore: "std::string DOS_Shell::ReadCommand")
 
         try assertInputHarnessPasses(input, label: "normal")
         for (needle, replacement, label) in [

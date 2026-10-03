@@ -213,3 +213,90 @@ struct DOSBox080Adapter: BoxerDOSBoxRuntimeAdapter {
         []
     }
 }
+
+/// DOSBox Staging v0.81.0 adapter.
+///
+/// v0.81 moved the keyboard implementation under `hardware/input` and moved
+/// capture-file ownership out of the hardware aggregate into `capture.cpp`.
+/// The remaining source locations are intentionally listed here rather than
+/// inferred by the shared tests, so a future upstream layout change produces a
+/// focused adapter failure.
+struct DOSBox081Adapter: BoxerDOSBoxRuntimeAdapter {
+    let productionRoot: URL
+
+    var identifier: String { "dosbox-0.81" }
+    var supportedVersions: [String] { ["0.81.0"] }
+
+    var includeDirectories: [URL] {
+        [
+            productionRoot,
+            productionRoot.appendingPathComponent("include"),
+            productionRoot.appendingPathComponent("src")
+        ]
+    }
+
+    func productionSources(for behavior: BoxerRuntimeBehavior) -> [URL] {
+        let paths: [String]
+        switch behavior {
+        case .joystick:
+            paths = ["src/hardware/joystick.cpp"]
+        case .lifecycle:
+            paths = ["src/dosbox.cpp", "src/dos/dos.cpp"]
+        case .keyboard:
+            paths = [
+                "src/hardware/input/keyboard.cpp",
+                "src/ints/bios_keyboard.cpp",
+                "src/dos/dev_con.h",
+                "src/dos/dos_keyboard_layout.cpp"
+            ]
+        case .printer:
+            paths = [
+                "src/hardware/parport/parport.cpp",
+                "src/hardware/parport/printer_redir.cpp",
+                "src/ints/bios.cpp",
+                "src/dos/dos.cpp"
+            ]
+        case .filesystem:
+            paths = ["src/dos/drive_local.cpp", "src/dos/drive_cache.cpp"]
+        case .shell:
+            paths = [
+                "src/shell/shell.cpp",
+                "src/shell/shell_batch.cpp",
+                "src/shell/shell_misc.cpp"
+            ]
+        case .mouse:
+            paths = ["src/hardware/input/mouse.cpp"]
+        case .render:
+            paths = ["src/gui/render.cpp"]
+        case .audio:
+            paths = ["src/hardware/mixer.cpp"]
+        case .configuration:
+            paths = ["src/dosbox.cpp"]
+        case .media:
+            paths = ["src/dos/program_mount.cpp", "src/dos/program_imgmount.cpp"]
+        case .localization:
+            paths = ["src/misc/messages.cpp"]
+        case .capture:
+            paths = ["src/capture/capture.cpp"]
+        }
+        return paths.map(productionRoot.appendingPathComponent)
+    }
+
+    func entryPoints(for behavior: BoxerRuntimeBehavior) -> [String] {
+        switch behavior {
+        case .joystick: return ["JOYSTICK_Init", "IO_ReadB", "IO_WriteB", "JOYSTICK_Destroy"]
+        case .lifecycle: return ["DOSBOX_RunMachine", "DOS_Shutdown"]
+        case .keyboard: return ["KEYBOARD_Init", "BIOS_AddKeyToBuffer"]
+        case .printer: return ["PARALLEL_Init", "CParallel::Putchar"]
+        case .filesystem: return ["localDrive::FileCreate", "localDrive::FileOpen"]
+        case .shell: return ["DOS_Shell::Run"]
+        case .mouse: return ["MOUSE_Init", "Mouse_CursorMoved"]
+        case .render: return ["RENDER_Reset", "RENDER_StartUpdate", "RENDER_EndUpdate"]
+        case .audio: return ["MIXER_Init", "MIXER_CallBack"]
+        case .configuration: return ["DOSBOX_Init"]
+        case .media: return ["MOUNT_ProgramStart", "IMGMOUNT_ProgramStart"]
+        case .localization: return ["MSG_Get"]
+        case .capture: return ["CAPTURE_CreateFile"]
+        }
+    }
+}

@@ -131,7 +131,6 @@
 		0FB9597E3054521500B88A1D /* mouse_interfaces.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959713054521500B88A1D /* mouse_interfaces.cpp */; };
 		0FB9597F3054521500B88A1D /* mouseif_dos_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959763054521500B88A1D /* mouseif_dos_driver.cpp */; };
 		0FB959803054521500B88A1D /* mouse_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB9596D3054521500B88A1D /* mouse_common.cpp */; };
-
 		0FB959823054521500B88A1D /* mouseif_ps2_bios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959773054521500B88A1D /* mouseif_ps2_bios.cpp */; };
 		0FB959833054521500B88A1D /* mouse_manymouse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959733054521500B88A1D /* mouse_manymouse.cpp */; };
 		0FB959843054521500B88A1D /* mouseif_virtual_machines.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959783054521500B88A1D /* mouseif_virtual_machines.cpp */; };
@@ -140,7 +139,6 @@
 		0FB959873054521500B88A1D /* mouse_interfaces.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959713054521500B88A1D /* mouse_interfaces.cpp */; };
 		0FB959883054521500B88A1D /* mouseif_dos_driver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959763054521500B88A1D /* mouseif_dos_driver.cpp */; };
 		0FB959893054521500B88A1D /* mouse_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB9596D3054521500B88A1D /* mouse_common.cpp */; };
-
 		0FB9598B3054521500B88A1D /* mouseif_ps2_bios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959773054521500B88A1D /* mouseif_ps2_bios.cpp */; };
 		0FB9598C3054521500B88A1D /* mouse_manymouse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959733054521500B88A1D /* mouse_manymouse.cpp */; };
 		0FB9598D3054521500B88A1D /* mouseif_virtual_machines.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959783054521500B88A1D /* mouseif_virtual_machines.cpp */; };
@@ -314,8 +312,8 @@
 		55F0B77526ABFEE80077E58C /* EnvelopeGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B74926ABFEE80077E58C /* EnvelopeGenerator.cpp */; };
 		55F0B77626ABFEE80077E58C /* Dac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B74A26ABFEE80077E58C /* Dac.cpp */; };
 		55F0B77726ABFEE80077E58C /* Dac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B74A26ABFEE80077E58C /* Dac.cpp */; };
-		55F0B77A26ABFEE80077E58C /* WaveformGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B74C26ABFEE80077E58C /* WaveformGenerator.cpp */; };
-		55F0B77B26ABFEE80077E58C /* WaveformGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B74C26ABFEE80077E58C /* WaveformGenerator.cpp */; };
+		55F0B77A26ABFEE80077E58C /* DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B74C26ABFEE80077E58C /* DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp */; };
+		55F0B77B26ABFEE80077E58C /* DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B74C26ABFEE80077E58C /* DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp */; };
 		55F0B77C26ABFEE80077E58C /* SID.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B74E26ABFEE80077E58C /* SID.cpp */; };
 		55F0B77D26ABFEE80077E58C /* SID.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B74E26ABFEE80077E58C /* SID.cpp */; };
 		55F0B77E26ABFEE80077E58C /* Filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55F0B75126ABFEE80077E58C /* Filter.cpp */; };
@@ -503,7 +501,6 @@
 		9F2D304C15B8233800FAE848 /* dma.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212212B38C4400072AE8 /* dma.cpp */; };
 		9F2D304D15B8233800FAE848 /* gameblaster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212312B38C4400072AE8 /* gameblaster.cpp */; };
 		9F2D304E15B8233800FAE848 /* gus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212412B38C4400072AE8 /* gus.cpp */; };
-
 		9F2D305015B8233800FAE848 /* iohandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212612B38C4400072AE8 /* iohandler.cpp */; };
 		9F2D305115B8233800FAE848 /* ipx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212712B38C4400072AE8 /* ipx.cpp */; };
 		9F2D305215B8233800FAE848 /* ipxserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212812B38C4400072AE8 /* ipxserver.cpp */; };
@@ -779,7 +776,6 @@
 		9F7721AA12B38C4400072AE8 /* dma.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212212B38C4400072AE8 /* dma.cpp */; };
 		9F7721AB12B38C4400072AE8 /* gameblaster.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212312B38C4400072AE8 /* gameblaster.cpp */; };
 		9F7721AC12B38C4400072AE8 /* gus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212412B38C4400072AE8 /* gus.cpp */; };
-
 		9F7721AE12B38C4400072AE8 /* iohandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212612B38C4400072AE8 /* iohandler.cpp */; };
 		9F7721AF12B38C4400072AE8 /* ipx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212712B38C4400072AE8 /* ipx.cpp */; };
 		9F7721B012B38C4400072AE8 /* ipxserver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77212812B38C4400072AE8 /* ipxserver.cpp */; };
@@ -1008,39 +1004,37 @@
 		9FFE3EA81BE68DBA005332E0 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 9FFE3EAA1BE68DBA005332E0 /* Localizable.strings */; };
 		9FFE7104165E931600F99C3D /* BXJoystickItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FFE7103165E931600F99C3D /* BXJoystickItem.m */; };
 		9FFF97951232B718009B5EE5 /* ADBMultiPanelWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FFF97941232B718009B5EE5 /* ADBMultiPanelWindowController.m */; };
-		B7900B3E13E47D9E00B37913 /* BXPrecisionProControllerProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = B7900B3D13E47D9E00B37913 /* BXPrecisionProControllerProfile.m */; };
-		A10000000000000000000064 /* capture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000000 /* capture.cpp */; };
-		A10000000000000000000065 /* dos_locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* dos_locale.cpp */; };
-		A10000000000000000000066 /* program_setver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* program_setver.cpp */; };
-		A10000000000000000000067 /* shader_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* shader_manager.cpp */; };
-		A10000000000000000000068 /* imfc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* imfc.cpp */; };
-		A10000000000000000000069 /* intel8042.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* intel8042.cpp */; };
-		A1000000000000000000006A /* intel8255.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000006 /* intel8255.cpp */; };
-		A1000000000000000000006B /* virtualbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000007 /* virtualbox.cpp */; };
-		A1000000000000000000006C /* vmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000008 /* vmware.cpp */; };
-		A1000000000000000000006D /* voodoo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000009 /* voodoo.cpp */; };
-		A1000000000000000000006E /* bios_pci.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000A /* bios_pci.cpp */; };
-		A1000000000000000000006F /* autoexec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000B /* autoexec.cpp */; };
-		A10000000000000000000070 /* command_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000C /* command_line.cpp */; };
-		A20000000000000000000064 /* capture_audio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000000 /* capture_audio.cpp */; };
-		A20000000000000000000065 /* capture_midi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* capture_midi.cpp */; };
-		A20000000000000000000066 /* capture_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* capture_video.cpp */; };
-		A20000000000000000000067 /* image_capturer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* image_capturer.cpp */; };
-		A20000000000000000000068 /* keyboard_scancodes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* keyboard_scancodes.cpp */; };
-		A30000000000000000000064 /* image_saver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000000 /* image_saver.cpp */; };
-		A30000000000000000000065 /* file_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* file_reader.cpp */; };
-		A30000000000000000000066 /* program_move.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* program_move.cpp */; };
-		A30000000000000000000067 /* program_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* program_tree.cpp */; };
-		A30000000000000000000068 /* program_mixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004 /* program_mixer.cpp */; };
-		A30000000000000000000069 /* program_subst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000005 /* program_subst.cpp */; };
+		A10000000000000000000064 /* DOSBox-Staging/src/capture/capture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000000 /* DOSBox-Staging/src/capture/capture.cpp */; };
+		A10000000000000000000065 /* DOSBox-Staging/src/dos/dos_locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000001 /* DOSBox-Staging/src/dos/dos_locale.cpp */; };
+		A10000000000000000000066 /* DOSBox-Staging/src/dos/program_setver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* DOSBox-Staging/src/dos/program_setver.cpp */; };
+		A10000000000000000000067 /* DOSBox-Staging/src/gui/shader_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000003 /* DOSBox-Staging/src/gui/shader_manager.cpp */; };
+		A10000000000000000000068 /* DOSBox-Staging/src/hardware/imfc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* DOSBox-Staging/src/hardware/imfc.cpp */; };
+		A10000000000000000000069 /* DOSBox-Staging/src/hardware/input/intel8042.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000005 /* DOSBox-Staging/src/hardware/input/intel8042.cpp */; };
+		A1000000000000000000006A /* DOSBox-Staging/src/hardware/input/intel8255.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000006 /* DOSBox-Staging/src/hardware/input/intel8255.cpp */; };
+		A1000000000000000000006B /* DOSBox-Staging/src/hardware/virtualbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000007 /* DOSBox-Staging/src/hardware/virtualbox.cpp */; };
+		A1000000000000000000006C /* DOSBox-Staging/src/hardware/vmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000008 /* DOSBox-Staging/src/hardware/vmware.cpp */; };
+		A1000000000000000000006D /* DOSBox-Staging/src/hardware/voodoo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000009 /* DOSBox-Staging/src/hardware/voodoo.cpp */; };
+		A1000000000000000000006E /* DOSBox-Staging/src/ints/bios_pci.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000A /* DOSBox-Staging/src/ints/bios_pci.cpp */; };
+		A1000000000000000000006F /* DOSBox-Staging/src/shell/autoexec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000B /* DOSBox-Staging/src/shell/autoexec.cpp */; };
+		A10000000000000000000070 /* DOSBox-Staging/src/shell/command_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000000C /* DOSBox-Staging/src/shell/command_line.cpp */; };
+		A20000000000000000000064 /* DOSBox-Staging/src/capture/capture_audio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000000 /* DOSBox-Staging/src/capture/capture_audio.cpp */; };
+		A20000000000000000000065 /* DOSBox-Staging/src/capture/capture_midi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* DOSBox-Staging/src/capture/capture_midi.cpp */; };
+		A20000000000000000000066 /* DOSBox-Staging/src/capture/capture_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* DOSBox-Staging/src/capture/capture_video.cpp */; };
+		A20000000000000000000067 /* DOSBox-Staging/src/capture/image/image_capturer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* DOSBox-Staging/src/capture/image/image_capturer.cpp */; };
+		A20000000000000000000068 /* DOSBox-Staging/src/hardware/input/keyboard_scancodes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* DOSBox-Staging/src/hardware/input/keyboard_scancodes.cpp */; };
+		A30000000000000000000064 /* DOSBox-Staging/src/capture/image/image_saver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000000 /* DOSBox-Staging/src/capture/image/image_saver.cpp */; };
+		A30000000000000000000065 /* DOSBox-Staging/src/shell/file_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000001 /* DOSBox-Staging/src/shell/file_reader.cpp */; };
+		A30000000000000000000066 /* DOSBox-Staging/src/dos/program_move.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* DOSBox-Staging/src/dos/program_move.cpp */; };
+		A30000000000000000000067 /* DOSBox-Staging/src/dos/program_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000003 /* DOSBox-Staging/src/dos/program_tree.cpp */; };
+		A30000000000000000000068 /* DOSBox-Staging/src/dos/program_mixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004 /* DOSBox-Staging/src/dos/program_mixer.cpp */; };
+		A30000000000000000000069 /* DOSBox-Staging/src/dos/program_subst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000005 /* DOSBox-Staging/src/dos/program_subst.cpp */; };
 		A30000000000000000000070 /* sdlmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77211A12B38C4400072AE8 /* sdlmain.cpp */; };
 		A30000000000000000000071 /* zmbv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77216912B38C4400072AE8 /* zmbv.cpp */; };
-		A40000000000000000000064 /* image_scaler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000000 /* image_scaler.cpp */; };
-		A40000000000000000000065 /* image_decoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000001 /* image_decoder.cpp */; };
-		A40000000000000000000066 /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000002 /* png_writer.cpp */; };
-
+		A40000000000000000000064 /* DOSBox-Staging/src/capture/image/image_scaler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000000 /* DOSBox-Staging/src/capture/image/image_scaler.cpp */; };
+		A40000000000000000000065 /* DOSBox-Staging/src/capture/image/image_decoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000001 /* DOSBox-Staging/src/capture/image/image_decoder.cpp */; };
+		A40000000000000000000066 /* DOSBox-Staging/src/capture/image/png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000002 /* DOSBox-Staging/src/capture/image/png_writer.cpp */; };
 		A40000000000000000000070 /* shell_batch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77217312B38C4400072AE8 /* shell_batch.cpp */; };
-
+		B7900B3E13E47D9E00B37913 /* BXPrecisionProControllerProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = B7900B3D13E47D9E00B37913 /* BXPrecisionProControllerProfile.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1323,7 +1317,6 @@
 		0FB959713054521500B88A1D /* mouse_interfaces.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_interfaces.cpp; sourceTree = "<group>"; };
 		0FB959723054521500B88A1D /* mouse_manymouse.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mouse_manymouse.h; sourceTree = "<group>"; };
 		0FB959733054521500B88A1D /* mouse_manymouse.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_manymouse.cpp; sourceTree = "<group>"; };
-
 		0FB959763054521500B88A1D /* mouseif_dos_driver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mouseif_dos_driver.cpp; sourceTree = "<group>"; };
 		0FB959773054521500B88A1D /* mouseif_ps2_bios.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mouseif_ps2_bios.cpp; sourceTree = "<group>"; };
 		0FB959783054521500B88A1D /* mouseif_virtual_machines.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mouseif_virtual_machines.cpp; sourceTree = "<group>"; };
@@ -1532,7 +1525,7 @@
 		55F0B74826ABFEE80077E58C /* siddefs-fp.h.in */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "siddefs-fp.h.in"; sourceTree = "<group>"; };
 		55F0B74926ABFEE80077E58C /* EnvelopeGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = EnvelopeGenerator.cpp; sourceTree = "<group>"; };
 		55F0B74A26ABFEE80077E58C /* Dac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Dac.cpp; sourceTree = "<group>"; };
-		55F0B74C26ABFEE80077E58C /* WaveformGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp"; sourceTree = SOURCE_ROOT; };
+		55F0B74C26ABFEE80077E58C /* DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp"; sourceTree = SOURCE_ROOT; };
 		55F0B74D26ABFEE80077E58C /* Integrator8580.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Integrator8580.h; sourceTree = "<group>"; };
 		55F0B74E26ABFEE80077E58C /* SID.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = SID.cpp; sourceTree = "<group>"; };
 		55F0B74F26ABFEE80077E58C /* EnvelopeGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EnvelopeGenerator.h; sourceTree = "<group>"; };
@@ -1953,7 +1946,6 @@
 		9F77212212B38C4400072AE8 /* dma.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dma.cpp; sourceTree = "<group>"; };
 		9F77212312B38C4400072AE8 /* gameblaster.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gameblaster.cpp; sourceTree = "<group>"; };
 		9F77212412B38C4400072AE8 /* gus.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gus.cpp; sourceTree = "<group>"; };
-
 		9F77212612B38C4400072AE8 /* iohandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = iohandler.cpp; sourceTree = "<group>"; };
 		9F77212712B38C4400072AE8 /* ipx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ipx.cpp; sourceTree = "<group>"; };
 		9F77212812B38C4400072AE8 /* ipxserver.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ipxserver.cpp; sourceTree = "<group>"; };
@@ -2282,6 +2274,34 @@
 		9FFE7103165E931600F99C3D /* BXJoystickItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXJoystickItem.m; sourceTree = "<group>"; };
 		9FFF97931232B718009B5EE5 /* ADBMultiPanelWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ADBMultiPanelWindowController.h; sourceTree = "<group>"; };
 		9FFF97941232B718009B5EE5 /* ADBMultiPanelWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ADBMultiPanelWindowController.m; sourceTree = "<group>"; };
+		A10000000000000000000000 /* DOSBox-Staging/src/capture/capture.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/capture.cpp"; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000001 /* DOSBox-Staging/src/dos/dos_locale.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/dos_locale.cpp"; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000002 /* DOSBox-Staging/src/dos/program_setver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_setver.cpp"; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000003 /* DOSBox-Staging/src/gui/shader_manager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/gui/shader_manager.cpp"; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000004 /* DOSBox-Staging/src/hardware/imfc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/imfc.cpp"; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000005 /* DOSBox-Staging/src/hardware/input/intel8042.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/input/intel8042.cpp"; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000006 /* DOSBox-Staging/src/hardware/input/intel8255.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/input/intel8255.cpp"; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000007 /* DOSBox-Staging/src/hardware/virtualbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/virtualbox.cpp"; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000008 /* DOSBox-Staging/src/hardware/vmware.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/vmware.cpp"; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000009 /* DOSBox-Staging/src/hardware/voodoo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/voodoo.cpp"; sourceTree = SOURCE_ROOT; };
+		A1000000000000000000000A /* DOSBox-Staging/src/ints/bios_pci.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/ints/bios_pci.cpp"; sourceTree = SOURCE_ROOT; };
+		A1000000000000000000000B /* DOSBox-Staging/src/shell/autoexec.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/shell/autoexec.cpp"; sourceTree = SOURCE_ROOT; };
+		A1000000000000000000000C /* DOSBox-Staging/src/shell/command_line.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/shell/command_line.cpp"; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000000 /* DOSBox-Staging/src/capture/capture_audio.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/capture_audio.cpp"; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000001 /* DOSBox-Staging/src/capture/capture_midi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/capture_midi.cpp"; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000002 /* DOSBox-Staging/src/capture/capture_video.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/capture_video.cpp"; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000003 /* DOSBox-Staging/src/capture/image/image_capturer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/image_capturer.cpp"; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000004 /* DOSBox-Staging/src/hardware/input/keyboard_scancodes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/input/keyboard_scancodes.cpp"; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000000 /* DOSBox-Staging/src/capture/image/image_saver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/image_saver.cpp"; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000001 /* DOSBox-Staging/src/shell/file_reader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/shell/file_reader.cpp"; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000002 /* DOSBox-Staging/src/dos/program_move.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_move.cpp"; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000003 /* DOSBox-Staging/src/dos/program_tree.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_tree.cpp"; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000004 /* DOSBox-Staging/src/dos/program_mixer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_mixer.cpp"; sourceTree = SOURCE_ROOT; };
+		A30000000000000000000005 /* DOSBox-Staging/src/dos/program_subst.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_subst.cpp"; sourceTree = SOURCE_ROOT; };
+		A40000000000000000000000 /* DOSBox-Staging/src/capture/image/image_scaler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/image_scaler.cpp"; sourceTree = SOURCE_ROOT; };
+		A40000000000000000000001 /* DOSBox-Staging/src/capture/image/image_decoder.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/image_decoder.cpp"; sourceTree = SOURCE_ROOT; };
+		A40000000000000000000002 /* DOSBox-Staging/src/capture/image/png_writer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/png_writer.cpp"; sourceTree = SOURCE_ROOT; };
+		A40000000000000000000003 /* DOSBox-Staging/src/gui/sdl_mapper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/gui/sdl_mapper.cpp"; sourceTree = SOURCE_ROOT; };
 		B7900B3D13E47D9E00B37913 /* BXPrecisionProControllerProfile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXPrecisionProControllerProfile.m; sourceTree = "<group>"; };
 		E3300C2223B02F2A000A459D /* pt-BR */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.html; name = "pt-BR"; path = "pt-BR.lproj/Credits.html"; sourceTree = "<group>"; };
 		E3300C2323B02F2B000A459D /* pt-BR */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = "pt-BR"; path = "pt-BR.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
@@ -2293,34 +2313,6 @@
 		F192BC8028C7FE0A00B8D48D /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F192BC8128C7FE0A00B8D48D /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/DOSBox.strings; sourceTree = "<group>"; };
 		F192BC8228C7FE0A00B8D48D /* fr */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Shell.strings; sourceTree = "<group>"; };
-		A10000000000000000000000 /* capture.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/capture.cpp"; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000001 /* dos_locale.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/dos_locale.cpp"; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000002 /* program_setver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_setver.cpp"; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000003 /* shader_manager.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/gui/shader_manager.cpp"; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000004 /* imfc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/imfc.cpp"; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000005 /* intel8042.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/input/intel8042.cpp"; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000006 /* intel8255.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/input/intel8255.cpp"; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000007 /* virtualbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/virtualbox.cpp"; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000008 /* vmware.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/vmware.cpp"; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000009 /* voodoo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/voodoo.cpp"; sourceTree = SOURCE_ROOT; };
-		A1000000000000000000000A /* bios_pci.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/ints/bios_pci.cpp"; sourceTree = SOURCE_ROOT; };
-		A1000000000000000000000B /* autoexec.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/shell/autoexec.cpp"; sourceTree = SOURCE_ROOT; };
-		A1000000000000000000000C /* command_line.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/shell/command_line.cpp"; sourceTree = SOURCE_ROOT; };
-		A20000000000000000000000 /* capture_audio.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/capture_audio.cpp"; sourceTree = SOURCE_ROOT; };
-		A20000000000000000000001 /* capture_midi.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/capture_midi.cpp"; sourceTree = SOURCE_ROOT; };
-		A20000000000000000000002 /* capture_video.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/capture_video.cpp"; sourceTree = SOURCE_ROOT; };
-		A20000000000000000000003 /* image_capturer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/image_capturer.cpp"; sourceTree = SOURCE_ROOT; };
-		A20000000000000000000004 /* keyboard_scancodes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/hardware/input/keyboard_scancodes.cpp"; sourceTree = SOURCE_ROOT; };
-		A30000000000000000000000 /* image_saver.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/image_saver.cpp"; sourceTree = SOURCE_ROOT; };
-		A30000000000000000000001 /* file_reader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/shell/file_reader.cpp"; sourceTree = SOURCE_ROOT; };
-		A30000000000000000000002 /* program_move.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_move.cpp"; sourceTree = SOURCE_ROOT; };
-		A30000000000000000000003 /* program_tree.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_tree.cpp"; sourceTree = SOURCE_ROOT; };
-		A30000000000000000000004 /* program_mixer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_mixer.cpp"; sourceTree = SOURCE_ROOT; };
-		A30000000000000000000005 /* program_subst.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/dos/program_subst.cpp"; sourceTree = SOURCE_ROOT; };
-		A40000000000000000000000 /* image_scaler.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/image_scaler.cpp"; sourceTree = SOURCE_ROOT; };
-		A40000000000000000000001 /* image_decoder.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/image_decoder.cpp"; sourceTree = SOURCE_ROOT; };
-		A40000000000000000000002 /* png_writer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/capture/image/png_writer.cpp"; sourceTree = SOURCE_ROOT; };
-		A40000000000000000000003 /* sdl_mapper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "DOSBox-Staging/src/gui/sdl_mapper.cpp"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -2521,7 +2513,7 @@
 				0F668614303C92950010580F /* meson.build */,
 				0F66861B303C92950010580F /* xms.h */,
 				0F66861C303C92950010580F /* xms.cpp */,
-				A1000000000000000000000A /* bios_pci.cpp */,
+				A1000000000000000000000A /* DOSBox-Staging/src/ints/bios_pci.cpp */,
 			);
 			path = ints;
 			sourceTree = "<group>";
@@ -2650,9 +2642,9 @@
 				0FB959763054521500B88A1D /* mouseif_dos_driver.cpp */,
 				0FB959773054521500B88A1D /* mouseif_ps2_bios.cpp */,
 				0FB959783054521500B88A1D /* mouseif_virtual_machines.cpp */,
-				A10000000000000000000005 /* intel8042.cpp */,
-				A10000000000000000000006 /* intel8255.cpp */,
-				A20000000000000000000004 /* keyboard_scancodes.cpp */,
+				A10000000000000000000005 /* DOSBox-Staging/src/hardware/input/intel8042.cpp */,
+				A10000000000000000000006 /* DOSBox-Staging/src/hardware/input/intel8255.cpp */,
+				A20000000000000000000004 /* DOSBox-Staging/src/hardware/input/keyboard_scancodes.cpp */,
 			);
 			name = mouse;
 			path = "DOSBox-Staging/src/hardware/input";
@@ -2968,7 +2960,7 @@
 				55F0B76426ABFEE80077E58C /* Voice.h */,
 				55F0B76326ABFEE80077E58C /* WaveformCalculator.cpp */,
 				55F0B76126ABFEE80077E58C /* WaveformCalculator.h */,
-				55F0B74C26ABFEE80077E58C /* WaveformGenerator.cpp */,
+				55F0B74C26ABFEE80077E58C /* DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp */,
 				55F0B74726ABFEE80077E58C /* WaveformGenerator.h */,
 			);
 			path = residfp;
@@ -3511,15 +3503,15 @@
 				5514502424BE8BCC0002CE28 /* midi */,
 				9F77216B12B38C4400072AE8 /* misc */,
 				9F77217112B38C4400072AE8 /* shell */,
-				A10000000000000000000000 /* capture.cpp */,
-				A20000000000000000000000 /* capture_audio.cpp */,
-				A20000000000000000000001 /* capture_midi.cpp */,
-				A20000000000000000000002 /* capture_video.cpp */,
-				A20000000000000000000003 /* image_capturer.cpp */,
-				A30000000000000000000000 /* image_saver.cpp */,
-				A40000000000000000000000 /* image_scaler.cpp */,
-				A40000000000000000000001 /* image_decoder.cpp */,
-				A40000000000000000000002 /* png_writer.cpp */,
+				A10000000000000000000000 /* DOSBox-Staging/src/capture/capture.cpp */,
+				A20000000000000000000000 /* DOSBox-Staging/src/capture/capture_audio.cpp */,
+				A20000000000000000000001 /* DOSBox-Staging/src/capture/capture_midi.cpp */,
+				A20000000000000000000002 /* DOSBox-Staging/src/capture/capture_video.cpp */,
+				A20000000000000000000003 /* DOSBox-Staging/src/capture/image/image_capturer.cpp */,
+				A30000000000000000000000 /* DOSBox-Staging/src/capture/image/image_saver.cpp */,
+				A40000000000000000000000 /* DOSBox-Staging/src/capture/image/image_scaler.cpp */,
+				A40000000000000000000001 /* DOSBox-Staging/src/capture/image/image_decoder.cpp */,
+				A40000000000000000000002 /* DOSBox-Staging/src/capture/image/png_writer.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -3547,21 +3539,21 @@
 				9F7720D512B38C4400072AE8 /* modrm.cpp */,
 				9F7720D612B38C4400072AE8 /* modrm.h */,
 				9F7720D712B38C4400072AE8 /* paging.cpp */,
-				A10000000000000000000001 /* dos_locale.cpp */,
-				A10000000000000000000002 /* program_setver.cpp */,
-				A10000000000000000000003 /* shader_manager.cpp */,
-				A10000000000000000000004 /* imfc.cpp */,
-				A10000000000000000000007 /* virtualbox.cpp */,
-				A10000000000000000000008 /* vmware.cpp */,
-				A10000000000000000000009 /* voodoo.cpp */,
-				A1000000000000000000000B /* autoexec.cpp */,
-				A1000000000000000000000C /* command_line.cpp */,
-				A30000000000000000000001 /* file_reader.cpp */,
-				A30000000000000000000002 /* program_move.cpp */,
-				A30000000000000000000003 /* program_tree.cpp */,
-				A30000000000000000000004 /* program_mixer.cpp */,
-				A30000000000000000000005 /* program_subst.cpp */,
-				A40000000000000000000003 /* sdl_mapper.cpp */,
+				A10000000000000000000001 /* DOSBox-Staging/src/dos/dos_locale.cpp */,
+				A10000000000000000000002 /* DOSBox-Staging/src/dos/program_setver.cpp */,
+				A10000000000000000000003 /* DOSBox-Staging/src/gui/shader_manager.cpp */,
+				A10000000000000000000004 /* DOSBox-Staging/src/hardware/imfc.cpp */,
+				A10000000000000000000007 /* DOSBox-Staging/src/hardware/virtualbox.cpp */,
+				A10000000000000000000008 /* DOSBox-Staging/src/hardware/vmware.cpp */,
+				A10000000000000000000009 /* DOSBox-Staging/src/hardware/voodoo.cpp */,
+				A1000000000000000000000B /* DOSBox-Staging/src/shell/autoexec.cpp */,
+				A1000000000000000000000C /* DOSBox-Staging/src/shell/command_line.cpp */,
+				A30000000000000000000001 /* DOSBox-Staging/src/shell/file_reader.cpp */,
+				A30000000000000000000002 /* DOSBox-Staging/src/dos/program_move.cpp */,
+				A30000000000000000000003 /* DOSBox-Staging/src/dos/program_tree.cpp */,
+				A30000000000000000000004 /* DOSBox-Staging/src/dos/program_mixer.cpp */,
+				A30000000000000000000005 /* DOSBox-Staging/src/dos/program_subst.cpp */,
+				A40000000000000000000003 /* DOSBox-Staging/src/gui/sdl_mapper.cpp */,
 			);
 			path = cpu;
 			sourceTree = "<group>";
@@ -3771,7 +3763,6 @@
 				5514503824BE8DE50002CE28 /* envelope.cpp */,
 				9F77212312B38C4400072AE8 /* gameblaster.cpp */,
 				9F77212412B38C4400072AE8 /* gus.cpp */,
-
 				9F77212612B38C4400072AE8 /* iohandler.cpp */,
 				55DB14DC27EDA2020024AE9E /* iohandler_containers.cpp */,
 				0FFCA146303264D20076F2F5 /* ide.cpp */,
@@ -4403,7 +4394,7 @@
 			dependencies = (
 				55EB73EA27ED72CA00D5F7E0 /* PBXTargetDependency */,
 				55540E642546B87300B88BE3 /* PBXTargetDependency */,
-				55D431F625044D50008515E1 /* PBXTargetDependency */, 
+				55D431F625044D50008515E1 /* PBXTargetDependency */,
 				55E6A0B91C00C86200285593 /* PBXTargetDependency */,
 				55E6A0BD1C00C86200285593 /* PBXTargetDependency */,
 			);
@@ -4431,7 +4422,7 @@
 			comments = "REGARDING --mstackrealign\nBoxer will crash with a dyld_misaligned_stack_error if dynamic core mode is on when the session starts.\n\ndyld is the dynamic linker, so this may be some peculiar interaction of threading and dynamically-loaded frameworks: the crash also happens in our non-XCode, SDL-framework-using build, and it *doesn't* happen if a sleep() delay is introduced before DOSBox_main is called, which implies a race condition.\n\nAdding -mstackrealign to the C flags for Intel seems to have made the problem go away. Which doesn't explain why it's happening in the first place.";
 			dependencies = (
 				55540E6F2546B87E00B88BE3 /* PBXTargetDependency */,
-				55D431F825044D56008515E1 /* PBXTargetDependency */, 
+				55D431F825044D56008515E1 /* PBXTargetDependency */,
 				55E6A0C51C00C88A00285593 /* PBXTargetDependency */,
 				55E6A0C91C00C88A00285593 /* PBXTargetDependency */,
 			);
@@ -4733,42 +4724,41 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A40000000000000000000064 /* image_scaler.cpp in Sources */,
-				A40000000000000000000065 /* image_decoder.cpp in Sources */,
-				A40000000000000000000066 /* png_writer.cpp in Sources */,
+				A40000000000000000000064 /* DOSBox-Staging/src/capture/image/image_scaler.cpp in Sources */,
+				A40000000000000000000065 /* DOSBox-Staging/src/capture/image/image_decoder.cpp in Sources */,
+				A40000000000000000000066 /* DOSBox-Staging/src/capture/image/png_writer.cpp in Sources */,
 				A40000000000000000000070 /* shell_batch.cpp in Sources */,
-				A30000000000000000000064 /* image_saver.cpp in Sources */,
-				A30000000000000000000065 /* file_reader.cpp in Sources */,
-				A30000000000000000000066 /* program_move.cpp in Sources */,
-				A30000000000000000000067 /* program_tree.cpp in Sources */,
-				A30000000000000000000068 /* program_mixer.cpp in Sources */,
-				A30000000000000000000069 /* program_subst.cpp in Sources */,
+				A30000000000000000000064 /* DOSBox-Staging/src/capture/image/image_saver.cpp in Sources */,
+				A30000000000000000000065 /* DOSBox-Staging/src/shell/file_reader.cpp in Sources */,
+				A30000000000000000000066 /* DOSBox-Staging/src/dos/program_move.cpp in Sources */,
+				A30000000000000000000067 /* DOSBox-Staging/src/dos/program_tree.cpp in Sources */,
+				A30000000000000000000068 /* DOSBox-Staging/src/dos/program_mixer.cpp in Sources */,
+				A30000000000000000000069 /* DOSBox-Staging/src/dos/program_subst.cpp in Sources */,
 				A30000000000000000000070 /* sdlmain.cpp in Sources */,
 				A30000000000000000000071 /* zmbv.cpp in Sources */,
-				A20000000000000000000064 /* capture_audio.cpp in Sources */,
-				A20000000000000000000065 /* capture_midi.cpp in Sources */,
-				A20000000000000000000066 /* capture_video.cpp in Sources */,
-				A20000000000000000000067 /* image_capturer.cpp in Sources */,
-				A20000000000000000000068 /* keyboard_scancodes.cpp in Sources */,
-				A10000000000000000000064 /* capture.cpp in Sources */,
-				A10000000000000000000065 /* dos_locale.cpp in Sources */,
-				A10000000000000000000066 /* program_setver.cpp in Sources */,
-				A10000000000000000000067 /* shader_manager.cpp in Sources */,
-				A10000000000000000000068 /* imfc.cpp in Sources */,
-				A10000000000000000000069 /* intel8042.cpp in Sources */,
-				A1000000000000000000006A /* intel8255.cpp in Sources */,
-				A1000000000000000000006B /* virtualbox.cpp in Sources */,
-				A1000000000000000000006C /* vmware.cpp in Sources */,
-				A1000000000000000000006D /* voodoo.cpp in Sources */,
-				A1000000000000000000006E /* bios_pci.cpp in Sources */,
-				A1000000000000000000006F /* autoexec.cpp in Sources */,
-				A10000000000000000000070 /* command_line.cpp in Sources */,
+				A20000000000000000000064 /* DOSBox-Staging/src/capture/capture_audio.cpp in Sources */,
+				A20000000000000000000065 /* DOSBox-Staging/src/capture/capture_midi.cpp in Sources */,
+				A20000000000000000000066 /* DOSBox-Staging/src/capture/capture_video.cpp in Sources */,
+				A20000000000000000000067 /* DOSBox-Staging/src/capture/image/image_capturer.cpp in Sources */,
+				A20000000000000000000068 /* DOSBox-Staging/src/hardware/input/keyboard_scancodes.cpp in Sources */,
+				A10000000000000000000064 /* DOSBox-Staging/src/capture/capture.cpp in Sources */,
+				A10000000000000000000065 /* DOSBox-Staging/src/dos/dos_locale.cpp in Sources */,
+				A10000000000000000000066 /* DOSBox-Staging/src/dos/program_setver.cpp in Sources */,
+				A10000000000000000000067 /* DOSBox-Staging/src/gui/shader_manager.cpp in Sources */,
+				A10000000000000000000068 /* DOSBox-Staging/src/hardware/imfc.cpp in Sources */,
+				A10000000000000000000069 /* DOSBox-Staging/src/hardware/input/intel8042.cpp in Sources */,
+				A1000000000000000000006A /* DOSBox-Staging/src/hardware/input/intel8255.cpp in Sources */,
+				A1000000000000000000006B /* DOSBox-Staging/src/hardware/virtualbox.cpp in Sources */,
+				A1000000000000000000006C /* DOSBox-Staging/src/hardware/vmware.cpp in Sources */,
+				A1000000000000000000006D /* DOSBox-Staging/src/hardware/voodoo.cpp in Sources */,
+				A1000000000000000000006E /* DOSBox-Staging/src/ints/bios_pci.cpp in Sources */,
+				A1000000000000000000006F /* DOSBox-Staging/src/shell/autoexec.cpp in Sources */,
+				A10000000000000000000070 /* DOSBox-Staging/src/shell/command_line.cpp in Sources */,
 				0FB9597C3054521500B88A1D /* mouse.cpp in Sources */,
 				0FB9597D3054521500B88A1D /* mouse_config.cpp in Sources */,
 				0FB9597E3054521500B88A1D /* mouse_interfaces.cpp in Sources */,
 				0FB9597F3054521500B88A1D /* mouseif_dos_driver.cpp in Sources */,
 				0FB959803054521500B88A1D /* mouse_common.cpp in Sources */,
-
 				0FB959823054521500B88A1D /* mouseif_ps2_bios.cpp in Sources */,
 				0FB959833054521500B88A1D /* mouse_manymouse.cpp in Sources */,
 				0FB959843054521500B88A1D /* mouseif_virtual_machines.cpp in Sources */,
@@ -4810,7 +4800,7 @@
 				0F66904B303C942F0010580F /* resample.c in Sources */,
 				55F0B78C26ABFEE80077E58C /* Integrator8580.cpp in Sources */,
 				9FC8F50C10934F3400AD6307 /* NSString+ADBPaths.m in Sources */,
-				55F0B77A26ABFEE80077E58C /* WaveformGenerator.cpp in Sources */,
+				55F0B77A26ABFEE80077E58C /* DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp in Sources */,
 				9F45A424109C867E00593456 /* BXMountPanelController.m in Sources */,
 				0F669099303CA6680010580F /* covox.cpp in Sources */,
 				0F66909A303CA6680010580F /* ston1_dac.cpp in Sources */,
@@ -5123,7 +5113,6 @@
 				9F7721AA12B38C4400072AE8 /* dma.cpp in Sources */,
 				9F7721AB12B38C4400072AE8 /* gameblaster.cpp in Sources */,
 				9F7721AC12B38C4400072AE8 /* gus.cpp in Sources */,
-
 				9F7721AE12B38C4400072AE8 /* iohandler.cpp in Sources */,
 				9F7721AF12B38C4400072AE8 /* ipx.cpp in Sources */,
 				0F66915C303CA7520010580F /* YM7128B_emu.c in Sources */,
@@ -5330,7 +5319,6 @@
 				0FB959873054521500B88A1D /* mouse_interfaces.cpp in Sources */,
 				0FB959883054521500B88A1D /* mouseif_dos_driver.cpp in Sources */,
 				0FB959893054521500B88A1D /* mouse_common.cpp in Sources */,
-
 				0FB9598B3054521500B88A1D /* mouseif_ps2_bios.cpp in Sources */,
 				0FB9598C3054521500B88A1D /* mouse_manymouse.cpp in Sources */,
 				0FB9598D3054521500B88A1D /* mouseif_virtual_machines.cpp in Sources */,
@@ -5361,7 +5349,6 @@
 				0FFCA153303265A60076F2F5 /* ethernet.cpp in Sources */,
 				9F2D304D15B8233800FAE848 /* gameblaster.cpp in Sources */,
 				9F2D304E15B8233800FAE848 /* gus.cpp in Sources */,
-
 				9F2D305015B8233800FAE848 /* iohandler.cpp in Sources */,
 				9F2D305115B8233800FAE848 /* ipx.cpp in Sources */,
 				9F2D305215B8233800FAE848 /* ipxserver.cpp in Sources */,
@@ -5437,7 +5424,7 @@
 				55844D1126C70E7700AA5924 /* pacer.cpp in Sources */,
 				9F2D308315B8233800FAE848 /* cross.cpp in Sources */,
 				9F2D308415B8233800FAE848 /* messages.cpp in Sources */,
-				55F0B77B26ABFEE80077E58C /* WaveformGenerator.cpp in Sources */,
+				55F0B77B26ABFEE80077E58C /* DOSBox-Staging/src/libs/residfp/WaveformGenerator.cpp in Sources */,
 				0FB959E03054585000B88A1D /* driver.cpp in Sources */,
 				0FB959E13054585000B88A1D /* video_mixer.cpp in Sources */,
 				0FB959E33054585000B88A1D /* player.cpp in Sources */,
@@ -5640,6 +5627,14 @@
 			target = 8D1107260486CEB800E47090 /* Boxer */;
 			targetProxy = 0FFCA18430329C6C0076F2F5 /* PBXContainerItemProxy */;
 		};
+		55540E642546B87300B88BE3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 55540E622546B87200B88BE3 /* CwlDemangle */;
+		};
+		55540E6F2546B87E00B88BE3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			productRef = 55540E6D2546B87D00B88BE3 /* CwlDemangle */;
+		};
 		55D431F625044D50008515E1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = OpenEmuShaders;
@@ -5673,14 +5668,6 @@
 		55EB73EA27ED72CA00D5F7E0 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			productRef = 55EB73DF27ED729F00D5F7E0 /* Sparkle */;
-		};
-		55540E642546B87300B88BE3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = 55540E622546B87200B88BE3 /* CwlDemangle */;
-		};
-		55540E6F2546B87E00B88BE3 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			productRef = 55540E6D2546B87D00B88BE3 /* CwlDemangle */;
 		};
 		9FB453B616442DA200BCF63B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -6436,7 +6423,7 @@
 					"\"$(SRCROOT)/Vendor/OpusUniversal/lib\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 4.5b1;
+				MARKETING_VERSION = 4.5b2;
 				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				OTHER_CFLAGS = "-mstackrealign";
 				OTHER_LDFLAGS = (
@@ -6513,7 +6500,7 @@
 					"\"$(SRCROOT)/Vendor/OpusUniversal/lib\"",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12.0;
-				MARKETING_VERSION = 4.5b1;
+				MARKETING_VERSION = 4.5b2;
 				MTL_LANGUAGE_REVISION = UseDeploymentTarget;
 				OTHER_CFLAGS = "-mstackrealign";
 				OTHER_LDFLAGS = (

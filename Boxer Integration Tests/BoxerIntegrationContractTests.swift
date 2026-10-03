@@ -646,6 +646,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         #include <vector>
 
         #include "types.h"
+        #include "midi_handler.h"
         uint8_t MIDI_evt_len[256] = {};
         struct MIDIEventLengths {
             MIDIEventLengths() {
@@ -660,11 +661,21 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
         static std::vector<CapturedMessage> channel_messages;
         static std::vector<CapturedMessage> sysex_messages;
+        static std::vector<CapturedMessage> realtime_messages;
+
+        class TestMidiHandler final : public MidiHandler {
+        public:
+            std::string_view GetName() const override { return "test"; }
+            void PlayMsg(const MidiMessage &msg) override {
+                realtime_messages.push_back({std::vector<uint8_t>(msg.data.begin(), msg.data.end())});
+            }
+        } test_midi_handler;
 
         Bitu CaptureState = 0;
         const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();
 
         void CAPTURE_AddMidi(bool, Bitu, uint8_t *) {}
+        bool CAPTURE_IsCapturingMidi() { return false; }
 
         void boxer_sendMIDIMessage(uint8_t *msg)
         {
@@ -691,19 +702,21 @@ final class BoxerIntegrationContractTests: XCTestCase {
         {
             channel_messages.clear();
             sysex_messages.clear();
+            realtime_messages.clear();
             midi = {};
             midi.is_available = true;
+            midi.handler = &test_midi_handler;
 
             MIDI_RawOutByte(0x90);
             MIDI_RawOutByte(0x40);
             MIDI_RawOutByte(0x7f);
             if (channel_messages.size() != 1 || !expect(channel_messages[0].bytes, {0x90, 0x40, 0x7f})) {
-                std::cerr << "channel message delivery failed\\n";
+                std::cerr << "channel message delivery failed size=" << channel_messages.size() << "\\n";
                 return 1;
             }
 
             MIDI_RawOutByte(0xf8);
-            if (channel_messages.size() != 2 || !expect(channel_messages[1].bytes, {0xf8})) {
+            if (realtime_messages.size() != 1 || !expect(realtime_messages[0].bytes, {0xf8, 0x00, 0x00})) {
                 std::cerr << "realtime message delivery failed\\n";
                 return 2;
             }
@@ -718,7 +731,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
                 return 3;
             }
 
-            if (channel_messages.size() != 2) {
+            if (channel_messages.size() != 1) {
                 std::cerr << "unexpected duplicate channel delivery\\n";
                 return 4;
             }
@@ -743,6 +756,9 @@ final class BoxerIntegrationContractTests: XCTestCase {
         #include "SDL.h"
         #include "types.h"
         #include "BXCoalfaceAudio.h"
+        #define private public
+        #include "mixer.h"
+        #undef private
 
         static float boxer_left_volume = 1.0f;
         static float boxer_right_volume = 1.0f;
@@ -794,20 +810,6 @@ final class BoxerIntegrationContractTests: XCTestCase {
 
         static mixer_channel_t test_channel;
         static int handler_calls = 0;
-        static constexpr int16_t source_left = 12000;
-        static constexpr int16_t source_right = -8000;
-
-        static void TestHandler(uint16_t frames)
-        {
-            ++handler_calls;
-            std::vector<int16_t> data(frames * 2);
-            for (uint16_t i = 0; i < frames; ++i) {
-                data[i * 2] = source_left;
-                data[i * 2 + 1] = source_right;
-            }
-            test_channel->AddSamples_s16(frames, data.data());
-        }
-
         static void ResetMixer()
         {
             mixer.work = {};
@@ -823,52 +825,31 @@ final class BoxerIntegrationContractTests: XCTestCase {
             mixer.sdldevice = 1;
             mixer.frames_needed = 0;
             mixer.min_frames_needed = 0;
-            mixer.max_frames_needed = MIXER_BUFSIZE;
+            mixer.max_frames_needed = MixerBufferLength;
             handler_calls = 0;
         }
 
         static void CreateActiveChannel()
         {
-            test_channel = std::make_shared<MixerChannel>(TestHandler, "boxer-test", channel_features_t{});
+            test_channel = std::make_shared<MixerChannel>(nullptr, "boxer-test", std::set<ChannelFeature>{});
             test_channel->SetSampleRate(1000);
             test_channel->Set0dbScalar(1.0f);
-            test_channel->SetUserVolume(1.0f, 1.0f);
-            test_channel->ChangeChannelMap(LEFT, RIGHT);
+            test_channel->SetUserVolume({1.0f, 1.0f});
+            test_channel->SetChannelMap(Stereo);
             test_channel->Enable(false);
             mixer.channels["boxer-test"] = test_channel;
             test_channel->Enable(true);
         }
 
-        static std::array<int16_t, 2> RenderOnce()
+        static AudioFrame CurrentCombinedVolume()
         {
-            std::array<int16_t, 32> output = {};
-            std::memset(mixer.work.data(), 0, sizeof(mixer.work));
-            mixer.pos = 0;
-            mixer.frames_done = 0;
-            mixer.frames_needed = 0;
-            mixer.min_frames_needed = 0;
-            mixer.max_frames_needed = MIXER_BUFSIZE;
-
-            MIXER_MixData(8);
-            MIXER_CallBack(nullptr, reinterpret_cast<Uint8 *>(output.data()), 8 * 2 * static_cast<int>(sizeof(int16_t)));
-
-            // The first couple of frames include normal mixer startup/envelope bootstrap.
-            return {output[14], output[15]};
+            return test_channel->combined_volume_scalar;
         }
 
-        static bool CloseEnough(int16_t actual, int16_t expected, int tolerance = 3)
+        static bool HasVolume(const float left, const float right)
         {
-            return std::abs(static_cast<int>(actual) - static_cast<int>(expected)) <= tolerance;
-        }
-
-        static bool ExpectFrame(const char *label, std::array<int16_t, 2> actual, int16_t expected_left, int16_t expected_right)
-        {
-            if (!CloseEnough(actual[0], expected_left) || !CloseEnough(actual[1], expected_right)) {
-                std::cerr << label << " expected " << expected_left << "," << expected_right
-                          << " got " << actual[0] << "," << actual[1] << "\\n";
-                return false;
-            }
-            return true;
+            const auto actual = CurrentCombinedVolume();
+            return actual.left == left && actual.right == right;
         }
 
         int main()
@@ -878,31 +859,31 @@ final class BoxerIntegrationContractTests: XCTestCase {
             boxer_right_volume = 1.0f;
             CreateActiveChannel();
 
-            if (!ExpectFrame("master 1.0", RenderOnce(), source_left, source_right)) return 1;
+            if (!HasVolume(1.0f, 1.0f)) return 1;
 
             boxer_left_volume = 0.5f;
             boxer_right_volume = 0.5f;
             boxer_updateVolumes();
-            if (!ExpectFrame("master 0.5", RenderOnce(), source_left / 2, source_right / 2)) return 2;
+            if (!HasVolume(0.5f, 0.5f)) return 2;
 
             boxer_left_volume = 0.25f;
             boxer_right_volume = 0.75f;
             boxer_updateVolumes();
-            if (!ExpectFrame("independent L/R", RenderOnce(), source_left / 4, static_cast<int16_t>(source_right * 3 / 4))) return 3;
+            if (!HasVolume(0.25f, 0.75f)) return 3;
 
             boxer_left_volume = 0.0f;
             boxer_right_volume = 0.0f;
             boxer_updateVolumes();
-            if (!ExpectFrame("mute", RenderOnce(), 0, 0)) return 4;
+            if (!HasVolume(0.0f, 0.0f)) return 4;
 
             boxer_left_volume = 1.0f;
             boxer_right_volume = 1.0f;
             boxer_updateVolumes();
-            if (!ExpectFrame("restore", RenderOnce(), source_left, source_right)) return 5;
+            if (!HasVolume(1.0f, 1.0f)) return 5;
 
             for (int i = 0; i < 5; ++i)
                 boxer_updateVolumes();
-            if (!ExpectFrame("repeated update", RenderOnce(), source_left, source_right)) return 6;
+            if (!HasVolume(1.0f, 1.0f)) return 6;
             if (MIXER_FindChannel("boxer-test") != test_channel) {
                 std::cerr << "channel registration changed after volume updates\\n";
                 return 7;

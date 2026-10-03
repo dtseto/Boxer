@@ -715,6 +715,7 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         #include <cstdint>
         #include <cstring>
         #include <iostream>
+        #include <array>
         #include "dos_inc.h"
         #include "bios.h"
         #include "callback.h"
@@ -731,7 +732,7 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         uint32_t cpu_direction = 1;
         DOS_Block dos = {};
         DOS_InfoBlock dos_infoblock = {};
-        DOS_Drive *Drives[DOS_DRIVES] = {};
+        std::array<DOS_Drive *, DOS_DRIVES> Drives = {};
         CParallel *parallelPortObjects[3] = {};
 
         uint8_t mem_readb(PhysPt address) { return MemBase[address]; }
@@ -983,8 +984,8 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
             void handleUpperEvent(uint16_t) override {}
         };
 
-        CommandLine::CommandLine(const char *, const char *) {}
-        bool CommandLine::FindCommand(unsigned int, std::string &value) {
+        CommandLine::CommandLine(std::string_view, std::string_view) {}
+        bool CommandLine::FindCommand(unsigned int, std::string &value) const {
             value = "printer";
             return true;
         }
@@ -992,7 +993,7 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
             registered_destroy = function;
         }
         Section_prop::~Section_prop() {}
-        const char *Section_prop::Get_string(const std::string &) const { return "printer"; }
+        std::string Section_prop::Get_string(const std::string &) const { return "printer"; }
         std::string Section_prop::GetPropValue(const std::string &) const { return {}; }
         bool Section_prop::HandleInputline(const std::string &) { return false; }
         void Section_prop::PrintData(FILE *) const {}

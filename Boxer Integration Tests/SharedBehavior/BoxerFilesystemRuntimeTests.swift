@@ -64,7 +64,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             contentsOf: adapter.productionSources(for: .filesystem)[0],
             encoding: .utf8
         )
-        let function = try productionFunction(beginningWith: "bool localDrive::MakeDir(char * dir)", in: source)
+        let function = try productionFunction(beginningWith: "bool localDrive::MakeDir(char* dir)", in: source)
 
         let normal = try compileAndRunDirectoryPolicy(source: function, label: "normal")
         XCTAssertEqual(normal.status, 0, normal.output)
@@ -142,7 +142,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             encoding: .utf8
         )
         let function = try productionFunction(
-            beginningWith: "bool localDrive::FileCreate(DOS_File * * file,char * name,uint16_t /*attributes*/)",
+            beginningWith: "bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)",
             in: source
         )
         let normal = try compileAndRunFileCreate(source: function, label: "normal")
@@ -235,7 +235,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             encoding: .utf8
         )
         let function = try productionFunction(
-            beginningWith: "bool localDrive::FileUnlink(char * name)",
+            beginningWith: "bool localDrive::FileUnlink(char* name)",
             in: source
         )
         let normal = try compileAndRunFileDelete(source: function, label: "normal")
@@ -283,7 +283,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             encoding: .utf8
         )
         let filename = try productionFunction(
-            beginningWith: "bool localDrive::GetSystemFilename(char *sysName, char const * const dosName)",
+            beginningWith: "bool localDrive::GetSystemFilename(char* sysName, const char* const dosName)",
             in: source
         )
         let filePointer = try productionFunction(
@@ -338,7 +338,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         ]
         let cacheFunctions = try signatures.map { try productionFunction(beginningWith: $0, in: cacheSource) }.joined(separator: "\n\n")
         let cacheFragment = "\(constructors)\n\n\(cacheFunctions)"
-        let unmount = try productionFunction(beginningWith: "Bits localDrive::UnMount(void)", in: localSource)
+        let unmount = try productionFunction(beginningWith: "Bits localDrive::UnMount()", in: localSource)
         let fragment = "\(cacheFragment)\n\n\(unmount)"
         let normal = try compileAndRunDriveTeardown(source: fragment, label: "normal")
         XCTAssertEqual(normal.status, 0, normal.output)
@@ -367,7 +367,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             "bool localFile::Seek(uint32_t *pos_addr, uint32_t type)",
             "bool localFile::Close()",
             "uint16_t localFile::GetInformation(void)",
-            "localFile::localFile(const char *_name, FILE *handle, const char *_basedir)",
+            "localFile::localFile(const char* _name, const std_fs::path& path, FILE* handle,",
             "bool localFile::UpdateDateTimeFromHost()",
             "void localFile::willBecomeUnavailable()"
         ]

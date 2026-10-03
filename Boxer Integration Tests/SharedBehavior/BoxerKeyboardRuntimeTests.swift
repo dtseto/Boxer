@@ -348,7 +348,11 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
 
         static int preferred_layout_calls = 0;
         static SectionFunction registered_destroy = nullptr;
-        config_ptr_t control;
+        config_ptr_t control = std::make_unique<Config>();
+        const std::string &Config::GetLanguage() {
+            static const std::string language = "en";
+            return language;
+        }
         const char *boxer_preferredKeyboardLayout() {
             ++preferred_layout_calls;
             return "de";
@@ -363,6 +367,9 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
         void Section::AddDestroyFunction(SectionFunction function, bool) {
             registered_destroy = function;
         }
+        std::string Section_line::GetPropValue(const std::string &) const { return {}; }
+        bool Section_line::HandleInputline(const std::string &) { return false; }
+        void Section_line::PrintData(FILE *) const {}
         Section_prop::~Section_prop() {}
         std::string Section_prop::Get_string(const std::string &) const { return "auto"; }
         int Section_prop::Get_int(const std::string &) const { return 0; }

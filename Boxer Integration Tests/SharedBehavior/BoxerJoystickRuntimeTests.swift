@@ -170,7 +170,7 @@ final class BoxerJoystickRuntimeTests: XCTestCase {
         }
 
         Config::~Config() {}
-        Section *Config::GetSection(const std::string &) const { return active_section; }
+        Section *Config::GetSection(const std::string_view) const { return active_section; }
         Section_prop::~Section_prop() {}
         std::string Section_line::GetPropValue(const std::string &) const { return {}; }
         bool Section_line::HandleInputline(const std::string &) { return false; }
@@ -182,13 +182,13 @@ final class BoxerJoystickRuntimeTests: XCTestCase {
         {
             return name == "deadzone" ? 0 : 0;
         }
-        const char *Section_prop::Get_string(const std::string &name) const
+        std::string Section_prop::Get_string(const std::string &name) const
         {
             if (name == "joysticktype")
-                return configured_type.c_str();
+                return configured_type;
             if (name == "joy_x_calibration" || name == "joy_y_calibration")
-                return "auto";
-            return "";
+                return std::string("auto");
+            return {};
         }
         bool Section_prop::Get_bool(const std::string &name) const
         {
@@ -206,9 +206,7 @@ final class BoxerJoystickRuntimeTests: XCTestCase {
         Property *Section_prop::Get_prop(int) { return nullptr; }
 
         void Section::AddDestroyFunction(SectionFunction, bool) {}
-        void Section::AddEarlyInitFunction(SectionFunction, bool) {}
         void Section::AddInitFunction(SectionFunction, bool) {}
-        void Section::ExecuteEarlyInit(bool) {}
         void Section::ExecuteInit(bool) {}
         void Section::ExecuteDestroy(bool) {}
 

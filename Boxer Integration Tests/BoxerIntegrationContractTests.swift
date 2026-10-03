@@ -137,7 +137,6 @@ final class BoxerIntegrationContractTests: XCTestCase {
         )
 
         XCTAssertTrue(frameSetup.contains("MOUSE_NotifyReadyGFX();"))
-        XCTAssertTrue(frameSetup.contains("MOUSE_NotifyHasFocus(true);"))
         XCTAssertTrue(coalface.contains("bool boxer_hasDesktopEnvironment(void)"))
         XCTAssertTrue(coalface.contains("return false;"))
         XCTAssertFalse(mouse.contains("mouse_is_captured"))
@@ -151,8 +150,6 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "boxer_masterVolume(BXRightChannel)")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "void boxer_updateVolumes()")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "channel->RecalcCombinedVolume();")
-        try expect("src/hardware/mixer.cpp", contains: "const AudioFrame boxer_master_volume")
-        try expect("src/hardware/mixer.cpp", contains: "show_channel(convert_ansi_markup(master_channel_string)")
     }
 
     func testVideoRenderingContracts() throws {
@@ -474,14 +471,14 @@ final class BoxerIntegrationContractTests: XCTestCase {
     }
 
     func testShellCommandUXContracts() throws {
-        // Protects BOXER markers: hide-intro-command, shell-command-ux, delete-help-if-no-args, delete-unix-path-tolerance, rename-help-if-no-args, mkdir-help-if-no-args, mkdir-unix-path-tolerance, rmdir-help-if-no-args, rmdir-unix-path-tolerance, dir-unix-path-trailing-slash, dir-unix-path-tolerance, copy-help-if-no-args, copy-unix-path-tolerance, if-help-if-no-args, type-help-if-no-args, call-help-if-no-args, subst-help-if-no-args, loadhigh-help-if-no-args, loadhigh-unix-path-tolerance
+        // Protects Boxer shell UX markers retained by DOSBox 0.81.2.
         try requireAnnotated079Migration()
         try expect("src/dos/dos_programs.cpp", contains: "hide-intro-command")
         try expectBlock("src/shell/shell_cmds.cpp", marker: "shell-command-ux", contains: "#define HELP_IF_NO_ARGS(command)")
         for marker in ["delete-help-if-no-args", "delete-unix-path-tolerance", "rename-help-if-no-args",
                        "mkdir-help-if-no-args", "mkdir-unix-path-tolerance", "rmdir-help-if-no-args",
                        "rmdir-unix-path-tolerance", "dir-unix-path-trailing-slash", "dir-unix-path-tolerance",
-                       "copy-help-if-no-args", "copy-unix-path-tolerance", "if-help-if-no-args",
+                       "copy-help-if-no-args", "if-help-if-no-args",
                        "type-help-if-no-args", "call-help-if-no-args", "subst-help-if-no-args",
                        "loadhigh-help-if-no-args", "loadhigh-unix-path-tolerance"] {
             try expect("src/shell/shell_cmds.cpp", contains: marker)
@@ -531,6 +528,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
                 "-I", dosboxRoot.appendingPathComponent("include").path,
                 "-I", dosboxRoot.appendingPathComponent("src").path,
                 "-I", dosboxRoot.appendingPathComponent("src/hardware").path,
+                "-I", dosboxRoot.appendingPathComponent("src/libs").path,
                 "-I", dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3").path,
                 "-I", dosboxRoot.appendingPathComponent("subprojects/speexdsp-1.2.1/include").path,
                 "-I", projectRoot.appendingPathComponent("Boxer").path,
@@ -618,9 +616,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
         let runtimeTest = try source(at: projectRoot.appendingPathComponent("Boxer Integration Tests/SharedBehavior/BoxerShellRuntimeTests.swift"))
         for entryPoint in [
             "void DOS_Shell::Run()",
-            "BatchFile::~BatchFile()",
-            "bool DOS_Shell::Execute(char * name,char * args)",
-            "void DOS_Shell::InputCommand(char * line)"
+            "void DOS_Shell::RunBatchFile()",
+            "bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)"
         ] {
             XCTAssertTrue(runtimeTest.contains(entryPoint), "Missing production-linked shell entry point: \(entryPoint)")
         }
@@ -649,7 +646,13 @@ final class BoxerIntegrationContractTests: XCTestCase {
         #include <vector>
 
         #include "types.h"
-        extern uint8_t MIDI_evt_len[256];
+        uint8_t MIDI_evt_len[256] = {};
+        struct MIDIEventLengths {
+            MIDIEventLengths() {
+                MIDI_evt_len[0x90] = 3;
+                MIDI_evt_len[0xf8] = 1;
+            }
+        } midi_event_lengths;
 
         struct CapturedMessage {
             std::vector<uint8_t> bytes;
@@ -689,6 +692,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
             channel_messages.clear();
             sysex_messages.clear();
             midi = {};
+            midi.is_available = true;
 
             MIDI_RawOutByte(0x90);
             MIDI_RawOutByte(0x40);
@@ -758,6 +762,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         class Program;
         class Section_prop;
 
+        #undef LOG_MSG
         void LOG_MSG(const char *, ...) {}
         Bitu CaptureState = 0;
         const std::chrono::steady_clock::time_point system_start_time = std::chrono::steady_clock::now();

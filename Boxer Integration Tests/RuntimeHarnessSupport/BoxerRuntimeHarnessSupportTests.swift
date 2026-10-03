@@ -51,8 +51,8 @@ final class BoxerRuntimeHarnessSupportTests: XCTestCase {
         let root = URL(fileURLWithPath: "/tmp/official-081")
         let adapter = DOSBox081Adapter(productionRoot: root)
 
-        XCTAssertEqual(adapter.identifier, "dosbox-0.81")
-        XCTAssertEqual(adapter.supportedVersions, ["0.81.0"])
+        XCTAssertEqual(adapter.identifier, "dosbox-0.81.2")
+        XCTAssertEqual(adapter.supportedVersions, ["0.81.2"])
         XCTAssertEqual(
             adapter.productionSources(for: .keyboard),
             [

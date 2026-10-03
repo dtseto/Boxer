@@ -224,8 +224,8 @@ struct DOSBox080Adapter: BoxerDOSBoxRuntimeAdapter {
 struct DOSBox081Adapter: BoxerDOSBoxRuntimeAdapter {
     let productionRoot: URL
 
-    var identifier: String { "dosbox-0.81" }
-    var supportedVersions: [String] { ["0.81.0"] }
+    var identifier: String { "dosbox-0.81.2" }
+    var supportedVersions: [String] { ["0.81.2"] }
 
     var includeDirectories: [URL] {
         [

@@ -167,9 +167,10 @@ Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double s
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
 
-    // The SDL frontend normally sends these notifications during startup and
-    // focus changes. Boxer replaces that frontend and gates input itself.
+	// The SDL frontend normally sends these notifications during startup and
+	// focus changes. Boxer replaces that frontend and gates input itself.
 	MOUSE_NotifyReadyGFX();
+	MOUSE_NotifyWindowActive(true);
 
     // v0.81 no longer calls the legacy Mouse_AutoLock hook that Boxer used
     // to remap. Mark the Cocoa mouse active when the DOS graphics session is

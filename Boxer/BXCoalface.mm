@@ -15,6 +15,12 @@
 #import "shell.h"
 #import "ADBFilesystem.h"
 
+// The SDL frontend normally owns this state. Boxer presents through Cocoa,
+// so retain the last DOS frame size for core render queries that can occur
+// before BXVideoFrame has been allocated.
+static int boxer_canvas_width = 640;
+static int boxer_canvas_height = 400;
+
 #pragma mark - Runloop state functions
 
 /// This is called in place of DOSBox's GFX_Events to allow us to process events when the DOSBox
@@ -167,9 +173,19 @@ Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double s
 
 	NSSize outputSize	= NSMakeSize((CGFloat)width, (CGFloat)height);
 	NSSize scale		= NSMakeSize((CGFloat)scalex, (CGFloat)scaley);
+	boxer_canvas_width = static_cast<int>(width);
+	boxer_canvas_height = static_cast<int>(height);
 	[[emulator videoHandler] prepareForOutputSize: outputSize atScale: scale withCallback: callback];
 	
 	return GFX_CAN_32;
+}
+
+DosBox::Rect boxer_getCanvasSizeInPixels(void)
+{
+    return DosBox::Rect{0,
+                        0,
+                        boxer_canvas_width,
+                        boxer_canvas_height};
 }
 
 Bitu boxer_idealOutputMode(Bitu flags)

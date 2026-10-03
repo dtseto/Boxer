@@ -15,6 +15,7 @@
 #define BOXER
 
 #import "config.h"
+namespace DosBox { struct Rect; }
 #import "video.h"
 #include <cstdint>
 #include <stdio.h>
@@ -45,6 +46,7 @@ extern "C" {
 #define GFX_CenterMouse boxer_centerMouse
 #define GFX_GetDisplayRefreshRate boxer_GetDisplayRefreshRate
 #define GFX_SetSize boxer_prepareForFrameSize
+#define GFX_GetCanvasSizeInPixels boxer_getCanvasSizeInPixels
 #define GFX_GetRGB boxer_getRGBPaletteEntry
 #define GFX_SetShader boxer_setShader
 #define GFX_GetBestMode boxer_idealOutputMode
@@ -232,6 +234,10 @@ FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtensi
     
 #if __cplusplus
 } //Extern C
+
+// This returns a C++ value type, so it intentionally remains outside the
+// C-linkage block above.
+DosBox::Rect boxer_getCanvasSizeInPixels(void);
 #endif
 
 #endif

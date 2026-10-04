@@ -245,6 +245,7 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
             @"iso": BXISOImageType,
             @"cdr": BXCDRImageType,
             @"ima": BXRawFloppyImageType,
+            @"img": BXNDIFImageType,
             @"vfd": BXVirtualPCImageType,
             @"gog": @"com.gog.gog-disk-image",
         };
@@ -569,8 +570,8 @@ NSString * const BXExecutableTypesErrorDomain = @"BXExecutableTypesErrorDomain";
             return isoImg;
         }
     }
-    // Other mountable image types (IMA, VFD, DMG, etc.)
-    else if ([extension isEqualToString:@"ima"] || [extension isEqualToString:@"vfd"] ||
+    // Other mountable image types (IMA, IMG, VFD, DMG, etc.)
+    else if ([extension isEqualToString:@"ima"] || [extension isEqualToString:@"img"] || [extension isEqualToString:@"vfd"] ||
              [URL matchingFileType: [ADBMountableImage supportedImageTypes]])
     {
         return [ADBMountableImage imageWithContentsOfURL: URL error: outError];

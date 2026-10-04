@@ -680,7 +680,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
         void boxer_sendMIDIMessage(uint8_t *msg)
         {
             const auto len = MIDI_evt_len[msg[0]] ? MIDI_evt_len[msg[0]] : 1;
-            channel_messages.push_back({std::vector<uint8_t>(msg, msg + len)});
+            auto &messages = msg[0] >= 0xf8 ? realtime_messages : channel_messages;
+            messages.push_back({std::vector<uint8_t>(msg, msg + len)});
         }
 
         void boxer_sendMIDISysex(uint8_t *msg, size_t len)
@@ -716,7 +717,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
             }
 
             MIDI_RawOutByte(0xf8);
-            if (realtime_messages.size() != 1 || !expect(realtime_messages[0].bytes, {0xf8, 0x00, 0x00})) {
+            if (realtime_messages.size() != 1 || !expect(realtime_messages[0].bytes, {0xf8})) {
                 std::cerr << "realtime message delivery failed\\n";
                 return 2;
             }

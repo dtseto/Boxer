@@ -887,7 +887,7 @@ static NSArray<NSURL*>* removeUserDirs(NSArray<NSURL*>* oldArrs)
 	[self resume: self];
 	
     //If this was an executable, launch it now.
-	if ([URL matchingFileType: [BXFileTypes executableTypes]] != nil)
+    if ([BXFileTypes matchingTypeForURL: URL inTypes: [BXFileTypes executableTypes]] != nil)
 	{
         if (completionBehavior == BXSessionProgramCompletionBehaviorAuto || completionBehavior == BXSessionShowDOSPromptOnCompletionIfDirectory)
         {

@@ -349,7 +349,12 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
         if (self.allowsLauncherPanel)
         {
             BOOL alwaysStartWithLaunchPanel = [self.gameSettings[BXGameboxSettingsAlwaysShowLaunchPanelKey] boolValue];
-            if (alwaysStartWithLaunchPanel)
+            BOOL hasConfiguredDefaultLauncher = (self.gamebox.defaultLauncher != nil ||
+                                                 self.gamebox.launchers.count == 1);
+
+            // A configured launcher is the game's intended startup program. Keep the
+            // launch panel override for gameboxes without a configured launcher.
+            if (alwaysStartWithLaunchPanel && !hasConfiguredDefaultLauncher)
             {
                 startWithLaunchPanel = YES;
             }
@@ -391,20 +396,28 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
                 self.targetURL = previousURL;
                 self.targetArguments = [self.gameSettings objectForKey: BXGameboxSettingsLastProgramLaunchArgumentsKey];
             }
-            //Otherwise, launch the gamebox's default launcher if it has one.
+            //Otherwise, honor the game's preconfigured default program first.
             else
             {
-                NSDictionary *defaultLauncher = self.gamebox.defaultLauncher;
-                
-                //If there's no nominated default launcher, but the gamebox only *has* one launcher,
-                //then launch that by default instead.
-                if (!defaultLauncher && self.gamebox.launchers.count == 1)
-                    defaultLauncher = self.gamebox.launchers.lastObject;
-                
-                if (defaultLauncher)
+                NSURL *configuredTargetURL = self.gamebox.legacyTargetURL;
+                if ([configuredTargetURL checkResourceIsReachableAndReturnError: NULL])
                 {
-                    self.targetURL = [defaultLauncher objectForKey: BXLauncherURLKey];
-                    self.targetArguments = [defaultLauncher objectForKey: BXLauncherArgsKey];
+                    self.targetURL = configuredTargetURL;
+                }
+                else
+                {
+                    NSDictionary *defaultLauncher = self.gamebox.defaultLauncher;
+                    
+                    //If there's no nominated default launcher, but the gamebox only *has* one launcher,
+                    //then launch that by default instead.
+                    if (!defaultLauncher && self.gamebox.launchers.count == 1)
+                        defaultLauncher = self.gamebox.launchers.lastObject;
+                    
+                    if (defaultLauncher)
+                    {
+                        self.targetURL = [defaultLauncher objectForKey: BXLauncherURLKey];
+                        self.targetArguments = [defaultLauncher objectForKey: BXLauncherArgsKey];
+                    }
                 }
             }
         }

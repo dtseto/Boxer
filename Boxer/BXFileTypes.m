@@ -246,6 +246,7 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
             @"cdr": BXCDRImageType,
             @"ima": BXRawFloppyImageType,
             @"img": BXNDIFImageType,
+            @"bat": BXBatchProgramType,
             @"vfd": BXVirtualPCImageType,
             @"gog": @"com.gog.gog-disk-image",
         };

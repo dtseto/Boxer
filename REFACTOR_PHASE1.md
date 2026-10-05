@@ -15,7 +15,7 @@ The target currently compiles the DOSBox-Staging sources through an explicit Xco
 - Boxer links `libDOSBoxStaging.a`.
 - `DOSBox-Staging/contrib/resources/freedos-keyboard` is included in Boxer’s resources.
 - The project builds successfully in Debug with Xcode.
-- The DOSBox source phase currently contains a duplicate `dos_memory.cpp` entry and should be deduplicated.
+- `dos_memory.cpp` appears once in the Boxer source phase and once in the separate DOSBoxStaging source phase; this is expected because both targets compile their own source sets.
 - The Boxer target explicitly depends on `DOSBoxStaging`, so a clean Boxer build compiles the library before linking.
 - The `Boxer Standalone` target does not currently declare the same dependency; add it if Standalone must build independently.
 
@@ -25,4 +25,4 @@ The target currently compiles the DOSBox-Staging sources through an explicit Xco
 
 ## Remaining project work
 
-The duplicate source entry should be corrected in Xcode’s project editor. The Standalone target dependency should also be added there if that target is in scope. These project edits should remain separate from the source and configuration fixes.
+The Standalone target dependency should also be added in Xcode’s project editor if that target is in scope. This project edit should remain separate from the source and configuration fixes.

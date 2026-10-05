@@ -341,11 +341,6 @@
 - (void) removeWindowController: (NSWindowController *)windowController
 {
 	[super removeWindowController: windowController];
-
-	if (windowController == self.importWindowController)
-	{
-		self.importWindowController = nil;
-	}
 }
 
 - (void) showWindows

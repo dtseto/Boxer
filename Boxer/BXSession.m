@@ -617,11 +617,6 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 - (void) removeWindowController: (NSWindowController *)windowController
 {
 	[super removeWindowController: windowController];
-
-	if (windowController == self.DOSWindowController)
-	{
-        self.DOSWindowController = nil;
-	}
 }
 
 - (void) setDOSWindowController: (BXDOSWindowController *)controller
@@ -695,6 +690,11 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 		[self _cleanup];
 		
 		[super close];
+
+		//NSDocument removes its window controllers during -close. Keep the
+		//DOSWindowController property alive until that operation has finished so
+		//the Inspector's nested KVO binding is not updated mid-teardown.
+		self.DOSWindowController = nil;
 	}
 }
 

@@ -7,6 +7,9 @@
 
 
 #import "BXCoalface.h"
+#define BXDOSBOX_BRIDGE_IMPLEMENTATION 1
+#import "../DOSBox-Staging/include/BXDOSBoxBridgeRegistration.h"
+#undef BXDOSBOX_BRIDGE_IMPLEMENTATION
 #import "BXEmulatorPrivate.h"
 #import "setup.h"
 #import "mapper.h"
@@ -574,6 +577,35 @@ void boxer_setScrollLockActive(bool active)
 
 
 #pragma mark - Printer functions
+
+static BXDOSBoxPrinterBridgeCallbacks BXDOSBoxPrinterCallbacks;
+static bool BXDOSBoxPrinterCallbacksRegistered = false;
+
+void boxer_registerDOSBoxPrinterBridge(const BXDOSBoxPrinterBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxPrinterCallbacks = *callbacks;
+        BXDOSBoxPrinterCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxPrinterBridgeCallbacks *boxer_registeredDOSBoxPrinterBridge(void)
+{
+    if (!BXDOSBoxPrinterCallbacksRegistered)
+    {
+        const BXDOSBoxPrinterBridgeCallbacks callbacks = {
+            boxer_PRINTER_isInited,
+            boxer_PRINTER_readdata,
+            boxer_PRINTER_readcontrol,
+            boxer_PRINTER_readstatus,
+            boxer_PRINTER_writedata,
+            boxer_PRINTER_writecontrol
+        };
+        boxer_registerDOSBoxPrinterBridge(&callbacks);
+    }
+    return BXDOSBoxPrinterCallbacksRegistered ? &BXDOSBoxPrinterCallbacks : NULL;
+}
 
 Bitu boxer_PRINTER_readdata(Bitu port,Bitu iolen)
 {

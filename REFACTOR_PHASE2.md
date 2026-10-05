@@ -33,6 +33,10 @@ fallback preserves the legacy harness link contract when a lightweight harness
 provides only the callback family it exercises. The remaining bridge categories
 still use `BXCoalface.h` and will migrate independently.
 
+The printer boundary is also migrated. `printer_redir.cpp` consumes the
+registered printer callbacks through compatibility macros that retain the
+legacy symbol expressions required by the standalone printer harness.
+
 ## Validation contract
 
 After each boundary change:

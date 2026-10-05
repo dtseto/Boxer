@@ -51,6 +51,12 @@ retain the legacy call expressions through call-site macros, so extracted
 standalone shell harnesses continue to compile and test the original callback
 ordering.
 
+The filesystem and drive boundary follows the same split. The public table
+uses opaque drive handles, while `BXDOSBoxFilesystemCompatibility.h` owns the
+typed `DOS_Drive *` fallback adapters. Drive-cache filtering, local-drive write
+policy and notifications, directory creation, and mount/unmount notifications
+now route through that boundary while retaining their legacy source calls.
+
 ## Validation contract
 
 After each boundary change:

@@ -408,6 +408,44 @@ bool boxer_createLocalDir(const char *path, DOS_Drive *drive)
     return [emulator _createDirectoryAtLocalPath: path onDOSBoxDrive: drive];
 }
 
+static bool boxer_filesystemBridgeShouldShowFileWithName(const char *name) { return boxer_shouldShowFileWithName(name); }
+static bool boxer_filesystemBridgeShouldAllowWriteAccessToPath(const char *path, uintptr_t drive) { return boxer_shouldAllowWriteAccessToPath(path, (DOS_Drive *)drive); }
+static void boxer_filesystemBridgeDidCreateLocalFile(const char *path, uintptr_t drive) { boxer_didCreateLocalFile(path, (DOS_Drive *)drive); }
+static void boxer_filesystemBridgeDidRemoveLocalFile(const char *path, uintptr_t drive) { boxer_didRemoveLocalFile(path, (DOS_Drive *)drive); }
+static bool boxer_filesystemBridgeCreateLocalDir(const char *path, uintptr_t drive) { return boxer_createLocalDir(path, (DOS_Drive *)drive); }
+static void boxer_filesystemBridgeDriveDidMount(uint8_t driveIndex) { boxer_driveDidMount(driveIndex); }
+static void boxer_filesystemBridgeDriveDidUnmount(uint8_t driveIndex) { boxer_driveDidUnmount(driveIndex); }
+
+static BXDOSBoxFilesystemBridgeCallbacks BXDOSBoxFilesystemCallbacks;
+static bool BXDOSBoxFilesystemCallbacksRegistered = false;
+
+void boxer_registerDOSBoxFilesystemBridge(const BXDOSBoxFilesystemBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxFilesystemCallbacks = *callbacks;
+        BXDOSBoxFilesystemCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxFilesystemBridgeCallbacks *boxer_registeredDOSBoxFilesystemBridge(void)
+{
+    if (!BXDOSBoxFilesystemCallbacksRegistered)
+    {
+        const BXDOSBoxFilesystemBridgeCallbacks callbacks = {
+            boxer_filesystemBridgeShouldShowFileWithName,
+            boxer_filesystemBridgeShouldAllowWriteAccessToPath,
+            boxer_filesystemBridgeDidCreateLocalFile,
+            boxer_filesystemBridgeDidRemoveLocalFile,
+            boxer_filesystemBridgeCreateLocalDir,
+            boxer_filesystemBridgeDriveDidMount,
+            boxer_filesystemBridgeDriveDidUnmount
+        };
+        boxer_registerDOSBoxFilesystemBridge(&callbacks);
+    }
+    return BXDOSBoxFilesystemCallbacksRegistered ? &BXDOSBoxFilesystemCallbacks : NULL;
+}
+
 bool boxer_removeLocalDir(const char *path, DOS_Drive *drive)
 {
     BXEmulator *emulator = [BXEmulator currentEmulator];

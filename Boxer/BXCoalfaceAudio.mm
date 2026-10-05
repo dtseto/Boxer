@@ -11,6 +11,27 @@
 #import "RegexKitLite.h"
 #import <CoreFoundation/CFByteOrder.h>
 
+static BXDOSBoxAudioBridgeCallbacks BXDOSBoxAudioCallbacks;
+static bool BXDOSBoxAudioCallbacksRegistered = false;
+
+static void boxer_registerDefaultDOSBoxAudioBridge(void);
+
+void boxer_registerDOSBoxAudioBridge(const BXDOSBoxAudioBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxAudioCallbacks = *callbacks;
+        BXDOSBoxAudioCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxAudioBridgeCallbacks *boxer_registeredDOSBoxAudioBridge(void)
+{
+    if (!BXDOSBoxAudioCallbacksRegistered)
+        boxer_registerDefaultDOSBoxAudioBridge();
+    return BXDOSBoxAudioCallbacksRegistered ? &BXDOSBoxAudioCallbacks : NULL;
+}
+
 //MIDI message lengths indexed by status code.
 //Copypasta from midi.cpp, modified with fixes of our own:
 //only undefined status codes are marked as having a length of 0.
@@ -91,6 +112,28 @@ bool boxer_MIDIAvailable()
     //Always treat MIDI as available, even if we're using a dummy MIDI handler.
     //(This actually matches DOSBox's behaviour.)
     return YES;
+}
+
+static float boxer_audioBridgeMasterVolume(BXDOSBoxAudioChannel channel)
+{
+    return boxer_masterVolume((BXAudioChannel)channel);
+}
+
+static void boxer_audioBridgeSuggestMIDIHandler(const char *handlerName, const char *configParams)
+{
+    boxer_suggestMIDIHandler(std::string(handlerName), configParams);
+}
+
+static void boxer_registerDefaultDOSBoxAudioBridge(void)
+{
+    BXDOSBoxAudioBridgeCallbacks callbacks = {};
+    callbacks.midiAvailable = boxer_MIDIAvailable;
+    callbacks.sendMIDIMessage = boxer_sendMIDIMessage;
+    callbacks.sendMIDISysex = boxer_sendMIDISysex;
+    callbacks.masterVolume = boxer_audioBridgeMasterVolume;
+    callbacks.updateVolumes = boxer_updateVolumes;
+    callbacks.suggestMIDIHandler = boxer_audioBridgeSuggestMIDIHandler;
+    boxer_registerDOSBoxAudioBridge(&callbacks);
 }
 
 void boxer_sendMIDIMessage(uint8_t *msg)

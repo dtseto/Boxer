@@ -8,7 +8,7 @@
  online at [http://www.gnu.org/licenses/gpl-2.0.txt].
  */
 
-#import "BXCoalface.h"
+#import "BXDOSBoxBridgeRegistration.h"
 #include <cstdint>
 #include <string>
 

@@ -576,6 +576,36 @@ void boxer_setScrollLockActive(bool active)
 }
 
 
+static BXDOSBoxInputBridgeCallbacks BXDOSBoxInputCallbacks;
+static bool BXDOSBoxInputCallbacksRegistered = false;
+
+void boxer_registerDOSBoxInputBridge(const BXDOSBoxInputBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxInputCallbacks = *callbacks;
+        BXDOSBoxInputCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxInputBridgeCallbacks *boxer_registeredDOSBoxInputBridge(void)
+{
+    if (!BXDOSBoxInputCallbacksRegistered)
+    {
+        const BXDOSBoxInputBridgeCallbacks callbacks = {
+            boxer_numKeyCodesInPasteBuffer,
+            boxer_continueListeningForKeyEvents,
+            boxer_getNextKeyCodeInPasteBuffer,
+            boxer_setCapsLockActive,
+            boxer_setNumLockActive,
+            boxer_setScrollLockActive
+        };
+        boxer_registerDOSBoxInputBridge(&callbacks);
+    }
+    return BXDOSBoxInputCallbacksRegistered ? &BXDOSBoxInputCallbacks : NULL;
+}
+
+
 #pragma mark - Printer functions
 
 static BXDOSBoxPrinterBridgeCallbacks BXDOSBoxPrinterCallbacks;

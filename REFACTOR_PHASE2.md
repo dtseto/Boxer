@@ -37,6 +37,12 @@ The printer boundary is also migrated. `printer_redir.cpp` consumes the
 registered printer callbacks through compatibility macros that retain the
 legacy symbol expressions required by the standalone printer harness.
 
+The keyboard/input boundary is now partially migrated. Console input,
+BIOS paste and lock-state callbacks consume the registered input table, while
+DOSBox-owned keyboard buffer and layout state APIs remain legacy symbols for
+the runtime harness. The legacy call expressions are intentionally preserved
+so the keyboard regression harness continues to exercise the same contracts.
+
 ## Validation contract
 
 After each boundary change:

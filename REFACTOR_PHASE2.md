@@ -57,6 +57,12 @@ typed `DOS_Drive *` fallback adapters. Drive-cache filtering, local-drive write
 policy and notifications, directory creation, and mount/unmount notifications
 now route through that boundary while retaining their legacy source calls.
 
+The rendering/run-loop migration has started with the run-loop lifecycle
+surface. `BXDOSBoxRunLoopCompatibility.h` keeps continuation and context
+bookkeeping callbacks opaque publicly while preserving typed legacy fallback
+calls in DOSBox. Frame-buffer and shader callbacks remain for the next
+rendering step.
+
 ## Validation contract
 
 After each boundary change:

@@ -97,6 +97,36 @@ bool boxer_runLoopShouldContinue()
 	return [[BXEmulator currentEmulator] _runLoopShouldContinue];
 }
 
+static bool boxer_runLoopBridgeShouldContinue(void) { return boxer_runLoopShouldContinue(); }
+static void boxer_runLoopBridgeWillStartWithContextInfo(void **contextInfo) { boxer_runLoopWillStartWithContextInfo(contextInfo); }
+static void boxer_runLoopBridgeDidFinishWithContextInfo(void *contextInfo) { boxer_runLoopDidFinishWithContextInfo(contextInfo); }
+
+static BXDOSBoxRunLoopBridgeCallbacks BXDOSBoxRunLoopCallbacks;
+static bool BXDOSBoxRunLoopCallbacksRegistered = false;
+
+void boxer_registerDOSBoxRunLoopBridge(const BXDOSBoxRunLoopBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxRunLoopCallbacks = *callbacks;
+        BXDOSBoxRunLoopCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxRunLoopBridgeCallbacks *boxer_registeredDOSBoxRunLoopBridge(void)
+{
+    if (!BXDOSBoxRunLoopCallbacksRegistered)
+    {
+        const BXDOSBoxRunLoopBridgeCallbacks callbacks = {
+            boxer_runLoopBridgeShouldContinue,
+            boxer_runLoopBridgeWillStartWithContextInfo,
+            boxer_runLoopBridgeDidFinishWithContextInfo
+        };
+        boxer_registerDOSBoxRunLoopBridge(&callbacks);
+    }
+    return BXDOSBoxRunLoopCallbacksRegistered ? &BXDOSBoxRunLoopCallbacks : NULL;
+}
+
 /// Notifies Boxer of changes to title and speed settings
 void boxer_handleDOSBoxTitleChange(int32_t newCycles, bool newPaused)
 {

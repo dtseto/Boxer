@@ -605,6 +605,65 @@ const BXDOSBoxInputBridgeCallbacks *boxer_registeredDOSBoxInputBridge(void)
     return BXDOSBoxInputCallbacksRegistered ? &BXDOSBoxInputCallbacks : NULL;
 }
 
+static void boxer_shellBridgeWillStart(uintptr_t shell) { boxer_shellWillStart((DOS_Shell *)shell); }
+static void boxer_shellBridgeDidFinish(uintptr_t shell) { boxer_shellDidFinish((DOS_Shell *)shell); }
+static bool boxer_shellBridgeShouldContinue(uintptr_t shell) { return boxer_shellShouldContinue((DOS_Shell *)shell); }
+static bool boxer_shellBridgeShouldRunCommand(uintptr_t shell, char *command, char *arguments) { return boxer_shellShouldRunCommand((DOS_Shell *)shell, command, arguments); }
+static bool boxer_shellBridgeHandleCommandInput(uintptr_t shell, char *line, uintptr_t *cursorPosition, bool *executeImmediately)
+{
+    return boxer_handleShellCommandInput((DOS_Shell *)shell, line, (Bitu *)cursorPosition, executeImmediately);
+}
+static bool boxer_shellBridgeHasPendingCommands(uintptr_t shell) { return boxer_hasPendingCommandsForShell((DOS_Shell *)shell); }
+static bool boxer_shellBridgeExecuteNextPendingCommand(uintptr_t shell) { return boxer_executeNextPendingCommandForShell((DOS_Shell *)shell); }
+static void boxer_shellBridgeDidReturnToShell(uintptr_t shell) { boxer_didReturnToShell((DOS_Shell *)shell); }
+static void boxer_shellBridgeWillStartAutoexec(uintptr_t shell) { boxer_shellWillStartAutoexec((DOS_Shell *)shell); }
+static bool boxer_shellBridgeShouldDisplayStartupMessages(uintptr_t shell) { return boxer_shellShouldDisplayStartupMessages((DOS_Shell *)shell); }
+static void boxer_shellBridgeWillReadCommandInput(uintptr_t shell, uint16_t handle) { boxer_shellWillReadCommandInputFromHandle((DOS_Shell *)shell, handle); }
+static void boxer_shellBridgeDidReadCommandInput(uintptr_t shell, uint16_t handle) { boxer_shellDidReadCommandInputFromHandle((DOS_Shell *)shell, handle); }
+static void boxer_shellBridgeWillExecuteFile(uintptr_t shell, const char *path, const char *arguments) { boxer_shellWillExecuteFileAtDOSPath((DOS_Shell *)shell, path, arguments); }
+static void boxer_shellBridgeDidExecuteFile(uintptr_t shell, const char *path) { boxer_shellDidExecuteFileAtDOSPath((DOS_Shell *)shell, path); }
+static void boxer_shellBridgeWillBeginBatch(uintptr_t shell, const char *path, const char *arguments) { boxer_shellWillBeginBatchFile((DOS_Shell *)shell, path, arguments); }
+static void boxer_shellBridgeDidEndBatch(uintptr_t shell, const char *path) { boxer_shellDidEndBatchFile((DOS_Shell *)shell, path); }
+
+static BXDOSBoxShellBridgeCallbacks BXDOSBoxShellCallbacks;
+static bool BXDOSBoxShellCallbacksRegistered = false;
+
+void boxer_registerDOSBoxShellBridge(const BXDOSBoxShellBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxShellCallbacks = *callbacks;
+        BXDOSBoxShellCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxShellBridgeCallbacks *boxer_registeredDOSBoxShellBridge(void)
+{
+    if (!BXDOSBoxShellCallbacksRegistered)
+    {
+        const BXDOSBoxShellBridgeCallbacks callbacks = {
+            boxer_shellBridgeWillStart,
+            boxer_shellBridgeDidFinish,
+            boxer_shellBridgeShouldContinue,
+            boxer_shellBridgeShouldRunCommand,
+            boxer_shellBridgeHandleCommandInput,
+            boxer_shellBridgeHasPendingCommands,
+            boxer_shellBridgeExecuteNextPendingCommand,
+            boxer_shellBridgeDidReturnToShell,
+            boxer_shellBridgeWillStartAutoexec,
+            boxer_shellBridgeShouldDisplayStartupMessages,
+            boxer_shellBridgeWillReadCommandInput,
+            boxer_shellBridgeDidReadCommandInput,
+            boxer_shellBridgeWillExecuteFile,
+            boxer_shellBridgeDidExecuteFile,
+            boxer_shellBridgeWillBeginBatch,
+            boxer_shellBridgeDidEndBatch
+        };
+        boxer_registerDOSBoxShellBridge(&callbacks);
+    }
+    return BXDOSBoxShellCallbacksRegistered ? &BXDOSBoxShellCallbacks : NULL;
+}
+
 
 #pragma mark - Printer functions
 

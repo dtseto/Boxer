@@ -43,6 +43,14 @@ DOSBox-owned keyboard buffer and layout state APIs remain legacy symbols for
 the runtime harness. The legacy call expressions are intentionally preserved
 so the keyboard regression harness continues to exercise the same contracts.
 
+The shell boundary is split into two layers. The public registration header
+uses opaque shell handles and contains no `DOS_Shell` declarations. The
+DOSBox-only `BXDOSBoxShellCompatibility.h` adapter owns typed legacy fallback
+calls and converts them to the opaque registration table. Shell source files
+retain the legacy call expressions through call-site macros, so extracted
+standalone shell harnesses continue to compile and test the original callback
+ordering.
+
 ## Validation contract
 
 After each boundary change:

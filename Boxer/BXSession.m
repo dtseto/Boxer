@@ -616,11 +616,12 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 
 - (void) removeWindowController: (NSWindowController *)windowController
 {
+	[super removeWindowController: windowController];
+
 	if (windowController == self.DOSWindowController)
 	{
         self.DOSWindowController = nil;
 	}
-	[super removeWindowController: windowController];
 }
 
 - (void) setDOSWindowController: (BXDOSWindowController *)controller

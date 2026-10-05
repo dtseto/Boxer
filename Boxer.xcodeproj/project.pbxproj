@@ -1012,6 +1012,8 @@
 		9FFE7104165E931600F99C3D /* BXJoystickItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FFE7103165E931600F99C3D /* BXJoystickItem.m */; };
 		9FFF97951232B718009B5EE5 /* ADBMultiPanelWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 9FFF97941232B718009B5EE5 /* ADBMultiPanelWindowController.m */; };
 		B7900B3E13E47D9E00B37913 /* BXPrecisionProControllerProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = B7900B3D13E47D9E00B37913 /* BXPrecisionProControllerProfile.m */; };
+		7A1B2C3D4E5F60718293A4BB /* libDOSBoxStaging.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */; };
+		7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1133,6 +1135,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 9F2D2F9715B8233800FAE848;
 			remoteInfo = "Boxer Standalone";
+		};
+		7A1B2C3D4E5F60718293A4B5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7A1B2C3D4E5F60718293A4B7;
+			remoteInfo = DOSBoxStaging;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -2268,6 +2277,8 @@
 		F192BC8028C7FE0A00B8D48D /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F192BC8128C7FE0A00B8D48D /* fr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/DOSBox.strings; sourceTree = "<group>"; };
 		F192BC8228C7FE0A00B8D48D /* fr */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = fr; path = fr.lproj/Shell.strings; sourceTree = "<group>"; };
+		7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libDOSBoxStaging.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "DOSBox-Staging/contrib/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -2304,6 +2315,7 @@
 				05F9A20224BAA7AB00969496 /* SDL2.framework in Frameworks */,
 				9F61942412340F5400F35AB4 /* ScriptingBridge.framework in Frameworks */,
 				55E6A0BA1C00C86200285593 /* DDHidLib.framework in Frameworks */,
+				7A1B2C3D4E5F60718293A4BB /* libDOSBoxStaging.a in Frameworks */,
 				9FBAA8F4134AFABD0092BF95 /* DiskArbitration.framework in Frameworks */,
 				55998D3725F6EF7900581095 /* libpcap.tbd in Frameworks */,
 				05E6BA7024B9FC2E00BAAD2D /* OpenEmuShaders.framework in Frameworks */,
@@ -2342,6 +2354,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				9FB4538F16442CDD00BCF63B /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7A1B2C3D4E5F60718293A4B9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2701,6 +2720,7 @@
 				9F2D317215B8233800FAE848 /* Boxer Standalone.app */,
 				9FB4538C16442CDD00BCF63B /* Boxer Bundler.app */,
 				0FFCA18030329C6C0076F2F5 /* Boxer Integration Tests.xctest */,
+				7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -4081,6 +4101,7 @@
 				55F0B73B26ABFEB80077E58C /* libs */,
 				9F77207312B38C4400072AE8 /* include */,
 				9F77209D12B38C4400072AE8 /* src */,
+				7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */,
 				9FBC3A7F0F56CEA2001811F2 /* config.h */,
 			);
 			name = DOSBox;
@@ -4333,6 +4354,7 @@
 			);
 			comments = "REGARDING --mstackrealign\nBoxer will crash with a dyld_misaligned_stack_error if dynamic core mode is on when the session starts.\n\ndyld is the dynamic linker, so this may be some peculiar interaction of threading and dynamically-loaded frameworks: the crash also happens in our non-XCode, SDL-framework-using build, and it *doesn't* happen if a sleep() delay is introduced before DOSBox_main is called, which implies a race condition.\n\nAdding -mstackrealign to the C flags for Intel seems to have made the problem go away. Which doesn't explain why it's happening in the first place.";
 			dependencies = (
+				7A1B2C3D4E5F60718293A4B6 /* PBXTargetDependency */,
 				55EB73EA27ED72CA00D5F7E0 /* PBXTargetDependency */,
 				55540E642546B87300B88BE3 /* PBXTargetDependency */,
 				55D431F625044D50008515E1 /* PBXTargetDependency */, 
@@ -4394,6 +4416,22 @@
 			productReference = 9FB4538C16442CDD00BCF63B /* Boxer Bundler.app */;
 			productType = "com.apple.product-type.application";
 		};
+		7A1B2C3D4E5F60718293A4B7 /* DOSBoxStaging */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7A1B2C3D4E5F60718293A4BE /* Build configuration list for PBXNativeTarget "DOSBoxStaging" */;
+			buildPhases = (
+				7A1B2C3D4E5F60718293A4B8 /* Sources */,
+				7A1B2C3D4E5F60718293A4B9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DOSBoxStaging;
+			productName = DOSBoxStaging;
+			productReference = 7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -4407,6 +4445,9 @@
 					0FFCA17F30329C6C0076F2F5 = {
 						CreatedOnToolsVersion = 26.6;
 						TestTargetID = 8D1107260486CEB800E47090;
+					};
+					7A1B2C3D4E5F60718293A4B7 = {
+						CreatedOnToolsVersion = 26.6;
 					};
 					8D1107260486CEB800E47090 = {
 						LastSwiftMigration = 1110;
@@ -4452,6 +4493,7 @@
 			);
 			projectRoot = "";
 			targets = (
+				7A1B2C3D4E5F60718293A4B7 /* DOSBoxStaging */,
 				8D1107260486CEB800E47090 /* Boxer */,
 				9F2D2F9715B8233800FAE848 /* Boxer Standalone */,
 				9FB4538B16442CDD00BCF63B /* Boxer Bundler */,
@@ -4595,6 +4637,7 @@
 				55635A372D35D8E000C70C0E /* InfoPlist.xcstrings in Resources */,
 				9F4199F61BD416E400A2D165 /* Bezel.xib in Resources */,
 				9F4BCCD817E6190A00140390 /* Boxer.help in Resources */,
+				7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4666,70 +4709,32 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0FB9597C3054521500B88A1D /* mouse.cpp in Sources */,
-				0FB9597D3054521500B88A1D /* mouse_config.cpp in Sources */,
-				0FB9597E3054521500B88A1D /* mouse_interfaces.cpp in Sources */,
-				0FB9597F3054521500B88A1D /* mouseif_dos_driver.cpp in Sources */,
-				0FB959803054521500B88A1D /* mouse_common.cpp in Sources */,
-				0FB959813054521500B88A1D /* mouse_queue.cpp in Sources */,
-				0FB959823054521500B88A1D /* mouseif_ps2_bios.cpp in Sources */,
-				0FB959833054521500B88A1D /* mouse_manymouse.cpp in Sources */,
-				0FB959843054521500B88A1D /* mouseif_virtual_machines.cpp in Sources */,
-				55F0B73926ABFE450077E58C /* program_help.cpp in Sources */,
 				9FBC352B0F56C7B7001811F2 /* BXAboutController.m in Sources */,
 				9FBC352C0F56C7B7001811F2 /* BXAppController.m in Sources */,
-				0FB959F43054585000B88A1D /* driver.cpp in Sources */,
-				0FB959F53054585000B88A1D /* video_mixer.cpp in Sources */,
-				0FB959F73054585000B88A1D /* player.cpp in Sources */,
 				9FBC352F0F56C7B7001811F2 /* BXSession.m in Sources */,
 				9FBC35310F56C7B7001811F2 /* BXEmulator+BXShell.mm in Sources */,
-				0FB959FC3054586D00B88A1D /* unicode.cpp in Sources */,
-				55F0B76C26ABFEE80077E58C /* OpAmp.cpp in Sources */,
 				9FBC35320F56C7B7001811F2 /* BXDOSWindow.m in Sources */,
 				9FBC35330F56C7B7001811F2 /* BXDOSWindowController.m in Sources */,
 				9FBC35340F56C7B7001811F2 /* NSWindow+ADBWindowDimensions.m in Sources */,
 				9FBC35360F56C7B7001811F2 /* ADBGeometry.m in Sources */,
 				9F1D50010F5C0966009F0AB9 /* BXEmulator.mm in Sources */,
 				9FC3B2550F62D9CE006DE439 /* BXSession+BXUIControls.m in Sources */,
-				0F668CC9303C92AF0010580F /* RBJ.cpp in Sources */,
-				0F668CCE303C92AF0010580F /* Custom.cpp in Sources */,
-				0F668CCF303C92AF0010580F /* ChebyshevI.cpp in Sources */,
-				0F668CDB303C92AF0010580F /* Biquad.cpp in Sources */,
-				0F668CE1303C92AF0010580F /* Butterworth.cpp in Sources */,
-				0F668CE2303C92AF0010580F /* PoleFilter.cpp in Sources */,
-				0F668CE3303C92AF0010580F /* ChebyshevII.cpp in Sources */,
-				0F668CE8303C92AF0010580F /* Cascade.cpp in Sources */,
 				9FB553E10F6EA30900A33017 /* BXCloseAlert.m in Sources */,
 				05E6BA7424BA26FD00BAAD2D /* BXMetalRenderingView+BXImageCapture.m in Sources */,
 				9FB554220F6EAC5F00A33017 /* NSAlert+BXAlert.m in Sources */,
 				9F6311090F70F54300AB1155 /* BXHelpMenuController.m in Sources */,
-				0F6685A8303BCC790010580F /* loguru.cpp in Sources */,
 				9F573C5A0F8E18B10089D8B7 /* NSWorkspace+ADBMountedVolumes.m in Sources */,
 				9F573D390F8E69AF0089D8B7 /* BXGamebox.m in Sources */,
 				058BC52E24C27CB50078C244 /* BXShaderParametersWindowController.m in Sources */,
-				55F0B73226ABFD9C0077E58C /* ps1audio.cpp in Sources */,
 				9F4971BB108EF02F00282261 /* BXEmulator+BXDOSFileSystem.mm in Sources */,
-				55F4A93D256315FD00410099 /* program_ls.cpp in Sources */,
-				0F66904B303C942F0010580F /* resample.c in Sources */,
-				55F0B78C26ABFEE80077E58C /* Integrator8580.cpp in Sources */,
 				9FC8F50C10934F3400AD6307 /* NSString+ADBPaths.m in Sources */,
-				55F0B77A26ABFEE80077E58C /* WaveformGenerator.cpp in Sources */,
 				9F45A424109C867E00593456 /* BXMountPanelController.m in Sources */,
-				0F669099303CA6680010580F /* covox.cpp in Sources */,
-				0F66909A303CA6680010580F /* ston1_dac.cpp in Sources */,
-				0F66909B303CA6680010580F /* adlib_gold.cpp in Sources */,
 				9F424207109D03F500111D28 /* BXInspectorController.m in Sources */,
-				5514500A24BE81E00002CE28 /* opl3.c in Sources */,
 				9F687004109F83ED003C26E4 /* BXDriveList.m in Sources */,
 				9F69128C10A2DF8D00EA78CD /* BXValueTransformers.m in Sources */,
 				9F69133310A2F62A00EA78CD /* BXDrive.m in Sources */,
 				9FA85CD510A357A600E6457F /* BXSession+BXFileManagement.m in Sources */,
 				9F544A8010AB44C40030FED5 /* BXThemes.m in Sources */,
-				0F6685EF303C91E90010580F /* opl.cpp in Sources */,
-				0F6685F0303C91E90010580F /* pcspeaker.cpp in Sources */,
-				0F6685F1303C91E90010580F /* lpt_dac.cpp in Sources */,
-				0F6685F2303C91E90010580F /* compressor.cpp in Sources */,
-				0F6685F3303C91E90010580F /* pcspeaker_discrete.cpp in Sources */,
 				9F59DA1810AE22D8008DBBC1 /* NSBezierPath+MCAdditions.m in Sources */,
 				9F59DAD510AF1042008DBBC1 /* BXProgramPanel.m in Sources */,
 				9F59DEDA10B0159A008DBBC1 /* BXProgramPanelController.m in Sources */,
@@ -4738,7 +4743,6 @@
 				9FDAD87F10C182B3004EA7D0 /* BXCoverArtWell.m in Sources */,
 				9FD011BD10C2A02F00670CE1 /* BXGameboxPanelController.m in Sources */,
 				9F76D1B910CA9DFB00C3B081 /* NSWorkspace+ADBFileTypes.m in Sources */,
-				0FFCA14B303265380076F2F5 /* program_serial.cpp in Sources */,
 				9F76D45610CBE5C500C3B081 /* BXSession+BXDragDrop.m in Sources */,
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				9F44E5E410D17A4C0081B8D2 /* BXEmulator+BXPaste.mm in Sources */,
@@ -4749,7 +4753,6 @@
 				9FD5481411047E420041E1E7 /* BXDrivesInUseAlert.m in Sources */,
 				8F97935824C1359B0054F84D /* BGThemeManager.m in Sources */,
 				9F42D9DF1172481800AC6F1F /* BXStatusBarController.m in Sources */,
-				55F643F925F41DF5009E1800 /* rwqueue.cpp in Sources */,
 				55E36CAC2B4A8307004E9BBE /* CoverArt.swift in Sources */,
 				9FDCA790118F2B7900E2FD74 /* BXCoalface.mm in Sources */,
 				9FEF98011191E1EF002024DF /* BXEmulatedMouse.mm in Sources */,
@@ -4757,8 +4760,6 @@
 				9FB4F9E411957B55006C8AC9 /* BXVideoFrame.m in Sources */,
 				9FC1620E119E9AD700705EA5 /* BXCursorFadeAnimation.m in Sources */,
 				9FF1756D11B25F4E00D0FCDC /* BXInputView.m in Sources */,
-				5514500E24BE81E00002CE28 /* mp3.cpp in Sources */,
-				5514503D24BE8FB90002CE28 /* program_autotype.cpp in Sources */,
 				9FF175E711B279F500D0FCDC /* BXVideoHandler.mm in Sources */,
 				9FF2E9BD11E6F4950051E485 /* BXEmulatorConfiguration.m in Sources */,
 				05E6BA5924B972C900BAAD2D /* BXMetalRenderingView.m in Sources */,
@@ -4767,14 +4768,11 @@
 				9FADFE5511EC7E1700990E91 /* ADBDigest.m in Sources */,
 				9FADFE9711EC932800990E91 /* NSData+HexStrings.m in Sources */,
 				9FBF66AF11F35ADD00DAAB9A /* ADBSingleFileTransfer.m in Sources */,
-				55F0B78426ABFEE80077E58C /* Filter6581.cpp in Sources */,
 				9F13F9D011F85E6F0069A02E /* NSFileManager+ADBTemporaryFiles.m in Sources */,
 				9F9E27D611F8C173003EE8F3 /* BXDrivePanelController.m in Sources */,
 				9FE90BF711F8D1DC003CFFFF /* ADBDelegatedView.m in Sources */,
 				9FEAA3EC1204595B0085F008 /* ADBOperation.m in Sources */,
-				55F0B79226ABFEE80077E58C /* Filter8580.cpp in Sources */,
 				9F1CBA58120C796C00C5E926 /* BXImportSession.m in Sources */,
-				55DB150827EDA2C70024AE9E /* program_intro.cpp in Sources */,
 				9F1CBA97120C7D9000C5E926 /* BXImportWindowController.m in Sources */,
 				9F1CBAAB120C830600C5E926 /* BXImportSession+BXImportPolicies.m in Sources */,
 				9F1CBB59120CAA5500C5E926 /* BXBlueprintPanel.m in Sources */,
@@ -4786,17 +4784,12 @@
 				9FC8B16B12182586004F6DA2 /* BXImportFinalizingPanelController.m in Sources */,
 				9FC8B2E812186171004F6DA2 /* BXImportFinishedPanelController.m in Sources */,
 				9F24D24D122439E0009C1817 /* BXWelcomeWindowController.m in Sources */,
-				5514501E24BE81E00002CE28 /* flac.c in Sources */,
 				9F24D25012243C9A009C1817 /* BXWelcomeView.m in Sources */,
 				9FC74821122A7C8B00E86E6A /* ADBPathEnumerator.m in Sources */,
-				55DB151227EDA2C70024AE9E /* program_imgmount.cpp in Sources */,
-				55F0B79426ABFEE80077E58C /* WaveformCalculator.cpp in Sources */,
 				9FFF97951232B718009B5EE5 /* ADBMultiPanelWindowController.m in Sources */,
 				9F61931B1233D8F000F35AB4 /* ADBTabbedWindowController.m in Sources */,
 				9F160E711236B2A600F8768E /* BXAppController+BXGamesFolder.m in Sources */,
 				9F511502129055FE00BEC0B9 /* BXImportCommand.m in Sources */,
-				55DEBB23201E875600F1092F /* pci_bus.cpp in Sources */,
-				55F0B76E26ABFEE80077E58C /* SincResampler.cpp in Sources */,
 				9F1812BF12996340009BC4B2 /* YRKSpinningProgressIndicator.m in Sources */,
 				9F18133B129990D5009BC4B2 /* BXGamesFolderPanelController.m in Sources */,
 				9FD23D55129AE3B600B2100B /* NSWindow+ADBWindowEffects.m in Sources */,
@@ -4805,12 +4798,9 @@
 				9F444FFF12AEBE5200A2D405 /* BXDriveBundleImport.m in Sources */,
 				55215F452AD22FD8007C7C68 /* MT32LCDDisplay.swift in Sources */,
 				9F44500212AEC0FC00A2D405 /* BXSimpleDriveImport.m in Sources */,
-				5514502224BE81E00002CE28 /* ppscale.c in Sources */,
 				9F2120F813015653002AB1B7 /* BXShelfArt.m in Sources */,
-				0FFCA178303266110076F2F5 /* whereami.c in Sources */,
 				9F2120FE1301597E002AB1B7 /* NSImage+ADBSaveImages.m in Sources */,
 				9F2122EA1301BDE1002AB1B7 /* BXShelfAppearanceOperation.m in Sources */,
-				55DB14FE27EDA2C70024AE9E /* program_mount_common.cpp in Sources */,
 				9F2122EF1301BE6E002AB1B7 /* BXSampleGamesCopy.m in Sources */,
 				9F3FB1AF1306F88800DB8FBE /* BXScriptablePreferences.m in Sources */,
 				9F3FB1B61306F9FB00DB8FBE /* NSApplication+BXScripting.m in Sources */,
@@ -4820,7 +4810,6 @@
 				9FBAA6E1134A21A50092BF95 /* BXDriveImport.m in Sources */,
 				9FBAA878134A66C80092BF95 /* BXBinCueImageImport.m in Sources */,
 				9FF865CF134DAB5A001CE857 /* ADBTaskOperation.m in Sources */,
-				0FFCA152303265A60076F2F5 /* ethernet.cpp in Sources */,
 				9FDE341F1351DE26000DCE44 /* BXBlueprintBackgroundView.m in Sources */,
 				9FDE34341351DFD4000DCE44 /* BXImportTipsPanelController.m in Sources */,
 				9F731B2E136323D2005E564F /* ADBHIDMonitor.m in Sources */,
@@ -4834,40 +4823,22 @@
 				9FC9E58F1367514C0095DCDE /* BXCHFlightstick.mm in Sources */,
 				9FFE1F831390F70C005C438A /* BXThrustmasterFCS.mm in Sources */,
 				9F06C6D313992E1F00B19DF1 /* BXHIDControllerProfile.m in Sources */,
-				55DB14E527EDA2020024AE9E /* iohandler_containers.cpp in Sources */,
 				9F06C6E113993FB100B19DF1 /* BXHIDInputBinding.m in Sources */,
 				9FD3A1E4139A358C00D0918E /* BX360ControllerProfile.m in Sources */,
 				9FD3A27F139A839600D0918E /* BXSixaxisControllerProfile.m in Sources */,
 				9F60B0DC13AA418300F06BB1 /* BXCollectionItemView.m in Sources */,
 				9FD012FB13AB87E500AF6FE8 /* BXThemedImageCell.m in Sources */,
-				5514502D24BE8BCC0002CE28 /* midi.cpp in Sources */,
 				9FB446EB13D23BD900E69AF5 /* BXG25ControllerProfile.m in Sources */,
 				9FA0C9E313D24FF3000F6FCB /* DDHidUsage+ADBUsageExtensions.m in Sources */,
 				9FC2F84013D60FBD00BD4F6B /* BXDualActionControllerProfile.m in Sources */,
-				0FFCA1503032657E0076F2F5 /* program_placeholder.cpp in Sources */,
-				0F669136303CA6EF0010580F /* AudioFileReaderThread.c in Sources */,
-				0F669137303CA6EF0010580F /* SDL_cdrom.c in Sources */,
-				0F669138303CA6EF0010580F /* AudioFilePlayer.c in Sources */,
-				0F66913D303CA6EF0010580F /* SDL_syscdrom.c in Sources */,
-				0F66913F303CA6EF0010580F /* CDPlayer.c in Sources */,
-				0F669141303CA6EF0010580F /* SDL_syscdrom.c in Sources */,
-				0F669142303CA6EF0010580F /* SDLOSXCAGuard.c in Sources */,
-				0F668602303C92810010580F /* Lfo.cpp in Sources */,
 				9F70277B13D706CC00606B4C /* BXBezelController.m in Sources */,
 				9F70278413D72D8100606B4C /* BXThemedLabel.m in Sources */,
 				9F8F482513DC74CA00C7E022 /* NSShadow+ADBShadowExtensions.m in Sources */,
 				9F58BB5113DD975F00358512 /* ADBFileScan.m in Sources */,
 				9F0C0BD713E1751E0039C081 /* BXDOSWindowControllerLion.m in Sources */,
-				0FB95A0B3054589000B88A1D /* manymouse.c in Sources */,
-				0FB95A0C3054589000B88A1D /* linux_evdev.c in Sources */,
-				0FB95A0D3054589000B88A1D /* windows_wminput.c in Sources */,
-				0FB95A0E3054589000B88A1D /* x11_xinput2.c in Sources */,
-				0FB95A0F3054589000B88A1D /* macosx_hidmanager.c in Sources */,
-				0FB95A103054589000B88A1D /* macosx_hidutilities.c in Sources */,
 				9FD95D6A13E2A45C005EF2C0 /* ADBFullscreenCapableWindow.m in Sources */,
 				B7900B3E13E47D9E00B37913 /* BXPrecisionProControllerProfile.m in Sources */,
 				9FA1CF6813E5B44000416D74 /* BXMOMORacingControllerProfile.m in Sources */,
-				55844D1026C70E7700AA5924 /* pacer.cpp in Sources */,
 				9F18BE9513EB07190047C217 /* BXInstallerScan.m in Sources */,
 				9F61F78313EC2D5100505436 /* ADBImageAwareFileScan.m in Sources */,
 				9F3E57A513F694B40070A14D /* BXEmulatorErrors.mm in Sources */,
@@ -4878,22 +4849,6 @@
 				9F34BE5F142B851800A69FAF /* BXEmulator+BXAudio.mm in Sources */,
 				9F34BE62142B917100A69FAF /* BXBaseAppController+BXSupportFiles.m in Sources */,
 				9F902C24142E183500843B01 /* BXMIDISynth.m in Sources */,
-				0F668634303C92950010580F /* int10_vptable.cpp in Sources */,
-				0F668636303C92950010580F /* int10_char.cpp in Sources */,
-				0F668637303C92950010580F /* int10_vesa.cpp in Sources */,
-				0F668638303C92950010580F /* int10_memory.cpp in Sources */,
-				0F668639303C92950010580F /* bios_disk.cpp in Sources */,
-				0F66863B303C92950010580F /* int10_misc.cpp in Sources */,
-				0F66863D303C92950010580F /* int10.cpp in Sources */,
-				0F66863F303C92950010580F /* int10_modes.cpp in Sources */,
-				0F668640303C92950010580F /* xms.cpp in Sources */,
-				0F668641303C92950010580F /* ems.cpp in Sources */,
-				0F668642303C92950010580F /* bios.cpp in Sources */,
-				0F668643303C92950010580F /* int10_put_pixel.cpp in Sources */,
-				0F668644303C92950010580F /* bios_keyboard.cpp in Sources */,
-				0F668645303C92950010580F /* int10_pal.cpp in Sources */,
-				0F668646303C92950010580F /* int10_video_state.cpp in Sources */,
-				55DB150427EDA2C70024AE9E /* program_boot.cpp in Sources */,
 				9F902C27142E198100843B01 /* BXEmulatedMT32.mm in Sources */,
 				9F902C2A142E199100843B01 /* BXExternalMIDIDevice.m in Sources */,
 				9F86DB401431EF5F00A2EFB6 /* BXMIDIDeviceMonitor.m in Sources */,
@@ -4903,18 +4858,12 @@
 				9F7D9EFF1444BAA800B6AD50 /* BXExternalMT32+BXMT32Sysexes.m in Sources */,
 				9FF1562914506DBA00545317 /* BXThemedProgressIndicator.m in Sources */,
 				9FF1562D14506E7200545317 /* BXHUDLevelIndicatorCell.m in Sources */,
-				55F0B79C26ABFF680077E58C /* program_choice.cpp in Sources */,
 				9FF1563014506F5C00545317 /* BXKeyboardEventTap.m in Sources */,
-				0F669102303CA6B70010580F /* FilterModelConfig.cpp in Sources */,
 				9F39A43B1452CE9100942D0F /* BXBezelView.m in Sources */,
 				9FD7B6B3145746CC00565CEB /* BXThemedButtonCell.m in Sources */,
 				9FAD1DFD14641ECD00C3074E /* ADBContinuousThread.m in Sources */,
 				9F6891A014B0F6D800641C62 /* BXTFlightControllerProfile.m in Sources */,
 				9F9AEE8914CB4AEA00728641 /* ADBAppKitVersionHelpers.m in Sources */,
-				55DB150227EDA2C70024AE9E /* program_keyb.cpp in Sources */,
-				55DB151027EDA2C70024AE9E /* program_mount.cpp in Sources */,
-				55DB150E27EDA2C70024AE9E /* program_mem.cpp in Sources */,
-				5514503924BE8DE60002CE28 /* envelope.cpp in Sources */,
 				9F8F374914F91FEB00E482FB /* BXApplication.m in Sources */,
 				9F8F374F14F9442D00E482FB /* BXBaseAppController+BXHotKeys.m in Sources */,
 				55BBA4E9235EE141007AE319 /* NSError+ADBErrorHelpers.swift in Sources */,
@@ -4929,27 +4878,13 @@
 				9FB60E8E15C5552F00CD0D63 /* NSURL+ADBFilesystemHelpers.m in Sources */,
 				9FB60E9215C5643200CD0D63 /* NSError+ADBErrorHelpers.mm in Sources */,
 				9FA2C09215C8409000380261 /* BXDOSWindowBackgroundView.m in Sources */,
-				5514501624BE81E00002CE28 /* mp3_seek_table.cpp in Sources */,
-				55F0B77C26ABFEE80077E58C /* SID.cpp in Sources */,
-				55540E262545604500B88BE3 /* fs_utils_posix.cpp in Sources */,
 				9FCA6D9615C85D8500E1650C /* BXLaunchPanelController.m in Sources */,
 				9F57684915DA27A300B50500 /* BXHUDSpinningProgressIndicator.m in Sources */,
 				9F3DD6CC15EE8047003C9A25 /* BXCHFlightstickProUSB.m in Sources */,
 				05E6BA6F24B9FACC00BAAD2D /* BXMetalLayer.m in Sources */,
-				9FD6AA0E16314A5B002B774E /* directlpt_linux.cpp in Sources */,
-				55DB150A27EDA2C70024AE9E /* program_biostest.cpp in Sources */,
-				9FD6AA1016314A5B002B774E /* directlpt_win32.cpp in Sources */,
-				9FD6AA1216314A5B002B774E /* filelpt.cpp in Sources */,
-				9FD6AA1416314A5B002B774E /* parport.cpp in Sources */,
-				9FD6AA1816314A5B002B774E /* printer_charmaps.cpp in Sources */,
 				558CE44D20F6931600319D1C /* BXXBOBluetoothControllerProfile.m in Sources */,
-				9FD6AA1A16314A5B002B774E /* printer_redir.cpp in Sources */,
 				9FD6AA2016315278002B774E /* BXEmulatedPrinter.mm in Sources */,
-				0FB959953054581900B88A1D /* program_more_output.cpp in Sources */,
-				0FB959963054581900B88A1D /* program_more.cpp in Sources */,
-				0FB959973054581900B88A1D /* program_mousectl.cpp in Sources */,
 				9F596502163D8D910094FD6B /* BXSession+BXPrinting.m in Sources */,
-				0F66918C303CA7930010580F /* opus.cpp in Sources */,
 				9FF982111646C7640080F763 /* BXPrintSession.m in Sources */,
 				9F67855C1649A6BC007FE89A /* BXPrintStatusPanelController.m in Sources */,
 				9F201E381657DB7F0086F1BB /* ADBUserNotificationDispatcher.m in Sources */,
@@ -4957,7 +4892,6 @@
 				9FFE7104165E931600F99C3D /* BXJoystickItem.m in Sources */,
 				9F125C4016983A9D003B5B2B /* BXDocumentationPanelController.m in Sources */,
 				9F125C4116983F0C003B5B2B /* BXDocumentationBrowser.m in Sources */,
-				0F6685F5303C92460010580F /* serialmouse.cpp in Sources */,
 				9F6463F716C67415008B65BF /* BXOutputBinding.m in Sources */,
 				9FF91EB616CC362700E1D1A8 /* NSWorkspace+ADBIconHelpers.m in Sources */,
 				9F35F3E916CFBB700093CF45 /* NSFileManager+ADBUniqueFilenames.m in Sources */,
@@ -4968,145 +4902,13 @@
 				9F1E8CDA16E16C0400F1C908 /* ADBScanOperation.m in Sources */,
 				9F1E8CDE16E16EB800F1C908 /* ADBMountableImage.m in Sources */,
 				9F20ADD01702E87B007263C8 /* BXDrive+BXDriveArchiving.m in Sources */,
-				9F77217612B38C4400072AE8 /* callback.cpp in Sources */,
-				9F77217712B38C4400072AE8 /* core_dyn_x86.cpp in Sources */,
-				9F77217812B38C4400072AE8 /* core_dynrec.cpp in Sources */,
-				9F77217912B38C4400072AE8 /* core_full.cpp in Sources */,
-				5557480B208FA8040045E635 /* sn76496.cpp in Sources */,
-				9F77217A12B38C4400072AE8 /* core_normal.cpp in Sources */,
-				9F77217B12B38C4400072AE8 /* core_prefetch.cpp in Sources */,
-				9F77217C12B38C4400072AE8 /* core_simple.cpp in Sources */,
-				9F77217D12B38C4400072AE8 /* cpu.cpp in Sources */,
-				9F77217E12B38C4400072AE8 /* flags.cpp in Sources */,
-				9F77217F12B38C4400072AE8 /* modrm.cpp in Sources */,
-				55F0B79626ABFEE80077E58C /* Spline.cpp in Sources */,
-				9F77218012B38C4400072AE8 /* paging.cpp in Sources */,
-				9F77218112B38C4400072AE8 /* debug.cpp in Sources */,
-				9F77218212B38C4400072AE8 /* debug_disasm.cpp in Sources */,
-				9F77218312B38C4400072AE8 /* debug_gui.cpp in Sources */,
-				9F77218412B38C4400072AE8 /* debug_win32.cpp in Sources */,
-				55998D2F25F6EDC400581095 /* ne2000.cpp in Sources */,
-				9F77218512B38C4400072AE8 /* cdrom.cpp in Sources */,
-				9F77218712B38C4400072AE8 /* cdrom_image.cpp in Sources */,
-				9F77218B12B38C4400072AE8 /* dos.cpp in Sources */,
-				55F0B78626ABFEE80077E58C /* FilterModelConfig6581.cpp in Sources */,
-				9F77218C12B38C4400072AE8 /* dos_classes.cpp in Sources */,
-				55DB150627EDA2C70024AE9E /* program_loadrom.cpp in Sources */,
-				55DB150C27EDA2C70024AE9E /* program_loadfix.cpp in Sources */,
-				9F77218D12B38C4400072AE8 /* dos_devices.cpp in Sources */,
-				9F77218E12B38C4400072AE8 /* dos_execute.cpp in Sources */,
-				9F77218F12B38C4400072AE8 /* dos_files.cpp in Sources */,
-				9F77219012B38C4400072AE8 /* dos_ioctl.cpp in Sources */,
-				9F77219112B38C4400072AE8 /* dos_keyboard_layout.cpp in Sources */,
-				9F77219212B38C4400072AE8 /* dos_memory.cpp in Sources */,
-				9F77219312B38C4400072AE8 /* dos_misc.cpp in Sources */,
-				9F77219412B38C4400072AE8 /* dos_mscdex.cpp in Sources */,
-				9F77219512B38C4400072AE8 /* dos_programs.cpp in Sources */,
-				9F77219612B38C4400072AE8 /* dos_tables.cpp in Sources */,
-				5548850E226A501000A879B3 /* drive_overlay.cpp in Sources */,
 				058BC52C24C27CB00078C244 /* BXShadersModel+OpenEmu.swift in Sources */,
-				9F77219712B38C4400072AE8 /* drive_cache.cpp in Sources */,
-				9F77219812B38C4400072AE8 /* drive_fat.cpp in Sources */,
 				55EA6CF625D4919E00945236 /* BXMIDIConfig.cpp in Sources */,
-				9F77219912B38C4400072AE8 /* drive_iso.cpp in Sources */,
-				9F77219A12B38C4400072AE8 /* drive_local.cpp in Sources */,
-				9F77219C12B38C4400072AE8 /* drive_virtual.cpp in Sources */,
-				55F0B79026ABFEE80077E58C /* FilterModelConfig8580.cpp in Sources */,
-				5514500C24BE81E00002CE28 /* vorbis.c in Sources */,
-				55F0B79826ABFEE80077E58C /* version.cc in Sources */,
-				9F77219D12B38C4400072AE8 /* drives.cpp in Sources */,
-				9F77219E12B38C4400072AE8 /* dosbox.cpp in Sources */,
-				0FFCA163303265EF0076F2F5 /* fs_std_impl.cpp in Sources */,
-				9F77219F12B38C4400072AE8 /* fpu.cpp in Sources */,
-				9F7721A112B38C4400072AE8 /* render.cpp in Sources */,
-				9F7721A212B38C4400072AE8 /* render_scalers.cpp in Sources */,
-				9F7721A712B38C4400072AE8 /* cmos.cpp in Sources */,
 				55A76C602B678C0700DEF246 /* URL+ADBQuickLookHelpers.swift in Sources */,
-				9F7721A912B38C4400072AE8 /* disney.cpp in Sources */,
-				55F0B78826ABFEE80077E58C /* Integrator6581.cpp in Sources */,
-				9F7721AA12B38C4400072AE8 /* dma.cpp in Sources */,
-				9F7721AB12B38C4400072AE8 /* gameblaster.cpp in Sources */,
-				9F7721AC12B38C4400072AE8 /* gus.cpp in Sources */,
-				9F7721AD12B38C4400072AE8 /* hardware.cpp in Sources */,
-				9F7721AE12B38C4400072AE8 /* iohandler.cpp in Sources */,
-				9F7721AF12B38C4400072AE8 /* ipx.cpp in Sources */,
-				0F66915C303CA7520010580F /* YM7128B_emu.c in Sources */,
-				9F7721B012B38C4400072AE8 /* ipxserver.cpp in Sources */,
-				9F7721B112B38C4400072AE8 /* joystick.cpp in Sources */,
-				9F7721B212B38C4400072AE8 /* keyboard.cpp in Sources */,
-				9F7721B312B38C4400072AE8 /* memory.cpp in Sources */,
-				55F0B78E26ABFEE80077E58C /* ExternalFilter.cpp in Sources */,
-				9F7721B412B38C4400072AE8 /* mixer.cpp in Sources */,
-				0F6690A0303CA6880010580F /* program_attrib.cpp in Sources */,
-				9F7721B512B38C4400072AE8 /* mpu401.cpp in Sources */,
-				9F7721B712B38C4400072AE8 /* pcspeaker.cpp in Sources */,
-				0F6685DD303C91690010580F /* fs_utils.cpp in Sources */,
-				0F6685DE303C91690010580F /* ansi_code_markup.cpp in Sources */,
-				0F6685DF303C91690010580F /* help_util.cpp in Sources */,
-				0F6685E0303C91690010580F /* string_utils.cpp in Sources */,
-				9F7721B812B38C4400072AE8 /* pic.cpp in Sources */,
-				9F7721B912B38C4400072AE8 /* sblaster.cpp in Sources */,
-				9F7721BA12B38C4400072AE8 /* directserial.cpp in Sources */,
-				9F7721BB12B38C4400072AE8 /* libserial.cpp in Sources */,
-				55574809208FA8040045E635 /* saa1099.cpp in Sources */,
-				9F7721BC12B38C4400072AE8 /* misc_util.cpp in Sources */,
-				9F7721BD12B38C4400072AE8 /* nullmodem.cpp in Sources */,
 				5591BA2826F2E35A005A8EF0 /* ADBSwiftHelpers.swift in Sources */,
-				9F7721BE12B38C4400072AE8 /* serialdummy.cpp in Sources */,
-				9F7721BF12B38C4400072AE8 /* serialport.cpp in Sources */,
-				9F7721C012B38C4400072AE8 /* softmodem.cpp in Sources */,
-				9F7721C112B38C4400072AE8 /* tandy_sound.cpp in Sources */,
-				9F7721C212B38C4400072AE8 /* timer.cpp in Sources */,
-				9F7721C312B38C4400072AE8 /* vga.cpp in Sources */,
-				9F7721C412B38C4400072AE8 /* vga_attr.cpp in Sources */,
-				9F7721C512B38C4400072AE8 /* vga_crtc.cpp in Sources */,
-				9F7721C612B38C4400072AE8 /* vga_dac.cpp in Sources */,
 				55A76C5E2B678C0700DEF246 /* URL+ADBAliasHelpers.swift in Sources */,
-				9F7721C712B38C4400072AE8 /* vga_draw.cpp in Sources */,
-				9F7721C812B38C4400072AE8 /* vga_gfx.cpp in Sources */,
-				0FFCA147303264D20076F2F5 /* ide.cpp in Sources */,
-				9F7721C912B38C4400072AE8 /* vga_memory.cpp in Sources */,
-				9F7721CA12B38C4400072AE8 /* vga_misc.cpp in Sources */,
-				0F669095303CA6460010580F /* pcspeaker_impulse.cpp in Sources */,
-				55F0B77426ABFEE80077E58C /* EnvelopeGenerator.cpp in Sources */,
-				9F7721CB12B38C4400072AE8 /* vga_other.cpp in Sources */,
-				9F7721CC12B38C4400072AE8 /* vga_paradise.cpp in Sources */,
-				9F7721CD12B38C4400072AE8 /* vga_s3.cpp in Sources */,
-				9F7721CE12B38C4400072AE8 /* vga_seq.cpp in Sources */,
-				55F0B77626ABFEE80077E58C /* Dac.cpp in Sources */,
-				9F7721CF12B38C4400072AE8 /* vga_tseng.cpp in Sources */,
-				9F7721D012B38C4400072AE8 /* vga_xga.cpp in Sources */,
-				9F7721D112B38C4400072AE8 /* bios.cpp in Sources */,
-				9F7721D212B38C4400072AE8 /* bios_disk.cpp in Sources */,
-				9F7721D312B38C4400072AE8 /* bios_keyboard.cpp in Sources */,
-				9F7721D412B38C4400072AE8 /* ems.cpp in Sources */,
-				5514501C24BE81E00002CE28 /* wav.c in Sources */,
-				9F7721D512B38C4400072AE8 /* int10.cpp in Sources */,
-				9F7721D612B38C4400072AE8 /* int10_char.cpp in Sources */,
-				9F7721D712B38C4400072AE8 /* int10_memory.cpp in Sources */,
-				9F7721D812B38C4400072AE8 /* int10_misc.cpp in Sources */,
-				9F7721D912B38C4400072AE8 /* int10_modes.cpp in Sources */,
-				9F7721DA12B38C4400072AE8 /* int10_pal.cpp in Sources */,
-				9F7721DB12B38C4400072AE8 /* int10_put_pixel.cpp in Sources */,
-				9F7721DC12B38C4400072AE8 /* int10_vesa.cpp in Sources */,
 				556C41AA2B6E35A80092AFB3 /* NSImage+ADBImageEffects.swift in Sources */,
-				9F7721DD12B38C4400072AE8 /* int10_video_state.cpp in Sources */,
-				9F7721DE12B38C4400072AE8 /* int10_vptable.cpp in Sources */,
-				9F7721E012B38C4400072AE8 /* xms.cpp in Sources */,
-				9F7721E312B38C4400072AE8 /* cross.cpp in Sources */,
-				9F7721E412B38C4400072AE8 /* messages.cpp in Sources */,
-				9F7721E512B38C4400072AE8 /* programs.cpp in Sources */,
-				9F7721E612B38C4400072AE8 /* setup.cpp in Sources */,
-				5514501A24BE81E00002CE28 /* SDL_sound.c in Sources */,
-				9F7721E712B38C4400072AE8 /* support.cpp in Sources */,
-				9F7721E812B38C4400072AE8 /* shell.cpp in Sources */,
-				55DB150027EDA2C70024AE9E /* program_rescan.cpp in Sources */,
 				55296E992AD4B86400845EB5 /* DummyMIDIDevice.swift in Sources */,
-				9F7721E912B38C4400072AE8 /* shell_batch.cpp in Sources */,
-				55F0B77E26ABFEE80077E58C /* Filter.cpp in Sources */,
-				9F7721EA12B38C4400072AE8 /* shell_cmds.cpp in Sources */,
-				55F0B73526ABFDDA0077E58C /* innovation.cpp in Sources */,
-				9F7721EB12B38C4400072AE8 /* shell_misc.cpp in Sources */,
 				9F8B282A1709C4A100B31A14 /* ADBFilesystemBase.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -5537,6 +5339,254 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7A1B2C3D4E5F60718293A4B8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0FB9597C3054521500B88A1D /* mouse.cpp in Sources */,
+				0FB9597D3054521500B88A1D /* mouse_config.cpp in Sources */,
+				0FB9597E3054521500B88A1D /* mouse_interfaces.cpp in Sources */,
+				0FB9597F3054521500B88A1D /* mouseif_dos_driver.cpp in Sources */,
+				0FB959803054521500B88A1D /* mouse_common.cpp in Sources */,
+				0FB959813054521500B88A1D /* mouse_queue.cpp in Sources */,
+				0FB959823054521500B88A1D /* mouseif_ps2_bios.cpp in Sources */,
+				0FB959833054521500B88A1D /* mouse_manymouse.cpp in Sources */,
+				0FB959843054521500B88A1D /* mouseif_virtual_machines.cpp in Sources */,
+				55F0B73926ABFE450077E58C /* program_help.cpp in Sources */,
+				0FB959F43054585000B88A1D /* driver.cpp in Sources */,
+				0FB959F53054585000B88A1D /* video_mixer.cpp in Sources */,
+				0FB959F73054585000B88A1D /* player.cpp in Sources */,
+				0FB959FC3054586D00B88A1D /* unicode.cpp in Sources */,
+				55F0B76C26ABFEE80077E58C /* OpAmp.cpp in Sources */,
+				0F668CC9303C92AF0010580F /* RBJ.cpp in Sources */,
+				0F668CCE303C92AF0010580F /* Custom.cpp in Sources */,
+				0F668CCF303C92AF0010580F /* ChebyshevI.cpp in Sources */,
+				0F668CDB303C92AF0010580F /* Biquad.cpp in Sources */,
+				0F668CE1303C92AF0010580F /* Butterworth.cpp in Sources */,
+				0F668CE2303C92AF0010580F /* PoleFilter.cpp in Sources */,
+				0F668CE3303C92AF0010580F /* ChebyshevII.cpp in Sources */,
+				0F668CE8303C92AF0010580F /* Cascade.cpp in Sources */,
+				0F6685A8303BCC790010580F /* loguru.cpp in Sources */,
+				55F0B73226ABFD9C0077E58C /* ps1audio.cpp in Sources */,
+				55F4A93D256315FD00410099 /* program_ls.cpp in Sources */,
+				0F66904B303C942F0010580F /* resample.c in Sources */,
+				55F0B78C26ABFEE80077E58C /* Integrator8580.cpp in Sources */,
+				55F0B77A26ABFEE80077E58C /* WaveformGenerator.cpp in Sources */,
+				0F669099303CA6680010580F /* covox.cpp in Sources */,
+				0F66909A303CA6680010580F /* ston1_dac.cpp in Sources */,
+				0F66909B303CA6680010580F /* adlib_gold.cpp in Sources */,
+				5514500A24BE81E00002CE28 /* opl3.c in Sources */,
+				0F6685EF303C91E90010580F /* opl.cpp in Sources */,
+				0F6685F0303C91E90010580F /* pcspeaker.cpp in Sources */,
+				0F6685F1303C91E90010580F /* lpt_dac.cpp in Sources */,
+				0F6685F2303C91E90010580F /* compressor.cpp in Sources */,
+				0F6685F3303C91E90010580F /* pcspeaker_discrete.cpp in Sources */,
+				0FFCA14B303265380076F2F5 /* program_serial.cpp in Sources */,
+				55F643F925F41DF5009E1800 /* rwqueue.cpp in Sources */,
+				5514500E24BE81E00002CE28 /* mp3.cpp in Sources */,
+				5514503D24BE8FB90002CE28 /* program_autotype.cpp in Sources */,
+				55F0B78426ABFEE80077E58C /* Filter6581.cpp in Sources */,
+				55F0B79226ABFEE80077E58C /* Filter8580.cpp in Sources */,
+				55DB150827EDA2C70024AE9E /* program_intro.cpp in Sources */,
+				5514501E24BE81E00002CE28 /* flac.c in Sources */,
+				55DB151227EDA2C70024AE9E /* program_imgmount.cpp in Sources */,
+				55F0B79426ABFEE80077E58C /* WaveformCalculator.cpp in Sources */,
+				55DEBB23201E875600F1092F /* pci_bus.cpp in Sources */,
+				55F0B76E26ABFEE80077E58C /* SincResampler.cpp in Sources */,
+				5514502224BE81E00002CE28 /* ppscale.c in Sources */,
+				0FFCA178303266110076F2F5 /* whereami.c in Sources */,
+				55DB14FE27EDA2C70024AE9E /* program_mount_common.cpp in Sources */,
+				0FFCA152303265A60076F2F5 /* ethernet.cpp in Sources */,
+				55DB14E527EDA2020024AE9E /* iohandler_containers.cpp in Sources */,
+				5514502D24BE8BCC0002CE28 /* midi.cpp in Sources */,
+				0FFCA1503032657E0076F2F5 /* program_placeholder.cpp in Sources */,
+				0F669136303CA6EF0010580F /* AudioFileReaderThread.c in Sources */,
+				0F669137303CA6EF0010580F /* SDL_cdrom.c in Sources */,
+				0F669138303CA6EF0010580F /* AudioFilePlayer.c in Sources */,
+				0F66913D303CA6EF0010580F /* SDL_syscdrom.c in Sources */,
+				0F66913F303CA6EF0010580F /* CDPlayer.c in Sources */,
+				0F669141303CA6EF0010580F /* SDL_syscdrom.c in Sources */,
+				0F669142303CA6EF0010580F /* SDLOSXCAGuard.c in Sources */,
+				0F668602303C92810010580F /* Lfo.cpp in Sources */,
+				0FB95A0B3054589000B88A1D /* manymouse.c in Sources */,
+				0FB95A0C3054589000B88A1D /* linux_evdev.c in Sources */,
+				0FB95A0D3054589000B88A1D /* windows_wminput.c in Sources */,
+				0FB95A0E3054589000B88A1D /* x11_xinput2.c in Sources */,
+				0FB95A0F3054589000B88A1D /* macosx_hidmanager.c in Sources */,
+				0FB95A103054589000B88A1D /* macosx_hidutilities.c in Sources */,
+				55844D1026C70E7700AA5924 /* pacer.cpp in Sources */,
+				0F668634303C92950010580F /* int10_vptable.cpp in Sources */,
+				0F668636303C92950010580F /* int10_char.cpp in Sources */,
+				0F668637303C92950010580F /* int10_vesa.cpp in Sources */,
+				0F668638303C92950010580F /* int10_memory.cpp in Sources */,
+				0F668639303C92950010580F /* bios_disk.cpp in Sources */,
+				0F66863B303C92950010580F /* int10_misc.cpp in Sources */,
+				0F66863D303C92950010580F /* int10.cpp in Sources */,
+				0F66863F303C92950010580F /* int10_modes.cpp in Sources */,
+				0F668640303C92950010580F /* xms.cpp in Sources */,
+				0F668641303C92950010580F /* ems.cpp in Sources */,
+				0F668642303C92950010580F /* bios.cpp in Sources */,
+				0F668643303C92950010580F /* int10_put_pixel.cpp in Sources */,
+				0F668644303C92950010580F /* bios_keyboard.cpp in Sources */,
+				0F668645303C92950010580F /* int10_pal.cpp in Sources */,
+				0F668646303C92950010580F /* int10_video_state.cpp in Sources */,
+				55DB150427EDA2C70024AE9E /* program_boot.cpp in Sources */,
+				55F0B79C26ABFF680077E58C /* program_choice.cpp in Sources */,
+				0F669102303CA6B70010580F /* FilterModelConfig.cpp in Sources */,
+				55DB150227EDA2C70024AE9E /* program_keyb.cpp in Sources */,
+				55DB151027EDA2C70024AE9E /* program_mount.cpp in Sources */,
+				55DB150E27EDA2C70024AE9E /* program_mem.cpp in Sources */,
+				5514503924BE8DE60002CE28 /* envelope.cpp in Sources */,
+				5514501624BE81E00002CE28 /* mp3_seek_table.cpp in Sources */,
+				55F0B77C26ABFEE80077E58C /* SID.cpp in Sources */,
+				55540E262545604500B88BE3 /* fs_utils_posix.cpp in Sources */,
+				9FD6AA0E16314A5B002B774E /* directlpt_linux.cpp in Sources */,
+				55DB150A27EDA2C70024AE9E /* program_biostest.cpp in Sources */,
+				9FD6AA1016314A5B002B774E /* directlpt_win32.cpp in Sources */,
+				9FD6AA1216314A5B002B774E /* filelpt.cpp in Sources */,
+				9FD6AA1416314A5B002B774E /* parport.cpp in Sources */,
+				9FD6AA1816314A5B002B774E /* printer_charmaps.cpp in Sources */,
+				9FD6AA1A16314A5B002B774E /* printer_redir.cpp in Sources */,
+				0FB959953054581900B88A1D /* program_more_output.cpp in Sources */,
+				0FB959963054581900B88A1D /* program_more.cpp in Sources */,
+				0FB959973054581900B88A1D /* program_mousectl.cpp in Sources */,
+				0F66918C303CA7930010580F /* opus.cpp in Sources */,
+				0F6685F5303C92460010580F /* serialmouse.cpp in Sources */,
+				9F77217612B38C4400072AE8 /* callback.cpp in Sources */,
+				9F77217712B38C4400072AE8 /* core_dyn_x86.cpp in Sources */,
+				9F77217812B38C4400072AE8 /* core_dynrec.cpp in Sources */,
+				9F77217912B38C4400072AE8 /* core_full.cpp in Sources */,
+				5557480B208FA8040045E635 /* sn76496.cpp in Sources */,
+				9F77217A12B38C4400072AE8 /* core_normal.cpp in Sources */,
+				9F77217B12B38C4400072AE8 /* core_prefetch.cpp in Sources */,
+				9F77217C12B38C4400072AE8 /* core_simple.cpp in Sources */,
+				9F77217D12B38C4400072AE8 /* cpu.cpp in Sources */,
+				9F77217E12B38C4400072AE8 /* flags.cpp in Sources */,
+				9F77217F12B38C4400072AE8 /* modrm.cpp in Sources */,
+				55F0B79626ABFEE80077E58C /* Spline.cpp in Sources */,
+				9F77218012B38C4400072AE8 /* paging.cpp in Sources */,
+				9F77218112B38C4400072AE8 /* debug.cpp in Sources */,
+				9F77218212B38C4400072AE8 /* debug_disasm.cpp in Sources */,
+				9F77218312B38C4400072AE8 /* debug_gui.cpp in Sources */,
+				9F77218412B38C4400072AE8 /* debug_win32.cpp in Sources */,
+				55998D2F25F6EDC400581095 /* ne2000.cpp in Sources */,
+				9F77218512B38C4400072AE8 /* cdrom.cpp in Sources */,
+				9F77218712B38C4400072AE8 /* cdrom_image.cpp in Sources */,
+				9F77218B12B38C4400072AE8 /* dos.cpp in Sources */,
+				55F0B78626ABFEE80077E58C /* FilterModelConfig6581.cpp in Sources */,
+				9F77218C12B38C4400072AE8 /* dos_classes.cpp in Sources */,
+				55DB150627EDA2C70024AE9E /* program_loadrom.cpp in Sources */,
+				55DB150C27EDA2C70024AE9E /* program_loadfix.cpp in Sources */,
+				9F77218D12B38C4400072AE8 /* dos_devices.cpp in Sources */,
+				9F77218E12B38C4400072AE8 /* dos_execute.cpp in Sources */,
+				9F77218F12B38C4400072AE8 /* dos_files.cpp in Sources */,
+				9F77219012B38C4400072AE8 /* dos_ioctl.cpp in Sources */,
+				9F77219112B38C4400072AE8 /* dos_keyboard_layout.cpp in Sources */,
+				9F77219212B38C4400072AE8 /* dos_memory.cpp in Sources */,
+				9F77219312B38C4400072AE8 /* dos_misc.cpp in Sources */,
+				9F77219412B38C4400072AE8 /* dos_mscdex.cpp in Sources */,
+				9F77219512B38C4400072AE8 /* dos_programs.cpp in Sources */,
+				9F77219612B38C4400072AE8 /* dos_tables.cpp in Sources */,
+				5548850E226A501000A879B3 /* drive_overlay.cpp in Sources */,
+				9F77219712B38C4400072AE8 /* drive_cache.cpp in Sources */,
+				9F77219812B38C4400072AE8 /* drive_fat.cpp in Sources */,
+				9F77219912B38C4400072AE8 /* drive_iso.cpp in Sources */,
+				9F77219A12B38C4400072AE8 /* drive_local.cpp in Sources */,
+				9F77219C12B38C4400072AE8 /* drive_virtual.cpp in Sources */,
+				55F0B79026ABFEE80077E58C /* FilterModelConfig8580.cpp in Sources */,
+				5514500C24BE81E00002CE28 /* vorbis.c in Sources */,
+				55F0B79826ABFEE80077E58C /* version.cc in Sources */,
+				9F77219D12B38C4400072AE8 /* drives.cpp in Sources */,
+				9F77219E12B38C4400072AE8 /* dosbox.cpp in Sources */,
+				0FFCA163303265EF0076F2F5 /* fs_std_impl.cpp in Sources */,
+				9F77219F12B38C4400072AE8 /* fpu.cpp in Sources */,
+				9F7721A112B38C4400072AE8 /* render.cpp in Sources */,
+				9F7721A212B38C4400072AE8 /* render_scalers.cpp in Sources */,
+				9F7721A712B38C4400072AE8 /* cmos.cpp in Sources */,
+				9F7721A912B38C4400072AE8 /* disney.cpp in Sources */,
+				55F0B78826ABFEE80077E58C /* Integrator6581.cpp in Sources */,
+				9F7721AA12B38C4400072AE8 /* dma.cpp in Sources */,
+				9F7721AB12B38C4400072AE8 /* gameblaster.cpp in Sources */,
+				9F7721AC12B38C4400072AE8 /* gus.cpp in Sources */,
+				9F7721AD12B38C4400072AE8 /* hardware.cpp in Sources */,
+				9F7721AE12B38C4400072AE8 /* iohandler.cpp in Sources */,
+				9F7721AF12B38C4400072AE8 /* ipx.cpp in Sources */,
+				0F66915C303CA7520010580F /* YM7128B_emu.c in Sources */,
+				9F7721B012B38C4400072AE8 /* ipxserver.cpp in Sources */,
+				9F7721B112B38C4400072AE8 /* joystick.cpp in Sources */,
+				9F7721B212B38C4400072AE8 /* keyboard.cpp in Sources */,
+				9F7721B312B38C4400072AE8 /* memory.cpp in Sources */,
+				55F0B78E26ABFEE80077E58C /* ExternalFilter.cpp in Sources */,
+				9F7721B412B38C4400072AE8 /* mixer.cpp in Sources */,
+				0F6690A0303CA6880010580F /* program_attrib.cpp in Sources */,
+				9F7721B512B38C4400072AE8 /* mpu401.cpp in Sources */,
+				9F7721B712B38C4400072AE8 /* pcspeaker.cpp in Sources */,
+				0F6685DD303C91690010580F /* fs_utils.cpp in Sources */,
+				0F6685DE303C91690010580F /* ansi_code_markup.cpp in Sources */,
+				0F6685DF303C91690010580F /* help_util.cpp in Sources */,
+				0F6685E0303C91690010580F /* string_utils.cpp in Sources */,
+				9F7721B812B38C4400072AE8 /* pic.cpp in Sources */,
+				9F7721B912B38C4400072AE8 /* sblaster.cpp in Sources */,
+				9F7721BA12B38C4400072AE8 /* directserial.cpp in Sources */,
+				9F7721BB12B38C4400072AE8 /* libserial.cpp in Sources */,
+				55574809208FA8040045E635 /* saa1099.cpp in Sources */,
+				9F7721BC12B38C4400072AE8 /* misc_util.cpp in Sources */,
+				9F7721BD12B38C4400072AE8 /* nullmodem.cpp in Sources */,
+				9F7721BE12B38C4400072AE8 /* serialdummy.cpp in Sources */,
+				9F7721BF12B38C4400072AE8 /* serialport.cpp in Sources */,
+				9F7721C012B38C4400072AE8 /* softmodem.cpp in Sources */,
+				9F7721C112B38C4400072AE8 /* tandy_sound.cpp in Sources */,
+				9F7721C212B38C4400072AE8 /* timer.cpp in Sources */,
+				9F7721C312B38C4400072AE8 /* vga.cpp in Sources */,
+				9F7721C412B38C4400072AE8 /* vga_attr.cpp in Sources */,
+				9F7721C512B38C4400072AE8 /* vga_crtc.cpp in Sources */,
+				9F7721C612B38C4400072AE8 /* vga_dac.cpp in Sources */,
+				9F7721C712B38C4400072AE8 /* vga_draw.cpp in Sources */,
+				9F7721C812B38C4400072AE8 /* vga_gfx.cpp in Sources */,
+				0FFCA147303264D20076F2F5 /* ide.cpp in Sources */,
+				9F7721C912B38C4400072AE8 /* vga_memory.cpp in Sources */,
+				9F7721CA12B38C4400072AE8 /* vga_misc.cpp in Sources */,
+				0F669095303CA6460010580F /* pcspeaker_impulse.cpp in Sources */,
+				55F0B77426ABFEE80077E58C /* EnvelopeGenerator.cpp in Sources */,
+				9F7721CB12B38C4400072AE8 /* vga_other.cpp in Sources */,
+				9F7721CC12B38C4400072AE8 /* vga_paradise.cpp in Sources */,
+				9F7721CD12B38C4400072AE8 /* vga_s3.cpp in Sources */,
+				9F7721CE12B38C4400072AE8 /* vga_seq.cpp in Sources */,
+				55F0B77626ABFEE80077E58C /* Dac.cpp in Sources */,
+				9F7721CF12B38C4400072AE8 /* vga_tseng.cpp in Sources */,
+				9F7721D012B38C4400072AE8 /* vga_xga.cpp in Sources */,
+				9F7721D112B38C4400072AE8 /* bios.cpp in Sources */,
+				9F7721D212B38C4400072AE8 /* bios_disk.cpp in Sources */,
+				9F7721D312B38C4400072AE8 /* bios_keyboard.cpp in Sources */,
+				9F7721D412B38C4400072AE8 /* ems.cpp in Sources */,
+				5514501C24BE81E00002CE28 /* wav.c in Sources */,
+				9F7721D512B38C4400072AE8 /* int10.cpp in Sources */,
+				9F7721D612B38C4400072AE8 /* int10_char.cpp in Sources */,
+				9F7721D712B38C4400072AE8 /* int10_memory.cpp in Sources */,
+				9F7721D812B38C4400072AE8 /* int10_misc.cpp in Sources */,
+				9F7721D912B38C4400072AE8 /* int10_modes.cpp in Sources */,
+				9F7721DA12B38C4400072AE8 /* int10_pal.cpp in Sources */,
+				9F7721DB12B38C4400072AE8 /* int10_put_pixel.cpp in Sources */,
+				9F7721DC12B38C4400072AE8 /* int10_vesa.cpp in Sources */,
+				9F7721DD12B38C4400072AE8 /* int10_video_state.cpp in Sources */,
+				9F7721DE12B38C4400072AE8 /* int10_vptable.cpp in Sources */,
+				9F7721E012B38C4400072AE8 /* xms.cpp in Sources */,
+				9F7721E312B38C4400072AE8 /* cross.cpp in Sources */,
+				9F7721E412B38C4400072AE8 /* messages.cpp in Sources */,
+				9F7721E512B38C4400072AE8 /* programs.cpp in Sources */,
+				9F7721E612B38C4400072AE8 /* setup.cpp in Sources */,
+				5514501A24BE81E00002CE28 /* SDL_sound.c in Sources */,
+				9F7721E712B38C4400072AE8 /* support.cpp in Sources */,
+				9F7721E812B38C4400072AE8 /* shell.cpp in Sources */,
+				55DB150027EDA2C70024AE9E /* program_rescan.cpp in Sources */,
+				9F7721E912B38C4400072AE8 /* shell_batch.cpp in Sources */,
+				55F0B77E26ABFEE80077E58C /* Filter.cpp in Sources */,
+				9F7721EA12B38C4400072AE8 /* shell_cmds.cpp in Sources */,
+				55F0B73526ABFDDA0077E58C /* innovation.cpp in Sources */,
+				9F7721EB12B38C4400072AE8 /* shell_misc.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -5591,6 +5641,11 @@
 			isa = PBXTargetDependency;
 			target = 9F2D2F9715B8233800FAE848 /* Boxer Standalone */;
 			targetProxy = 9FB453B516442DA200BCF63B /* PBXContainerItemProxy */;
+		};
+		7A1B2C3D4E5F60718293A4B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7A1B2C3D4E5F60718293A4B7 /* DOSBoxStaging */;
+			targetProxy = 7A1B2C3D4E5F60718293A4B5 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -6492,6 +6547,87 @@
 			};
 			name = Release;
 		};
+		7A1B2C3D4E5F60718293A4BC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/Frameworks",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"BOXER_DEBUG",
+					"C_SRECORD",
+					"HAVE_CXX11",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/build/$(CONFIGURATION)/include",
+					"$(SRCROOT)/Frameworks/SDL2.framework/Headers",
+					"$(SRCROOT)/DOSBox-Staging/src/libs/loguru",
+					"$(SRCROOT)/DOSBox-Staging/src/libs/whereami",
+					"$(SRCROOT)/Vendor/OpusUniversal/include",
+					"$(SRCROOT)/Vendor/OpusUniversal/include/opus",
+					"$(SRCROOT)/DOSBox-Staging/subprojects/iir1-1.9.3",
+					"$(SRCROOT)/DOSBox-Staging/subprojects/speexdsp-1.2.1/include",
+					"$(SRCROOT)/DOSBox-Staging/subprojects/speexdsp-1.2.1/libspeexdsp",
+				);
+				MACH_O_TYPE = staticlib;
+				OTHER_CPLUSPLUSFLAGS = "-mstackrealign";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USER_HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/DOSBox-Staging/include",
+					"$(SRCROOT)/DOSBox-Staging",
+				);
+			};
+			name = Debug;
+		};
+		7A1B2C3D4E5F60718293A4BD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/Frameworks",
+				);
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"C_SRECORD",
+					"HAVE_CXX11",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/build/$(CONFIGURATION)/include",
+					"$(SRCROOT)/Frameworks/SDL2.framework/Headers",
+					"$(SRCROOT)/DOSBox-Staging/src/libs/loguru",
+					"$(SRCROOT)/DOSBox-Staging/src/libs/whereami",
+					"$(SRCROOT)/Vendor/OpusUniversal/include",
+					"$(SRCROOT)/Vendor/OpusUniversal/include/opus",
+					"$(SRCROOT)/DOSBox-Staging/subprojects/iir1-1.9.3",
+					"$(SRCROOT)/DOSBox-Staging/subprojects/speexdsp-1.2.1/include",
+					"$(SRCROOT)/DOSBox-Staging/subprojects/speexdsp-1.2.1/libspeexdsp",
+				);
+				MACH_O_TYPE = staticlib;
+				OTHER_CPLUSPLUSFLAGS = "-mstackrealign";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				USER_HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/DOSBox-Staging/include",
+					"$(SRCROOT)/DOSBox-Staging",
+				);
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -6536,6 +6672,15 @@
 			buildConfigurations = (
 				9FE76B331139A11A005EF7B1 /* Debug */,
 				C01FCF5008A954540054247B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7A1B2C3D4E5F60718293A4BE /* Build configuration list for PBXNativeTarget "DOSBoxStaging" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7A1B2C3D4E5F60718293A4BC /* Debug */,
+				7A1B2C3D4E5F60718293A4BD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

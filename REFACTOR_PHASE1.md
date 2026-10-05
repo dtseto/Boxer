@@ -25,6 +25,7 @@ The target currently compiles the DOSBox-Staging sources through an explicit Xco
 - Built bundle contains `KEYBOARD.SYS`, `KEYBRD2.SYS`, `KEYBRD3.SYS`, and `KEYBRD4.SYS` under `Contents/Resources/freedos-keyboard`.
 - Xcode Run: **launched successfully**.
 - Filtered launch console: no DOSBox configuration warnings, keyboard-layout failure, or KVO exception observed. The only matching system notices were the known AppKit `autosavesInPlace` notice and the missing `/private/var/db/DetachedSignatures` lookup.
+- Manual runtime test: launched a game, typed `exit`, and confirmed the session closed without the previous KVO exception.
 - Device Interaction was unavailable because the configured workflow supports iOS, watchOS, and tvOS simulators, not this macOS app.
 
 ## Build/update model

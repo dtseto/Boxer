@@ -6560,6 +6560,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"BOXER_DEBUG",
+					"BXDOSBOX_PRODUCTION",
 					"C_SRECORD",
 					"HAVE_CXX11",
 					"$(inherited)",
@@ -6600,6 +6601,7 @@
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_PREPROCESSOR_DEFINITIONS = (
+					"BXDOSBOX_PRODUCTION",
 					"C_SRECORD",
 					"HAVE_CXX11",
 					"$(inherited)",

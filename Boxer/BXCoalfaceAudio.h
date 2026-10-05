@@ -12,10 +12,12 @@
 #include <cstdint>
 #include <string>
 
-typedef enum {
-    BXLeftChannel,
-    BXRightChannel
-} BXAudioChannel;
+typedef BXDOSBoxAudioChannel BXAudioChannel;
+
+enum {
+    BXLeftChannel = BXDOSBoxAudioChannelLeft,
+    BXRightChannel = BXDOSBoxAudioChannelRight
+};
 
 /// Tell BXEmulator the preferred MIDI handler according to the DOSBox configuration.
 void boxer_suggestMIDIHandler(std::string const &handlerName, const char *configParams);

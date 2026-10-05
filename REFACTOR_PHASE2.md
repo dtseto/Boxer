@@ -27,11 +27,11 @@ the categories are migrated; it is not a suitable long-term public API.
 Audio and MIDI are the first isolated surface. `BXDOSBoxBridgeRegistration.h`
 contains only fixed-width C-compatible callback types and registration/accessor
 functions. DOSBox's mixer and MIDI implementation now consume that callback
-table is now available as the staged contract, while the existing DOSBox call
-sites still import `BXCoalfaceAudio.h` and use the legacy symbols. The existing
-`boxer_*` functions remain as host-side adapters, preserving both application
-behavior and the standalone runtime harness while the next migration adds
-harness-compatible adapters before changing those call sites.
+table as the production DOSBox audio/MIDI boundary. DOSBox uses the table
+for mixer volume, MIDI messages, SysEx, and MIDI configuration. A weak-symbol
+fallback preserves the legacy harness link contract when a lightweight harness
+provides only the callback family it exercises. The remaining bridge categories
+still use `BXCoalface.h` and will migrate independently.
 
 ## Validation contract
 

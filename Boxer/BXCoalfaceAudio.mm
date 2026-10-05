@@ -6,8 +6,10 @@
  */
 
 #import <Foundation/Foundation.h>
+#define BXDOSBOX_BRIDGE_IMPLEMENTATION 1
 #import "BXEmulatorPrivate.h"
 #import "BXCoalfaceAudio.h"
+#undef BXDOSBOX_BRIDGE_IMPLEMENTATION
 #import "RegexKitLite.h"
 #import <CoreFoundation/CFByteOrder.h>
 

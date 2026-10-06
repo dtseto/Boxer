@@ -1255,6 +1255,7 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
             animation.duration = 0.25f;
             animation.animationBlockingMode = NSAnimationNonblocking;
             animation.animationCurve = NSAnimationEaseIn;
+            animation.delegate = self;
             
             if (involvesRenderingView && [self.renderingView respondsToSelector: @selector(viewAnimationWillStart:)])
                 [self.renderingView viewAnimationWillStart: animation];
@@ -1267,6 +1268,8 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
         
         [[NSNotificationCenter defaultCenter] postNotificationName: BXDidFinishInterruptionNotification object: self];
     }
+
+    [self _resizePanelsToFitWrapper];
     
     _currentPanel = newPanel;
     viewForNewPanel.hidden = NO;
@@ -1802,6 +1805,29 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
 	viewSize = constrainToFitSize(viewSize, maxViewSize);
 	
 	return viewSize;
+}
+
+//Puts each panel back to the size of the view it sits in.
+//
+//NSViewAnimation animates frames as well as visual effects. During the
+//crossfade, a window resize can enlarge the panels, after which the animation
+//restores their old frames. Autoresizing does not necessarily correct them
+//again, leaving the rendering view in the bottom-left corner of the window.
+- (void) _resizePanelsToFitWrapper
+{
+    NSArray *panels = [NSArray arrayWithObjects: self.loadingPanel, self.launchPanel, self.inputView, nil];
+
+    for (NSView *panel in panels)
+    {
+        NSView *wrapper = panel.superview;
+        if (wrapper && !NSEqualRects(panel.frame, wrapper.bounds))
+            panel.frame = wrapper.bounds;
+    }
+}
+
+- (void) animationDidEnd: (NSAnimation *)animation
+{
+    [self _resizePanelsToFitWrapper];
 }
 
 //Resizes the window if necessary to accomodate the specified view sliding in

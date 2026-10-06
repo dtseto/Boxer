@@ -232,6 +232,54 @@ Bitu boxer_getRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue)
 	return [[emulator videoHandler] paletteEntryWithRed: red green: green blue: blue];
 }
 
+static void boxer_renderingBridgeApplyStrategy(void) { boxer_applyRenderingStrategy(); }
+static uintptr_t boxer_renderingBridgePrepareForFrameSize(uintptr_t width, uintptr_t height,
+                                                           uintptr_t flags, double scaleX,
+                                                           double scaleY, uintptr_t callback,
+                                                           double pixelAspect)
+{
+    return boxer_prepareForFrameSize((Bitu)width, (Bitu)height, (Bitu)flags, scaleX, scaleY,
+                                     (GFX_CallBack_t)callback, pixelAspect);
+}
+static uintptr_t boxer_renderingBridgeIdealOutputMode(uintptr_t flags) { return boxer_idealOutputMode((Bitu)flags); }
+static bool boxer_renderingBridgeStartFrame(uint8_t **pixels, int *pitch) { return boxer_startFrame(*pixels, *pitch); }
+static void boxer_renderingBridgeFinishFrame(const uint16_t *dirtyBlocks) { boxer_finishFrame(dirtyBlocks); }
+static uintptr_t boxer_renderingBridgeGetRGBPaletteEntry(uint8_t red, uint8_t green, uint8_t blue)
+{
+    return boxer_getRGBPaletteEntry(red, green, blue);
+}
+static void boxer_renderingBridgeSetShader(const char *source) { boxer_setShader(source); }
+
+static BXDOSBoxRenderingBridgeCallbacks BXDOSBoxRenderingCallbacks;
+static bool BXDOSBoxRenderingCallbacksRegistered = false;
+
+void boxer_registerDOSBoxRenderingBridge(const BXDOSBoxRenderingBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxRenderingCallbacks = *callbacks;
+        BXDOSBoxRenderingCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxRenderingBridgeCallbacks *boxer_registeredDOSBoxRenderingBridge(void)
+{
+    if (!BXDOSBoxRenderingCallbacksRegistered)
+    {
+        const BXDOSBoxRenderingBridgeCallbacks callbacks = {
+            boxer_renderingBridgeApplyStrategy,
+            boxer_renderingBridgePrepareForFrameSize,
+            boxer_renderingBridgeIdealOutputMode,
+            boxer_renderingBridgeStartFrame,
+            boxer_renderingBridgeFinishFrame,
+            boxer_renderingBridgeGetRGBPaletteEntry,
+            boxer_renderingBridgeSetShader
+        };
+        boxer_registerDOSBoxRenderingBridge(&callbacks);
+    }
+    return BXDOSBoxRenderingCallbacksRegistered ? &BXDOSBoxRenderingCallbacks : NULL;
+}
+
 
 #pragma mark - Shell-related functions
 

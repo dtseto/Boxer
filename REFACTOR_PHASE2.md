@@ -63,6 +63,11 @@ bookkeeping callbacks opaque publicly while preserving typed legacy fallback
 calls in DOSBox. Frame-buffer and shader callbacks remain for the next
 rendering step.
 
+The rendering callback surface is now registered as well. Frame-size setup,
+output-mode selection, frame acquisition and completion, palette conversion,
+shader selection, and rendering-strategy application use the opaque public
+table with typed DOSBox compatibility wrappers at the call site.
+
 ## Validation contract
 
 After each boundary change:

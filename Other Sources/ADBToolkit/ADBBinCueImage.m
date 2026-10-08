@@ -115,7 +115,6 @@ NSString * const ADBCueFileDescriptorSyntax = @"(?im)^[\\t ]*FILE[\\t ]+(?:\"((?
 
 + (NSURL *) _caseCorrectedURLForURL: (NSURL *)URL
 {
-    if ([URL checkResourceIsReachableAndReturnError: NULL]) return URL;
     NSArray *components = URL.path.pathComponents;
     if (!components.count) return URL;
     NSURL *candidate = [NSURL fileURLWithPath: components.firstObject isDirectory: YES];

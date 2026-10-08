@@ -15,7 +15,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         CoverageRow(subsystem: "MIDI routing and sysex policy", markers: ["midi-routing"]),
         CoverageRow(subsystem: "Audio mixer volume bridge", markers: ["mixer-volume-bridge"]),
         CoverageRow(subsystem: "Video rendering, display options, capture files", markers: ["render-reset-strategy", "display-mode-controls", "display-refresh-rate", "capture-file-routing", "core-mode-title-refresh"]),
-        CoverageRow(subsystem: "Keyboard input, paste, lock keys, and layout", markers: ["keyboard-buffer-capacity", "console-read-cancel", "console-paste-availability", "bios-key-paste-pop", "bios-key-paste-peek", "caps-lock-state", "num-lock-state", "scroll-lock-state", "int16-cancel", "keyboard-layout-switching-api", "keyboard-cpi-buffer-storage", "keyboard-layout-state-methods", "keyboard-layout-bridge", "macos-preferred-keyboard-layout", "us-layout-remap-fix"]),
+        CoverageRow(subsystem: "Keyboard input, paste, lock keys, and layout", markers: ["keyboard-buffer-capacity", "console-read-cancel", "console-paste-availability", "bios-key-paste-pop", "bios-key-paste-peek", "caps-lock-state", "num-lock-state", "scroll-lock-state", "int16-cancel", "keyboard-layout-switching-api", "keyboard-cpi-buffer-storage", "keyboard-layout-state-methods", "keyboard-layout-bridge", "macos-preferred-keyboard-layout", "us-layout-remap-fix", "input-command-bounds"]),
         CoverageRow(subsystem: "Joystick and controller ownership", markers: ["gameport-timing-export", "gameport-timing-state", "mapper-free-autofire", "gameport-poll-activation", "gameport-timing-config", "preserve-controller-ownership", "dos-visible-joystick-state", "joystick-handler-install-end"]),
         CoverageRow(subsystem: "Gamebox drive paths, file policy, and mounted media", markers: ["drive-system-path", "initialize-drive-system-path", "retrieve-drive-system-path", "fat-drive-system-path", "iso-drive-system-path", "local-drive-system-path", "drive-cache-filter-bridge", "hide-host-metadata", "file-create-write-policy", "file-open-write-policy", "file-open-write-policy-end", "file-delete-write-policy", "local-dir-create-policy", "local-file-created", "local-file-removed", "local-open-file-removed", "imgmount-drive-mounted", "mount-drive-mounted", "drive-unmounted", "invalid-fat-image-fails-construction", "invalid-fat-bootsector-fails-construction", "suppress-cdrom-image-error-text", "file-unavailable-notification", "local-file-unavailable-notification", "local-file-unavailable", "unavailable-file-read", "unavailable-file-write", "unavailable-file-seek", "unavailable-file-timestamp"]),
         CoverageRow(subsystem: "Shell lifecycle, command injection, and launch tracking", markers: ["current-shell-export", "active-shell-global", "shell-run-lifecycle", "shell-misc-bridge", "shell-input-injection", "shell-command-filter", "batch-lifecycle-bridge", "batch-file-ended", "program-launch-lifecycle"]),
@@ -37,7 +37,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try requireAnnotated079Migration()
         let manifestMarkers = try markerSetFromManifest()
         XCTAssertEqual(Self.documentedRows.count, 14)
-        XCTAssertEqual(documentedMarkerSet().count, 111)
+        XCTAssertEqual(documentedMarkerSet().count, 112)
         XCTAssertEqual(manifestMarkers, documentedMarkerSet(), "The executable migration coverage table must track the manifest")
         try assertMarkerInventory(manifestMarkers: manifestMarkers)
     }

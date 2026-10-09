@@ -86,6 +86,12 @@ final class BoxerIntegrationContractTests: XCTestCase {
         // Protects BOXER markers: xcode-lazyflags-include, keyboard-enum-c-compat
         try expect("src/hardware/iohandler.cpp", contains: "#include \"../cpu/lazyflags.h\"")
         try expect("include/keyboard.h", contains: "typedef enum KBD_KEYS KBD_KEYS;")
+        let registrationHeader = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxBridgeRegistration.h"))
+        XCTAssertFalse(registrationHeader.contains("std::string"))
+        XCTAssertFalse(registrationHeader.contains("BXDOSBOX_WEAK"))
+        let compatibilityHeader = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxLegacyCompatibility.h"))
+        XCTAssertTrue(compatibilityHeader.contains("BXDOSBOX_WEAK"))
+        XCTAssertTrue(compatibilityHeader.contains("boxer_registeredDOSBoxPrinterBridge"))
     }
 
     func testConfigurationContracts() throws {

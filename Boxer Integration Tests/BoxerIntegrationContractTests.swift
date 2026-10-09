@@ -21,7 +21,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         CoverageRow(subsystem: "Shell lifecycle, command injection, and launch tracking", markers: ["current-shell-export", "active-shell-global", "shell-run-lifecycle", "shell-misc-bridge", "shell-input-injection", "shell-command-filter", "batch-lifecycle-bridge", "batch-file-ended", "program-launch-lifecycle"]),
         CoverageRow(subsystem: "Shell command UX compatibility", markers: ["hide-intro-command", "shell-command-ux", "delete-help-if-no-args", "delete-unix-path-tolerance", "rename-help-if-no-args", "mkdir-help-if-no-args", "mkdir-unix-path-tolerance", "rmdir-help-if-no-args", "rmdir-unix-path-tolerance", "dir-unix-path-trailing-slash", "dir-unix-path-tolerance", "copy-help-if-no-args", "copy-unix-path-tolerance", "if-help-if-no-args", "type-help-if-no-args", "call-help-if-no-args", "subst-help-if-no-args", "loadhigh-help-if-no-args", "loadhigh-unix-path-tolerance"]),
         CoverageRow(subsystem: "Printer and parallel-port routing", markers: ["printer-redirection", "parport-skip-occupied-lpt", "bios-parport-include", "int17-printer-emulation", "bios-parport-detection-disabled", "bios-equipment-parport-count", "bios-refresh-parport-count", "int21-printer-output"]),
-        CoverageRow(subsystem: "Localization", markers: ["localization-routing", "upstream-localization-disabled"]),
+        CoverageRow(subsystem: "Localization and diagnostics", markers: ["localization-routing", "upstream-localization-disabled", "diagnostics-bridge"]),
     ]
 
     private var projectRoot: URL {
@@ -37,7 +37,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try requireAnnotated079Migration()
         let manifestMarkers = try markerSetFromManifest()
         XCTAssertEqual(Self.documentedRows.count, 14)
-        XCTAssertEqual(documentedMarkerSet().count, 112)
+        XCTAssertEqual(documentedMarkerSet().count, 113)
         XCTAssertEqual(manifestMarkers, documentedMarkerSet(), "The executable migration coverage table must track the manifest")
         try assertMarkerInventory(manifestMarkers: manifestMarkers)
     }
@@ -505,12 +505,18 @@ final class BoxerIntegrationContractTests: XCTestCase {
     }
 
     func testLocalizationContracts() throws {
-        // Protects BOXER markers: localization-routing, upstream-localization-disabled
+        // Protects BOXER markers: localization-routing, upstream-localization-disabled, diagnostics-bridge
         try requireAnnotated079Migration()
         try expect("src/misc/messages.cpp", contains: "#include \"dosbox.h\"")
+        try expectBlock("src/misc/messages.cpp", marker: "diagnostics-bridge", contains: "BXDOSBoxDiagnosticsCompatibility.h")
         try expectBlock("src/misc/messages.cpp", marker: "localization-routing", contains: "return boxer_localizedStringForKey(requested_name);")
         try expect("src/misc/messages.cpp", contains: "upstream-localization-disabled")
         try expect("src/misc/messages.cpp", contains: "const char *MSG_Get(char const *requested_name)")
+        let registrationHeader = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxBridgeRegistration.h"))
+        XCTAssertTrue(registrationHeader.contains("BXDOSBoxDiagnosticsBridgeCallbacks"))
+        XCTAssertTrue(registrationHeader.contains("boxer_registerDOSBoxDiagnosticsBridge"))
+        let coalface = try source(at: projectRoot.appendingPathComponent("Boxer/BXCoalface.mm"))
+        XCTAssertTrue(coalface.contains("boxer_diagnosticsBridgeFatalError"))
     }
 
     func testRuntimeMixerVolumeBridgeBehavior() throws {

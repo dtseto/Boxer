@@ -131,6 +131,8 @@ this inventory is reviewed.
 
 ## Next step
 
-Step 2 should split the compatibility declarations out of the public
-registration header and define the registration lifecycle policy before
-introducing the diagnostics/error callback table.
+Step 2 split the compatibility declarations out of the public registration
+header and documented the registration lifecycle policy. The next boundary is
+the typed diagnostics/error callback table, beginning with localization and
+preserving the existing variadic logging and fatal-error behavior through the
+adapter.

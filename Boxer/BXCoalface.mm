@@ -890,6 +890,50 @@ void boxer_die(const char *functionName, const char *fileName, int lineNumber, c
     throw boxer_emulatorException(errorReason, fileName, functionName, lineNumber);
 }
 
+static const char *boxer_diagnosticsBridgeLocalizedStringForKey(const char *key)
+{
+    return boxer_localizedStringForKey(key);
+}
+
+static void boxer_diagnosticsBridgeLogMessage(const char *message)
+{
+    boxer_log("%s", message);
+}
+
+static void boxer_diagnosticsBridgeFatalError(const char *functionName,
+                                               const char *fileName,
+                                               int lineNumber,
+                                               const char *message)
+{
+    boxer_die(functionName, fileName, lineNumber, "%s", message);
+}
+
+static BXDOSBoxDiagnosticsBridgeCallbacks BXDOSBoxDiagnosticsCallbacks;
+static bool BXDOSBoxDiagnosticsCallbacksRegistered = false;
+
+void boxer_registerDOSBoxDiagnosticsBridge(const BXDOSBoxDiagnosticsBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxDiagnosticsCallbacks = *callbacks;
+        BXDOSBoxDiagnosticsCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxDiagnosticsBridgeCallbacks *boxer_registeredDOSBoxDiagnosticsBridge(void)
+{
+    if (!BXDOSBoxDiagnosticsCallbacksRegistered)
+    {
+        const BXDOSBoxDiagnosticsBridgeCallbacks callbacks = {
+            boxer_diagnosticsBridgeLocalizedStringForKey,
+            boxer_diagnosticsBridgeLogMessage,
+            boxer_diagnosticsBridgeFatalError
+        };
+        boxer_registerDOSBoxDiagnosticsBridge(&callbacks);
+    }
+    return BXDOSBoxDiagnosticsCallbacksRegistered ? &BXDOSBoxDiagnosticsCallbacks : NULL;
+}
+
 void restart_program(std::vector<std::string> & parameters) {
     // TODO: re-write?
     E_Exit("Restarting not implemented!");

@@ -174,6 +174,12 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/hardware/vga_other.cpp", marker: "display-mode-controls", contains: "boxer_setCGACompositeHueOffset")
         try expectBlock("src/hardware/vga_other.cpp", marker: "display-mode-controls", contains: "boxer_setCGAComponentMode")
         try expectBlock("src/hardware/vga_other.cpp", marker: "display-refresh-rate", contains: "int boxer_GetDisplayRefreshRate(void)")
+        try expect("include/BXDOSBoxBridgeRegistration.h", contains: "setHerculesTintMode")
+        try expect("include/BXDOSBoxBridgeRegistration.h", contains: "setCGACompositeHueOffset")
+        try expect("include/BXDOSBoxBridgeRegistration.h", contains: "getDisplayRefreshRate")
+        try expect("../Boxer/BXVideoHandler.mm", contains: "registeredDOSBoxRenderingBridge()->setHerculesTintMode")
+        try expect("../Boxer/BXVideoHandler.mm", contains: "registeredDOSBoxRenderingBridge()->setCGAComponentMode")
+        try expect("../Boxer/BXVideoHandler.mm", contains: "registeredDOSBoxRenderingBridge()->setCGACompositeHueOffset")
         try expectBlock("src/hardware/hardware.cpp", marker: "capture-file-routing", contains: "#if 0")
         try expect("src/dos/dos_execute.cpp", contains: "GFX_SetTitle(-1, false);")
     }

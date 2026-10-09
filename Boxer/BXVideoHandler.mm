@@ -7,6 +7,9 @@
 
 
 #import "BXVideoHandler.h"
+#define BXDOSBOX_BRIDGE_IMPLEMENTATION 1
+#import "../DOSBox-Staging/include/BXDOSBoxBridgeRegistration.h"
+#undef BXDOSBOX_BRIDGE_IMPLEMENTATION
 #import "BXEmulatorPrivate.h"
 #import "BXVideoFrame.h"
 #import "ADBGeometry.h"
@@ -165,7 +168,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_setHerculesTintMode((uint8_t)self.herculesTint);
+        boxer_registeredDOSBoxRenderingBridge()->setHerculesTintMode((uint8_t)self.herculesTint);
     }
 }
 
@@ -181,7 +184,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_setCGAComponentMode((uint8_t)self.CGAComposite);
+        boxer_registeredDOSBoxRenderingBridge()->setCGAComponentMode((uint8_t)self.CGAComposite);
     }
 }
 
@@ -195,7 +198,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_setCGACompositeHueOffset(self.CGAHueAdjustment);
+        boxer_registeredDOSBoxRenderingBridge()->setCGACompositeHueOffset(self.CGAHueAdjustment);
     }
 }
 

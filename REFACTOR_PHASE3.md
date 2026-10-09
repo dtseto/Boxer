@@ -133,7 +133,10 @@ this inventory is reviewed.
 
 Step 2 split the compatibility declarations out of the public registration
 header and documented the registration lifecycle policy. The typed diagnostics
-bridge and the event/mouse/title bridge are now implemented with DOSBox-only
-compatibility adapters and host-side registrations. The next boundary is the
-remaining rendering preference controls; frame presentation and shader
-callbacks are already covered by the rendering bridge.
+bridge, event/mouse/title bridge, and rendering preference controls are now
+implemented with DOSBox-only compatibility adapters and host-side
+registrations. Frame presentation, shader, display mode, composite, tint, and
+refresh-rate paths are covered by typed rendering callbacks. The next step is
+the Phase 3 closure audit: inventory the remaining legacy declarations, verify
+no public registration header exposes DOSBox implementation types, and repeat
+launch/exit validation before declaring the phase complete.

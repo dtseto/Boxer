@@ -297,6 +297,13 @@ static uintptr_t boxer_renderingBridgeGetRGBPaletteEntry(uint8_t red, uint8_t gr
     return boxer_getRGBPaletteEntry(red, green, blue);
 }
 static void boxer_renderingBridgeSetShader(const char *source) { boxer_setShader(source); }
+static uint8_t boxer_renderingBridgeHerculesTintMode(void) { return boxer_herculesTintMode(); }
+static void boxer_renderingBridgeSetHerculesTintMode(uint8_t mode) { boxer_setHerculesTintMode(mode); }
+static double boxer_renderingBridgeCGACompositeHueOffset(void) { return boxer_CGACompositeHueOffset(); }
+static void boxer_renderingBridgeSetCGACompositeHueOffset(double offset) { boxer_setCGACompositeHueOffset(offset); }
+static uint8_t boxer_renderingBridgeCGAComponentMode(void) { return boxer_CGAComponentMode(); }
+static void boxer_renderingBridgeSetCGAComponentMode(uint8_t mode) { boxer_setCGAComponentMode(mode); }
+static int boxer_renderingBridgeGetDisplayRefreshRate(void) { return boxer_GetDisplayRefreshRate(); }
 
 static BXDOSBoxRenderingBridgeCallbacks BXDOSBoxRenderingCallbacks;
 static bool BXDOSBoxRenderingCallbacksRegistered = false;
@@ -321,7 +328,14 @@ const BXDOSBoxRenderingBridgeCallbacks *boxer_registeredDOSBoxRenderingBridge(vo
             boxer_renderingBridgeStartFrame,
             boxer_renderingBridgeFinishFrame,
             boxer_renderingBridgeGetRGBPaletteEntry,
-            boxer_renderingBridgeSetShader
+            boxer_renderingBridgeSetShader,
+            boxer_renderingBridgeHerculesTintMode,
+            boxer_renderingBridgeSetHerculesTintMode,
+            boxer_renderingBridgeCGACompositeHueOffset,
+            boxer_renderingBridgeSetCGACompositeHueOffset,
+            boxer_renderingBridgeCGAComponentMode,
+            boxer_renderingBridgeSetCGAComponentMode,
+            boxer_renderingBridgeGetDisplayRefreshRate
         };
         boxer_registerDOSBoxRenderingBridge(&callbacks);
     }

@@ -140,3 +140,15 @@ refresh-rate paths are covered by typed rendering callbacks. The next step is
 the Phase 3 closure audit: inventory the remaining legacy declarations, verify
 no public registration header exposes DOSBox implementation types, and repeat
 launch/exit validation before declaring the phase complete.
+
+## Phase 3 closure audit
+
+The public registration header is opaque and contains no DOSBox implementation
+types. The remaining `BXCoalface.h` consumers are deliberate compatibility
+surfaces: the DOSBox umbrella header preserves legacy global remaps, the shell
+batch and printer paths retain literal legacy expressions for standalone
+harness contracts, and Boxer’s Objective-C++ files expose the host-facing
+legacy entry points used by the current application. Typed registrations now
+cover audio, printer, input, shell, filesystem, run loop, event/mouse/title,
+rendering, and diagnostics boundaries. The existing runtime harness remains
+the regression baseline for launch, callback ordering, and DOS shutdown.

@@ -77,6 +77,20 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(coalface.contains("boxer_eventBridgeSetMouseHint"))
     }
 
+    func testPhase3RegistrationHeaderRemainsOpaque() throws {
+        let header = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxBridgeRegistration.h"))
+        for legacyType in ["DOS_Shell", "DOS_Drive", "Bitu", "GFX_CallBack_t", "class DOS_"] {
+            XCTAssertFalse(header.contains(legacyType), "Registration header leaked legacy type: \(legacyType)")
+        }
+        for callbackTable in ["BXDOSBoxAudioBridgeCallbacks", "BXDOSBoxPrinterBridgeCallbacks",
+                              "BXDOSBoxInputBridgeCallbacks", "BXDOSBoxShellBridgeCallbacks",
+                              "BXDOSBoxFilesystemBridgeCallbacks", "BXDOSBoxRunLoopBridgeCallbacks",
+                              "BXDOSBoxEventBridgeCallbacks", "BXDOSBoxRenderingBridgeCallbacks",
+                              "BXDOSBoxDiagnosticsBridgeCallbacks"] {
+            XCTAssertTrue(header.contains(callbackTable), "Missing public callback table: \(callbackTable)")
+        }
+    }
+
     func testRunLoopAndShutdownContracts() throws {
         // Protects BOXER markers: runloop-termination, runloop-event-cancellation, runloop-context, shutdown-drive-clear
         try requireAnnotated079Migration()

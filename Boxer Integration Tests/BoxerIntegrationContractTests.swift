@@ -8,7 +8,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
     }
 
     private static let documentedRows: [CoverageRow] = [
-        CoverageRow(subsystem: "Core bridge, SDL/event/mouse/video capture remaps", markers: ["coalface-remaps"]),
+        CoverageRow(subsystem: "Core bridge, SDL/event/mouse/video capture remaps", markers: ["coalface-remaps", "event-mouse-title-bridge"]),
         CoverageRow(subsystem: "Emulator run loop and shutdown lifecycle", markers: ["runloop-termination", "runloop-event-cancellation", "runloop-context", "shutdown-drive-clear"]),
         CoverageRow(subsystem: "Build/Xcode compatibility", markers: ["xcode-lazyflags-include", "keyboard-enum-c-compat"]),
         CoverageRow(subsystem: "Configuration: MT-32, MIDI, and parallel printer", markers: ["boxer-mt32-config-include", "mt32-device-value", "mt32-help-unconditional", "mt32-midiconfig-help", "mt32-config-section", "dosbox-parport-init", "parallel-config-section"]),
@@ -37,15 +37,20 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try requireAnnotated079Migration()
         let manifestMarkers = try markerSetFromManifest()
         XCTAssertEqual(Self.documentedRows.count, 14)
-        XCTAssertEqual(documentedMarkerSet().count, 113)
+        XCTAssertEqual(documentedMarkerSet().count, 114)
         XCTAssertEqual(manifestMarkers, documentedMarkerSet(), "The executable migration coverage table must track the manifest")
         try assertMarkerInventory(manifestMarkers: manifestMarkers)
     }
 
     func testCoreBridgeContracts() throws {
-        // Protects BOXER marker: coalface-remaps
+        // Protects BOXER markers: coalface-remaps, event-mouse-title-bridge
         try requireAnnotated079Migration()
         try expectBlock("include/dosbox.h", marker: "coalface-remaps", contains: "#include \"BXCoalface.h\"")
+        try expectBlock("src/dosbox.cpp", marker: "event-mouse-title-bridge", contains: "BXDOSBoxEventCompatibility.h")
+        let registrationHeader = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxBridgeRegistration.h"))
+        XCTAssertTrue(registrationHeader.contains("BXDOSBoxEventBridgeCallbacks"))
+        XCTAssertTrue(registrationHeader.contains("boxer_registerDOSBoxEventBridge"))
+        XCTAssertFalse(registrationHeader.contains("DOS_Shell"))
         for remap in ["#define GFX_Events boxer_processEvents",
                       "#define GFX_StartUpdate boxer_startFrame",
                       "#define GFX_EndUpdate boxer_finishFrame",
@@ -68,6 +73,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertFalse(captureBridge.contains("boxer_setMouseActive(captured);"))
         XCTAssertTrue(coalface.contains("bool boxer_hasDesktopEnvironment(void)"))
         XCTAssertTrue(coalface.contains("return true;"))
+        XCTAssertTrue(coalface.contains("boxer_eventBridgeHandleTitleChange"))
+        XCTAssertTrue(coalface.contains("boxer_eventBridgeSetMouseHint"))
     }
 
     func testRunLoopAndShutdownContracts() throws {

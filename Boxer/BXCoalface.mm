@@ -127,6 +127,54 @@ const BXDOSBoxRunLoopBridgeCallbacks *boxer_registeredDOSBoxRunLoopBridge(void)
     return BXDOSBoxRunLoopCallbacksRegistered ? &BXDOSBoxRunLoopCallbacks : NULL;
 }
 
+static bool boxer_eventBridgeProcessEvents(void) { return boxer_processEvents(); }
+static void boxer_eventBridgeHandleTitleChange(int32_t cycles, bool paused)
+{
+    boxer_handleDOSBoxTitleChange(cycles, paused);
+}
+static void boxer_eventBridgeRefreshTitle(void) { boxer_refreshDOSBoxTitle(); }
+static void boxer_eventBridgeSetMouseHint(uintptr_t hint)
+{
+    boxer_setMouseHint((MouseHint)hint);
+}
+static void boxer_eventBridgeSetMouseCapture(bool captured) { boxer_setMouseCapture(captured); }
+static void boxer_eventBridgeSetMouseRawInput(bool rawInput) { boxer_setMouseRawInput(rawInput); }
+static void boxer_eventBridgeSetMouseVisibility(bool visible) { boxer_setMouseVisibility(visible); }
+static bool boxer_eventBridgeHasDesktopEnvironment(void) { return boxer_hasDesktopEnvironment(); }
+static void boxer_eventBridgeCenterMouse(void) { boxer_centerMouse(); }
+
+static BXDOSBoxEventBridgeCallbacks BXDOSBoxEventCallbacks;
+static bool BXDOSBoxEventCallbacksRegistered = false;
+
+void boxer_registerDOSBoxEventBridge(const BXDOSBoxEventBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxEventCallbacks = *callbacks;
+        BXDOSBoxEventCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxEventBridgeCallbacks *boxer_registeredDOSBoxEventBridge(void)
+{
+    if (!BXDOSBoxEventCallbacksRegistered)
+    {
+        const BXDOSBoxEventBridgeCallbacks callbacks = {
+            boxer_eventBridgeProcessEvents,
+            boxer_eventBridgeHandleTitleChange,
+            boxer_eventBridgeRefreshTitle,
+            boxer_eventBridgeSetMouseHint,
+            boxer_eventBridgeSetMouseCapture,
+            boxer_eventBridgeSetMouseRawInput,
+            boxer_eventBridgeSetMouseVisibility,
+            boxer_eventBridgeHasDesktopEnvironment,
+            boxer_eventBridgeCenterMouse
+        };
+        boxer_registerDOSBoxEventBridge(&callbacks);
+    }
+    return BXDOSBoxEventCallbacksRegistered ? &BXDOSBoxEventCallbacks : NULL;
+}
+
 /// Notifies Boxer of changes to title and speed settings
 void boxer_handleDOSBoxTitleChange(int32_t newCycles, bool newPaused)
 {

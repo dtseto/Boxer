@@ -123,10 +123,12 @@ final class BoxerIntegrationContractTests: XCTestCase {
         let keyboard = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatedKeyboard.mm"))
         let keyBuffer = try source(at: projectRoot.appendingPathComponent("Boxer/BXKeyBuffer.mm"))
         let printer = try source(at: projectRoot.appendingPathComponent("Boxer/Printing/BXEmulatedPrinter.mm"))
+        let shellBatch = try source(at: dosboxRoot.appendingPathComponent("src/shell/shell_batch.cpp"))
         XCTAssertTrue(keyboard.contains("#import \"BXHostBridge.h\""))
         XCTAssertFalse(keyboard.contains("#import \"BXCoalface.h\""))
         XCTAssertFalse(keyBuffer.contains("#import \"BXCoalface.h\""))
         XCTAssertFalse(printer.contains("#import \"BXCoalface.h\""))
+        XCTAssertFalse(shellBatch.contains("#include \"BXCoalface.h\""))
     }
 
     func testRunLoopAndShutdownContracts() throws {

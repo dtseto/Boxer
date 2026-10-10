@@ -91,6 +91,29 @@ final class BoxerIntegrationContractTests: XCTestCase {
         }
     }
 
+    func testPhase4CoalfaceCompatibilityInventory() throws {
+        let coalfaceURL = projectRoot.appendingPathComponent("Boxer/BXCoalface.h")
+        let coalface = try source(at: coalfaceURL)
+        XCTAssertEqual(coalface.components(separatedBy: "#define ").count - 1, 23)
+        let declarationPattern = #"^\s*(bool|void|Bitu|uint8_t|double|int|FILE \*|const char \*|void \*)\s+boxer_"#
+        let declarationCount = coalface.split(separator: "\n").filter {
+            $0.range(of: declarationPattern, options: .regularExpression) != nil
+        }.count
+        XCTAssertEqual(declarationCount, 85)
+
+        for consumer in [
+            "Boxer/BXCoalface.mm",
+            "Boxer/BXEmulatedKeyboard.mm",
+            "Boxer/BXKeyBuffer.mm",
+            "Boxer/Printing/BXEmulatedPrinter.mm",
+            "DOSBox-Staging/include/dosbox.h",
+            "DOSBox-Staging/src/shell/shell_batch.cpp"
+        ] {
+            XCTAssertTrue(FileManager.default.fileExists(atPath: projectRoot.appendingPathComponent(consumer).path),
+                          "Missing inventoried BXCoalface consumer: \(consumer)")
+        }
+    }
+
     func testRunLoopAndShutdownContracts() throws {
         // Protects BOXER markers: runloop-termination, runloop-event-cancellation, runloop-context, shutdown-drive-clear
         try requireAnnotated079Migration()

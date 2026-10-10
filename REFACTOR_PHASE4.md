@@ -28,6 +28,12 @@ including `BXCoalface.h` directly.
   candidate.
 - Add contract coverage for the inventory before changing includes.
 
+Current frozen counts are 23 legacy macro remaps, 85 `boxer_*` declarations,
+and six actual direct consumers: `BXCoalface.mm`, `BXEmulatedKeyboard.mm`,
+`BXKeyBuffer.mm`, `BXEmulatedPrinter.mm`, `dosbox.h`, and `shell_batch.cpp`.
+`printer_redir.cpp` retains a documented compatibility comment and uses the
+typed printer adapter at its callsites.
+
 ### Step 2: Introduce a host declaration boundary
 
 - Create a host-facing declaration header containing only callback entry points

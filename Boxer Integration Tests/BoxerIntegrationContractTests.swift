@@ -45,7 +45,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
     func testCoreBridgeContracts() throws {
         // Protects BOXER markers: coalface-remaps, event-mouse-title-bridge
         try requireAnnotated079Migration()
-        try expectBlock("include/dosbox.h", marker: "coalface-remaps", contains: "#include \"BXCoalface.h\"")
+        try expectBlock("include/dosbox.h", marker: "coalface-remaps", contains: "#include \"BXDOSBoxCoalfaceCompatibility.h\"")
         try expectBlock("src/dosbox.cpp", marker: "event-mouse-title-bridge", contains: "BXDOSBoxEventCompatibility.h")
         let registrationHeader = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxBridgeRegistration.h"))
         XCTAssertTrue(registrationHeader.contains("BXDOSBoxEventBridgeCallbacks"))
@@ -124,11 +124,16 @@ final class BoxerIntegrationContractTests: XCTestCase {
         let keyBuffer = try source(at: projectRoot.appendingPathComponent("Boxer/BXKeyBuffer.mm"))
         let printer = try source(at: projectRoot.appendingPathComponent("Boxer/Printing/BXEmulatedPrinter.mm"))
         let shellBatch = try source(at: dosboxRoot.appendingPathComponent("src/shell/shell_batch.cpp"))
+        let dosboxHeader = try source(at: dosboxRoot.appendingPathComponent("include/dosbox.h"))
+        let coalfaceCompatibility = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxCoalfaceCompatibility.h"))
         XCTAssertTrue(keyboard.contains("#import \"BXHostBridge.h\""))
         XCTAssertFalse(keyboard.contains("#import \"BXCoalface.h\""))
         XCTAssertFalse(keyBuffer.contains("#import \"BXCoalface.h\""))
         XCTAssertFalse(printer.contains("#import \"BXCoalface.h\""))
         XCTAssertFalse(shellBatch.contains("#include \"BXCoalface.h\""))
+        XCTAssertTrue(dosboxHeader.contains("#include \"BXDOSBoxCoalfaceCompatibility.h\""))
+        XCTAssertFalse(dosboxHeader.contains("#include \"BXCoalface.h\""))
+        XCTAssertTrue(coalfaceCompatibility.contains("#include \"BXCoalface.h\""))
     }
 
     func testRunLoopAndShutdownContracts() throws {

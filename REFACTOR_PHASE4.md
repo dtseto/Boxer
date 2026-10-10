@@ -43,6 +43,12 @@ typed printer adapter at its callsites.
   not edit the project file directly while Xcode is open.
 - Preserve `BXCoalface.h` as a compatibility shim during the transition.
 
+Step 2 has begun with the project-integrated `BXHostBridge.h`, which contains
+only keyboard buffer and keyboard-layout declarations. `BXEmulatedKeyboard.mm` now uses that header,
+while `BXKeyBuffer.mm` and `BXEmulatedPrinter.mm` no longer import
+`BXCoalface.h` directly. The project-aware Xcode integration added the header;
+the mixed pre-existing project-file diff remains uncommitted.
+
 ### Step 3: Migrate Boxer host consumers
 
 - Move `BXEmulatedKeyboard.mm`, `BXKeyBuffer.mm`, and

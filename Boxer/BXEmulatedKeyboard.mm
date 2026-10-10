@@ -8,7 +8,7 @@
 
 #import "BXEmulatedKeyboard.h"
 #import "BXEmulator.h"
-#import "BXCoalface.h"
+#import "BXHostBridge.h"
 #import "NSObject+ADBPerformExtensions.h"
 
 #include "src/dos/dos_keyboard_layout.h"

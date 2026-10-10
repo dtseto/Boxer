@@ -8,7 +8,6 @@
 #import "BXEmulatorPrivate.h"
 #import "BXEmulatedPrinter.h"
 #import "printer_charmaps.h"
-#import "BXCoalface.h"
 #import "BXPrintSession.h"
 
 

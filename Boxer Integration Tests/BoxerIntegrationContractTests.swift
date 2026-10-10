@@ -114,6 +114,21 @@ final class BoxerIntegrationContractTests: XCTestCase {
         }
     }
 
+    func testPhase4HostDeclarationBoundary() throws {
+        let hostHeader = try source(at: projectRoot.appendingPathComponent("BXHostBridge.h"))
+        for legacyType in ["DOS_Shell", "DOS_Drive", "Bitu", "GFX_CallBack_t", "MouseHint"] {
+            XCTAssertFalse(hostHeader.contains(legacyType), "Host header leaked legacy type: \(legacyType)")
+        }
+
+        let keyboard = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatedKeyboard.mm"))
+        let keyBuffer = try source(at: projectRoot.appendingPathComponent("Boxer/BXKeyBuffer.mm"))
+        let printer = try source(at: projectRoot.appendingPathComponent("Boxer/Printing/BXEmulatedPrinter.mm"))
+        XCTAssertTrue(keyboard.contains("#import \"BXHostBridge.h\""))
+        XCTAssertFalse(keyboard.contains("#import \"BXCoalface.h\""))
+        XCTAssertFalse(keyBuffer.contains("#import \"BXCoalface.h\""))
+        XCTAssertFalse(printer.contains("#import \"BXCoalface.h\""))
+    }
+
     func testRunLoopAndShutdownContracts() throws {
         // Protects BOXER markers: runloop-termination, runloop-event-cancellation, runloop-context, shutdown-drive-clear
         try requireAnnotated079Migration()

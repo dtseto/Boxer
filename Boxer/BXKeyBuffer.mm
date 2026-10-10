@@ -6,7 +6,6 @@
  */
 
 #import "BXKeyBuffer.h"
-#import "BXCoalface.h"
 #import "dosbox.h"
 #import "bios.h"
 #import "pic.h"

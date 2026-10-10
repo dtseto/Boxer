@@ -47,7 +47,6 @@ extern "C" {
 #define OpenCaptureFile boxer_openCaptureFile
 FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtension);
 
-#define E_Exit(format,...) boxer_die(__PRETTY_FUNCTION__, __FILE__, __LINE__, format, ##__VA_ARGS__)
 	class DOS_Drive;
     class DOS_Shell;
 	

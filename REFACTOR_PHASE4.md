@@ -28,7 +28,7 @@ including `BXCoalface.h` directly.
   candidate.
 - Add contract coverage for the inventory before changing includes.
 
-Current frozen counts are 23 legacy macro remaps, 85 `boxer_*` declarations,
+Current frozen counts are 22 legacy macro remaps, 85 `boxer_*` declarations,
 and six actual direct consumers: `BXCoalface.mm`, `BXEmulatedKeyboard.mm`,
 `BXKeyBuffer.mm`, `BXEmulatedPrinter.mm`, `dosbox.h`, and `shell_batch.cpp`.
 `printer_redir.cpp` retains a documented compatibility comment and uses the
@@ -48,6 +48,11 @@ only keyboard buffer and keyboard-layout declarations. `BXEmulatedKeyboard.mm` n
 while `BXKeyBuffer.mm` and `BXEmulatedPrinter.mm` no longer import
 `BXCoalface.h` directly. The project-aware Xcode integration added the header;
 the mixed pre-existing project-file diff remains uncommitted.
+
+The DOSBox umbrella boundary now also owns the legacy `E_Exit` remap. Typed
+fatal-message formatting is intentionally deferred until the host and DOSBox
+include contexts are separated; attempting it globally leaks the DOSBox
+callsite macro into Boxer Objective-C++ translation units.
 
 ### Step 3: Migrate Boxer host consumers
 

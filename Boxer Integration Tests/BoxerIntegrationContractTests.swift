@@ -58,8 +58,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
                       "#define GFX_HaveDesktopEnvironment boxer_hasDesktopEnvironment",
                       "#define GFX_CenterMouse boxer_centerMouse",
                       "#define MIDI_Available boxer_MIDIAvailable",
-                      "#define OpenCaptureFile boxer_openCaptureFile",
-                      "#define E_Exit"] {
+                      "#define OpenCaptureFile boxer_openCaptureFile"] {
             try expect(projectRoot.appendingPathComponent("Boxer/BXCoalface.h"), contains: remap)
         }
 
@@ -94,7 +93,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
     func testPhase4CoalfaceCompatibilityInventory() throws {
         let coalfaceURL = projectRoot.appendingPathComponent("Boxer/BXCoalface.h")
         let coalface = try source(at: coalfaceURL)
-        XCTAssertEqual(coalface.components(separatedBy: "#define ").count - 1, 23)
+        XCTAssertEqual(coalface.components(separatedBy: "#define ").count - 1, 22)
         let declarationPattern = #"^\s*(bool|void|Bitu|uint8_t|double|int|FILE \*|const char \*|void \*)\s+boxer_"#
         let declarationCount = coalface.split(separator: "\n").filter {
             $0.range(of: declarationPattern, options: .regularExpression) != nil
@@ -134,6 +133,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(dosboxHeader.contains("#include \"BXDOSBoxCoalfaceCompatibility.h\""))
         XCTAssertFalse(dosboxHeader.contains("#include \"BXCoalface.h\""))
         XCTAssertTrue(coalfaceCompatibility.contains("#include \"BXCoalface.h\""))
+        XCTAssertFalse(try source(at: projectRoot.appendingPathComponent("Boxer/BXCoalface.h")).contains("#define E_Exit"))
+        XCTAssertTrue(coalfaceCompatibility.contains("#define E_Exit"))
     }
 
     func testRunLoopAndShutdownContracts() throws {

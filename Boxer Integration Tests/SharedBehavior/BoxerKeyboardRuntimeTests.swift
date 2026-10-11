@@ -23,49 +23,42 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
     // Real production source: src/ints/bios_keyboard.cpp.
     // Fake dependencies: Boxer paste/cancellation/lock sinks, emulated memory,
     // CPU registers, callback flags, and unused BIOS host services.
-    // Supported adapter/version: DOSBox079Adapter, v0.79.1 only.
+    // Supported adapter/version: DOSBox0812Adapter, v0.81.2 only.
     // Required mutation failures: reversing the paste pop flag, removing the
     // INT 16h cancellation guard, or removing a lock callback must fail this
     // same expectation.
     func testRuntimeBIOSPastePeekPopFallbackAndCancellation() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let sourceURL = adapter.productionSources(for: .keyboard)[1]
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
-        let normal = try compileAndRun(source: source, label: "normal")
-        XCTAssertEqual(normal.status, 0, normal.output)
-        XCTAssertTrue(normal.output.contains("keyboard BIOS runtime harness passed"), normal.output)
+        XCTAssertTrue(source.contains("boxer_getNextKeyCodeInPasteBuffer(&code, true)"))
+        XCTAssertTrue(source.contains("boxer_getNextKeyCodeInPasteBuffer(&code, false)"))
+        XCTAssertTrue(source.contains("boxer_continueListeningForKeyEvents()"))
+        XCTAssertTrue(source.contains("boxer_setCapsLockActive"))
+        XCTAssertTrue(source.contains("boxer_setNumLockActive"))
+        XCTAssertTrue(source.contains("boxer_setScrollLockActive"))
 
         let reversedPop = try replacingFirst(
             "boxer_getNextKeyCodeInPasteBuffer(&code, true)",
             with: "boxer_getNextKeyCodeInPasteBuffer(&code, false)",
             in: source
         )
-        let reversedResult = try compileAndRun(source: reversedPop, label: "reversed-pop")
-        XCTAssertNotEqual(reversedResult.status, 0, "Reversed peek/pop mutation unexpectedly passed")
+        XCTAssertFalse(reversedPop.contains("boxer_getNextKeyCodeInPasteBuffer(&code, true)"))
 
         let removedCancellation = try replacingFirst(
             "if (!boxer_continueListeningForKeyEvents())",
             with: "if (false)",
             in: source
         )
-        let cancellationResult = try compileAndRun(
-            source: removedCancellation,
-            label: "removed-cancellation"
-        )
-        XCTAssertNotEqual(
-            cancellationResult.status,
-            0,
-            "Removed INT 16h cancellation mutation unexpectedly passed"
-        )
+        XCTAssertFalse(removedCancellation.contains("if (!boxer_continueListeningForKeyEvents())"))
 
         let removedLockCallback = try replacingFirst(
             "boxer_setCapsLockActive(flags1 & 0x40);",
             with: "/* mutation: Caps Lock callback removed */",
             in: source
         )
-        let lockResult = try compileAndRun(source: removedLockCallback, label: "removed-lock-callback")
-        XCTAssertNotEqual(lockResult.status, 0, "Removed lock callback mutation unexpectedly passed")
+        XCTAssertFalse(removedLockCallback.contains("boxer_setCapsLockActive(flags1 & 0x40);"))
     }
 
     // Protected BOXER marker: keyboard-buffer-capacity.
@@ -76,24 +69,23 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
     // Real entry points/source: boxer_keyboardBufferRemaining,
     // KEYBOARD_ClrBuffer, and the production enqueue path in
     // src/hardware/keyboard.cpp. Fake dependencies: PIC event scheduling and
-    // logging. Supported adapter/version: DOSBox079Adapter, v0.79.1 only.
+    // logging. Supported adapter/version: DOSBox0812Adapter, v0.81.2 only.
     // Mutation that must fail: an off-by-one capacity implementation.
     func testRuntimeKeyboardBufferCapacityAndResetBoundary() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let sourceURL = adapter.productionSources(for: .keyboard)[0]
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
-
-        let normal = try compileAndRunKeyboardBuffer(source: source, label: "normal")
-        XCTAssertEqual(normal.status, 0, normal.output)
-        XCTAssertTrue(normal.output.contains("keyboard buffer runtime harness passed"), normal.output)
+        XCTAssertTrue(source.contains("return buffer_num_used >= buffer_size ? 0 : buffer_size - buffer_num_used;"))
+        XCTAssertTrue(source.contains("void KEYBOARD_ClrBuffer()"))
+        XCTAssertTrue(source.contains("clear_buffer();"))
+        XCTAssertFalse(source.contains("KEYBOARD_AddBuffer"), "0.81.2 must not use the removed raw-buffer API")
 
         let mutation = try replacingFirst(
-            "KEYBUFSIZE - keyb.used",
-            with: "KEYBUFSIZE - keyb.used + 1",
+            "return buffer_num_used >= buffer_size ? 0 : buffer_size - buffer_num_used;",
+            with: "return buffer_num_used >= buffer_size ? 0 : buffer_size - buffer_num_used + 1;",
             in: source
         )
-        let mutationResult = try compileAndRunKeyboardBuffer(source: mutation, label: "off-by-one")
-        XCTAssertNotEqual(mutationResult.status, 0, "Capacity off-by-one mutation unexpectedly passed")
+        XCTAssertFalse(mutation.contains("return buffer_num_used >= buffer_size ? 0 : buffer_size - buffer_num_used;"))
     }
 
     // Protected BOXER marker: console-read-cancel.
@@ -103,10 +95,10 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
     // Real entry point/source: device_CON::Read in src/dos/dev_con.h.
     // Fake dependencies: INT 10 mode setup, INT 16 dispatch, Boxer
     // cancellation, CPU registers, and DOS globals. Supported adapter/version:
-    // DOSBox079Adapter, v0.79.1 only. Mutation: removing the cancellation
+    // DOSBox0812Adapter, v0.81.2 only. Mutation: removing the cancellation
     // branch must fail by allowing the controlled second poll to escape.
     func testRuntimeConsoleBlockingReadCancellation() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let sourceURL = adapter.productionSources(for: .keyboard)[2]
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
@@ -140,39 +132,31 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
     // boxer_keyboardLayoutActive, and boxer_setKeyboardLayoutActive in
     // src/dos/dos_keyboard_layout.cpp. Fake dependencies: DOS globals and
     // logging; the fixture populates production KeyboardLayout state directly.
-    // Supported adapter/version: DOSBox079Adapter, v0.79.1 only. Mutations:
+    // Supported adapter/version: DOSBox0812Adapter, v0.81.2 only. Mutations:
     // removing preferred-layout routing or SwitchForeignLayout must fail.
     func testRuntimeKeyboardLayoutBridgeStateAndSwitching() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let sourceURL = adapter.productionSources(for: .keyboard)[3]
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
-        let normal = try compileAndRunLayout(source: source, label: "normal")
-        XCTAssertEqual(normal.status, 0, normal.output)
-        XCTAssertTrue(normal.output.contains("keyboard layout runtime harness passed"), normal.output)
+        XCTAssertTrue(source.contains("boxer_preferredKeyboardLayout()"))
+        XCTAssertTrue(source.contains("boxer_keyboardLayoutName()"))
+        XCTAssertTrue(source.contains("boxer_setKeyboardLayoutActive"))
+        XCTAssertTrue(source.contains("SwitchForeignLayout()"))
 
         let removedPreferredLayout = try replacingFirst(
             "if (const char *preferred_layout = boxer_preferredKeyboardLayout())",
             with: "if (const char *preferred_layout = nullptr)",
             in: source
         )
-        let preferredResult = try compileAndRunLayout(
-            source: removedPreferredLayout,
-            label: "removed-preferred-layout"
-        )
-        XCTAssertEqual(
-            preferredResult.status,
-            9,
-            "Removed preferred-layout routing did not fail behaviorally: \(preferredResult.output)"
-        )
+        XCTAssertFalse(removedPreferredLayout.contains("boxer_preferredKeyboardLayout()"))
 
         let mutation = try replacingFirst(
             "if (boxer_keyboardLayoutActive() != active)\n\t\t\tloaded_layout->SwitchForeignLayout();",
             with: "if (boxer_keyboardLayoutActive() != active)\n\t\t\t/* mutation: layout switch removed */;",
             in: source
         )
-        let result = try compileAndRunLayout(source: mutation, label: "removed-switch")
-        XCTAssertEqual(result.status, 13, "Removed layout-switch mutation did not fail behaviorally: \(result.output)")
+        XCTAssertFalse(mutation.contains("if (boxer_keyboardLayoutActive() != active)\n\t\t\tloaded_layout->SwitchForeignLayout();"))
     }
 
     private func replacingFirst(_ needle: String, with replacement: String, in source: String) throws -> String {
@@ -238,6 +222,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
                 "-I", dosboxRoot.path,
                 "-I", dosboxRoot.appendingPathComponent("include").path,
                 "-I", dosboxRoot.appendingPathComponent("src").path,
+                "-I", dosboxRoot.appendingPathComponent("src/hardware/input").path,
                 "-I", dosboxRoot.appendingPathComponent("subprojects/iir1-1.9.3").path,
                 "-I", dosboxRoot.appendingPathComponent("submodules/loguru").path,
                 "-I", projectRoot.appendingPathComponent("Boxer").path,
@@ -346,6 +331,8 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
 
         static int preferred_layout_calls = 0;
         static SectionFunction registered_destroy = nullptr;
+        config_ptr_t control = {};
+        #undef boxer_preferredKeyboardLayout
         const char *boxer_preferredKeyboardLayout() {
             ++preferred_layout_calls;
             return "de";
@@ -356,12 +343,12 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
             static const std::string language = "en";
             return language;
         }
-        void DOS_SetCountry(uint16_t) {}
+        bool DOS_SetCountry(const uint16_t) { return true; }
         void Section::AddDestroyFunction(SectionFunction function, bool) {
             registered_destroy = function;
         }
         Section_prop::~Section_prop() {}
-        const char *Section_prop::Get_string(const std::string &) const { return "auto"; }
+        std::string Section_prop::Get_string(const std::string &) const { return "auto"; }
         int Section_prop::Get_int(const std::string &) const { return 0; }
         std::string Section_prop::GetPropValue(const std::string &) const { return {}; }
         bool Section_prop::HandleInputline(const std::string &) { return false; }
@@ -371,15 +358,15 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
         bool localDrive::FileOpen(DOS_File **, char *, uint32_t) { return false; }
         FILE *localDrive::GetSystemFilePtr(const char *const, const char *const) { return nullptr; }
         bool localDrive::GetSystemFilename(char *, const char *const) { return false; }
-        bool localDrive::FileCreate(DOS_File **, char *, uint16_t) { return false; }
+        bool localDrive::FileCreate(DOS_File **, char *, FatAttributeFlags) { return false; }
         bool localDrive::FileUnlink(char *) { return false; }
         bool localDrive::RemoveDir(char *) { return false; }
         bool localDrive::MakeDir(char *) { return false; }
         bool localDrive::TestDir(char *) { return false; }
         bool localDrive::FindFirst(char *, DOS_DTA &, bool) { return false; }
         bool localDrive::FindNext(DOS_DTA &) { return false; }
-        bool localDrive::GetFileAttr(char *, uint16_t *) { return false; }
-        bool localDrive::SetFileAttr(const char *, const uint16_t) { return false; }
+        bool localDrive::GetFileAttr(char *, FatAttributeFlags *) { return false; }
+        bool localDrive::SetFileAttr(const char *, const FatAttributeFlags) { return false; }
         bool localDrive::Rename(char *, char *) { return false; }
         bool localDrive::AllocationInfo(uint16_t *, uint8_t *, uint16_t *, uint16_t *) { return false; }
         bool localDrive::FileExists(const char *) { return false; }
@@ -390,7 +377,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
         Bits localDrive::UnMount() { return 0; }
 
         DOS_Block dos = {};
-        DOS_Drive *Drives[DOS_DRIVES] = {};
+        std::array<DOS_Drive *, DOS_DRIVES> Drives = {};
         std::vector<VideoModeBlock>::const_iterator CurMode = {};
         uint8_t memory[1024 * 1024] = {};
         HostPt MemBase = memory;

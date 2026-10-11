@@ -45,6 +45,8 @@ enum BoxerRuntimeHarnessError: Error, CustomStringConvertible {
 /// Standard output and error are merged so compiler and mutation failures retain
 /// their complete diagnostic reason.
 enum BoxerRuntimeProcessRunner {
+    static let timeout: TimeInterval = 20
+
     static func run(executable: String, arguments: [String]) throws -> BoxerRuntimeProcessResult {
         let process = Process()
         let pipe = Pipe()
@@ -64,11 +66,39 @@ enum BoxerRuntimeProcessRunner {
             )
         }
 
-        let data = pipe.fileHandleForReading.readDataToEndOfFile()
-        process.waitUntilExit()
+        let lock = NSLock()
+        var output = Data()
+        pipe.fileHandleForReading.readabilityHandler = { handle in
+            let data = handle.availableData
+            guard !data.isEmpty else { return }
+            lock.lock()
+            output.append(data)
+            lock.unlock()
+        }
+
+        let deadline = Date().addingTimeInterval(timeout)
+        while process.isRunning && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+
+        if process.isRunning {
+            process.terminate()
+            while process.isRunning {
+                RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+            }
+            lock.lock()
+            output.append(Data("\nRuntime harness timed out after \(Int(timeout)) seconds.\n".utf8))
+            lock.unlock()
+        }
+
+        pipe.fileHandleForReading.readabilityHandler = nil
+        lock.lock()
+        let capturedOutput = output
+        lock.unlock()
+
         return BoxerRuntimeProcessResult(
             status: process.terminationStatus,
-            output: String(decoding: data, as: UTF8.self)
+            output: String(decoding: capturedOutput, as: UTF8.self)
         )
     }
 }
@@ -188,6 +218,88 @@ struct DOSBox079Adapter: BoxerDOSBoxRuntimeAdapter {
         case .media: return ["MOUNT_ProgramStart", "IMGMOUNT_ProgramStart"]
         case .localization: return ["MSG_Get"]
         case .capture: return ["OpenCaptureFile"]
+        }
+    }
+}
+
+/// DOSBox-Staging v0.81.2 adapter used by the current checked-out submodule.
+///
+/// This is intentionally separate from DOSBox079Adapter. Shared behavioral tests
+/// may be reused, but source paths, ownership models, and entry points must be
+/// selected explicitly for the production version under test.
+struct DOSBox0812Adapter: BoxerDOSBoxRuntimeAdapter {
+    let productionRoot: URL
+
+    var identifier: String { "dosbox-staging-0.81.2" }
+    var supportedVersions: [String] { ["0.81.2"] }
+
+    var includeDirectories: [URL] {
+        [
+            productionRoot,
+            productionRoot.appendingPathComponent("include"),
+            productionRoot.appendingPathComponent("src"),
+            productionRoot.appendingPathComponent("src/libs")
+        ]
+    }
+
+    func productionSources(for behavior: BoxerRuntimeBehavior) -> [URL] {
+        let paths: [String]
+        switch behavior {
+        case .joystick:
+            paths = ["src/hardware/joystick.cpp"]
+        case .lifecycle:
+            paths = ["src/dosbox.cpp", "src/dos/dos.cpp"]
+        case .keyboard:
+            paths = [
+                "src/hardware/input/keyboard.cpp",
+                "src/ints/bios_keyboard.cpp",
+                "src/dos/dev_con.h",
+                "src/dos/dos_keyboard_layout.cpp"
+            ]
+        case .printer:
+            paths = [
+                "src/hardware/parport/parport.cpp",
+                "src/hardware/parport/printer_redir.cpp",
+                "src/ints/bios.cpp",
+                "src/dos/dos.cpp"
+            ]
+        case .filesystem:
+            paths = ["src/dos/drive_local.cpp", "src/dos/drive_cache.cpp"]
+        case .shell:
+            paths = ["src/shell/shell.cpp", "src/shell/shell_misc.cpp", "src/shell/file_reader.cpp"]
+        case .mouse:
+            paths = ["src/hardware/input/mouse.cpp"]
+        case .render:
+            paths = ["src/gui/render.cpp"]
+        case .audio:
+            paths = ["src/hardware/mixer.cpp"]
+        case .configuration:
+            paths = ["src/dosbox.cpp"]
+        case .media:
+            paths = ["src/dos/program_mount.cpp", "src/dos/program_imgmount.cpp"]
+        case .localization:
+            paths = ["src/misc/messages.cpp", "src/dos/dos_locale.cpp"]
+        case .capture:
+            paths = ["src/capture/capture.cpp", "src/capture/capture_audio.cpp", "src/capture/capture_video.cpp"]
+        }
+        return paths.map(productionRoot.appendingPathComponent)
+    }
+
+    func entryPoints(for behavior: BoxerRuntimeBehavior) -> [String] {
+        switch behavior {
+        case .joystick: return ["JOYSTICK_Init", "IO_ReadB", "IO_WriteB", "JOYSTICK_Destroy"]
+        case .lifecycle: return ["DOSBOX_RunMachine", "DOS_Shutdown"]
+        case .keyboard: return ["KEYBOARD_Init", "BIOS_AddKeyToBuffer"]
+        case .printer: return ["PARALLEL_Init", "CParallel::Putchar"]
+        case .filesystem: return ["localDrive::FileCreate", "localDrive::FileOpen"]
+        case .shell: return ["DOS_Shell::Run", "DOS_Shell::RunBatchFile", "DOS_Shell::ExecuteProgram"]
+        case .mouse: return ["MOUSE_Init", "Mouse_CursorMoved"]
+        case .render: return ["RENDER_Reset", "RENDER_StartUpdate", "RENDER_EndUpdate"]
+        case .audio: return ["MIXER_Init", "MIXER_CallBack"]
+        case .configuration: return ["DOSBOX_Init"]
+        case .media: return ["MOUNT_ProgramStart", "IMGMOUNT_ProgramStart"]
+        case .localization: return ["MSG_Get"]
+        case .capture: return ["CAPTURE_Start"]
         }
     }
 }

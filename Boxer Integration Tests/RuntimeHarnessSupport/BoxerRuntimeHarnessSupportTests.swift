@@ -25,11 +25,11 @@ final class BoxerRuntimeHarnessSupportTests: XCTestCase {
         XCTAssertEqual(result.output, "intentional harness failure\n")
     }
 
-    func test079AdapterMapsProductionJoystickEntryPointsOnce() {
+    func test0812AdapterMapsProductionJoystickEntryPointsOnce() {
         let root = URL(fileURLWithPath: "/tmp/DOSBox-Staging")
-        let adapter = DOSBox079Adapter(productionRoot: root)
+        let adapter = DOSBox0812Adapter(productionRoot: root)
 
-        XCTAssertEqual(adapter.supportedVersions, ["0.79.1"])
+        XCTAssertEqual(adapter.supportedVersions, ["0.81.2"])
         XCTAssertEqual(
             adapter.productionSources(for: .joystick),
             [root.appendingPathComponent("src/hardware/joystick.cpp")]

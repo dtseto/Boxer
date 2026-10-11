@@ -30,7 +30,7 @@ final class BoxerLifecycleRuntimeTests: XCTestCase {
     //
     // Versions:
     //   Shared lifecycle expectation through version adapters; instantiated
-    //   here with DOSBox079Adapter.
+    //   here with DOSBox0812Adapter.
     //
     // Mutation guards:
     //   Removing either context callback or either cancellation checkpoint
@@ -44,7 +44,7 @@ final class BoxerLifecycleRuntimeTests: XCTestCase {
     }
 
     func testRuntimeRunLoopContextAndSecondSessionBehavior() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let sourceURL = adapter.productionSources(for: .lifecycle)[0]
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 

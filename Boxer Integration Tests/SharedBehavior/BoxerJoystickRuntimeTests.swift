@@ -31,14 +31,14 @@ final class BoxerJoystickRuntimeTests: XCTestCase {
     //   production handlers.
     //
     // Versions:
-    //   Shared expectation for Boxer-integrated v0.79.1, v0.80.0, and v0.80.1
-    //   through version adapters. This file currently instantiates DOSBox079.
+    //   Shared expectation for the Boxer-integrated DOSBox 0.81.2 adapter
+    //   through version adapters. This file instantiates DOSBox0812.
     //
     // Mutation guard:
     //   Removing the activation callback or duplicating either Install call
     //   must make the same shared expectation fail.
     func testRuntimeJoystickOwnershipBehavior() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .joystick)[0],
             encoding: .utf8
@@ -170,7 +170,7 @@ final class BoxerJoystickRuntimeTests: XCTestCase {
         }
 
         Config::~Config() {}
-        Section *Config::GetSection(const std::string &) const { return active_section; }
+        Section *Config::GetSection(const std::string_view) const { return active_section; }
         Section_prop::~Section_prop() {}
         std::string Section_line::GetPropValue(const std::string &) const { return {}; }
         bool Section_line::HandleInputline(const std::string &) { return false; }
@@ -182,13 +182,13 @@ final class BoxerJoystickRuntimeTests: XCTestCase {
         {
             return name == "deadzone" ? 0 : 0;
         }
-        const char *Section_prop::Get_string(const std::string &name) const
+        std::string Section_prop::Get_string(const std::string &name) const
         {
             if (name == "joysticktype")
-                return configured_type.c_str();
+                return configured_type;
             if (name == "joy_x_calibration" || name == "joy_y_calibration")
                 return "auto";
-            return "";
+            return {};
         }
         bool Section_prop::Get_bool(const std::string &name) const
         {
@@ -206,9 +206,7 @@ final class BoxerJoystickRuntimeTests: XCTestCase {
         Property *Section_prop::Get_prop(int) { return nullptr; }
 
         void Section::AddDestroyFunction(SectionFunction, bool) {}
-        void Section::AddEarlyInitFunction(SectionFunction, bool) {}
         void Section::AddInitFunction(SectionFunction, bool) {}
-        void Section::ExecuteEarlyInit(bool) {}
         void Section::ExecuteInit(bool) {}
         void Section::ExecuteDestroy(bool) {}
 

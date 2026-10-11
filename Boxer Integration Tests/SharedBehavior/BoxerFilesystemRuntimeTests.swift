@@ -22,10 +22,10 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
     // UpdateDateTimeFromHost, willBecomeUnavailable, and their position helpers
     // from src/dos/drive_local.cpp. Fake dependencies: DOS error sink, packed
     // timestamp conversion, and port IO. Supported adapter/version:
-    // DOSBox079Adapter, v0.79.1 only. Mutation that must fail: removing the
+    // DOSBox0812Adapter, v0.81.2 only. Mutation that must fail: removing the
     // production unavailable-read guard.
     func testRuntimeUnavailableLocalFileSafetyAndSecondLifecycle() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .filesystem)[0],
             encoding: .utf8
@@ -56,15 +56,15 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
     // 4e359684f, 92281b3ee. Real entry point/source: localDrive::MakeDir from
     // src/dos/drive_local.cpp. Fake dependencies: the minimum localDrive/cache
     // shape, Boxer policy/directory bridges, and an isolated host directory.
-    // Supported adapter/version: DOSBox079Adapter, v0.79.1 only. Mutations:
+    // Supported adapter/version: DOSBox0812Adapter, v0.81.2 only. Mutations:
     // bypassing policy or removing the Boxer creation route must fail.
     func testRuntimeDirectoryCreationPolicyAndAtomicDenial() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .filesystem)[0],
             encoding: .utf8
         )
-        let function = try productionFunction(beginningWith: "bool localDrive::MakeDir(char * dir)", in: source)
+        let function = try productionFunction(beginningWith: "bool localDrive::MakeDir(char* dir)", in: source)
 
         let normal = try compileAndRunDirectoryPolicy(source: function, label: "normal")
         XCTAssertEqual(normal.status, 0, normal.output)
@@ -79,7 +79,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         XCTAssertEqual(bypassResult.status, 10, "Directory policy bypass did not fail behaviorally: \(bypassResult.output)")
 
         let removedRoute = try replacingFirst(
-            "const bool created = boxer_createLocalDir(dirCache.GetExpandName(newdir), this);",
+            "const bool created = boxer_createLocalDir(\n\t        dirCache.GetExpandNameAndNormaliseCase(newdir), this);",
             with: "const bool created = false;",
             in: function
         )
@@ -95,10 +95,10 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
     // 92281b3ee. Real entry point/source: DOS_Drive_Cache::CreateEntry from
     // src/dos/drive_cache.cpp. Fake dependencies: minimal cache node shape,
     // short-name generator, and Boxer visibility policy. Supported adapter:
-    // DOSBox079Adapter, v0.79.1 only. Mutation: bypassing the visibility guard
+    // DOSBox0812Adapter, v0.81.2 only. Mutation: bypassing the visibility guard
     // must fail.
     func testRuntimeDriveCacheHidesProtectedMetadata() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .filesystem)[1],
             encoding: .utf8
@@ -133,16 +133,16 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
     // localDrive::FileCreate from src/dos/drive_local.cpp. Fake dependencies:
     // minimal drive/cache/file shapes, DOS error sink, Boxer policy and create
     // callback, and an isolated host directory. Supported adapter/version:
-    // DOSBox079Adapter, v0.79.1 only. Mutations: bypassing policy or removing
+    // DOSBox0812Adapter, v0.81.2 only. Mutations: bypassing policy or removing
     // the creation notification must fail.
     func testRuntimeFileCreatePolicyNotificationAndTruncation() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .filesystem)[0],
             encoding: .utf8
         )
         let function = try productionFunction(
-            beginningWith: "bool localDrive::FileCreate(DOS_File * * file,char * name,uint16_t /*attributes*/)",
+            beginningWith: "bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)",
             in: source
         )
         let normal = try compileAndRunFileCreate(source: function, label: "normal")
@@ -181,10 +181,10 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
     // entry point/source: localDrive::FileOpen from src/dos/drive_local.cpp.
     // Fake dependencies: minimal drive/cache/file shapes, open-file lookup,
     // DOS error sink, Boxer write policy, and isolated host storage. Supported
-    // adapter/version: DOSBox079Adapter, v0.79.1 only. Mutations: bypassing the
+    // adapter/version: DOSBox0812Adapter, v0.81.2 only. Mutations: bypassing the
     // policy or removing the read/write downgrade must fail.
     func testRuntimeFileOpenPolicyAndReadOnlyDowngrade() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .filesystem)[0],
             encoding: .utf8
@@ -226,10 +226,10 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
     // 4e359684f, 92281b3ee. Real entry point/source: localDrive::FileUnlink from
     // src/dos/drive_local.cpp. Fake dependencies: minimal drive/cache/open-file
     // inventory, DOS error sink, Boxer policy/removal callbacks, and isolated
-    // host storage. Supported adapter/version: DOSBox079Adapter, v0.79.1 only.
+    // host storage. Supported adapter/version: DOSBox0812Adapter, v0.81.2 only.
     // Mutations: bypassing policy or removing notification must fail.
     func testRuntimeFileDeletePolicyAndNotification() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .filesystem)[0],
             encoding: .utf8
@@ -274,20 +274,20 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
     // localDrive::GetSystemFilename and GetSystemFilePtr from
     // src/dos/drive_local.cpp. Fake dependencies: minimal drive/cache shape and
     // deterministic case-expansion mapping in isolated storage. Supported
-    // adapter/version: DOSBox079Adapter, v0.79.1 only. Mutation: removing host
+    // adapter/version: DOSBox0812Adapter, v0.81.2 only. Mutation: removing host
     // path expansion must fail.
     func testRuntimeHostBackingPathsRemainAvailable() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .filesystem)[0],
             encoding: .utf8
         )
         let filename = try productionFunction(
-            beginningWith: "bool localDrive::GetSystemFilename(char *sysName, char const * const dosName)",
+            beginningWith: "bool localDrive::GetSystemFilename(char* sysName, const char* const dosName)",
             in: source
         )
         let filePointer = try productionFunction(
-            beginningWith: "FILE * localDrive::GetSystemFilePtr(char const * const name, char const * const type)",
+            beginningWith: "FILE* localDrive::GetSystemFilePtr(const char* const name, const char* const type)",
             in: source
         )
         let fragment = "\(filePointer)\n\n\(filename)"
@@ -318,10 +318,10 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
     // constructors, destructor, Clear, EmptyCache, ClearFileInfo, and
     // DeleteFileInfo from src/dos/drive_cache.cpp. Fake dependencies: minimal
     // DOS drive base shape and deterministic SetBaseDir. Supported adapter:
-    // DOSBox079Adapter, v0.79.1 only. Mutation: removing destructor Clear must
+    // DOSBox0812Adapter, v0.81.2 only. Mutation: removing destructor Clear must
     // fail by retaining the cache root/tree.
     func testRuntimeDriveCacheTeardownAndSecondSession() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let localSource = try String(contentsOf: adapter.productionSources(for: .filesystem)[0], encoding: .utf8)
         let cacheSource = try String(contentsOf: adapter.productionSources(for: .filesystem)[1], encoding: .utf8)
         let constructors = try productionSource(
@@ -338,7 +338,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         ]
         let cacheFunctions = try signatures.map { try productionFunction(beginningWith: $0, in: cacheSource) }.joined(separator: "\n\n")
         let cacheFragment = "\(constructors)\n\n\(cacheFunctions)"
-        let unmount = try productionFunction(beginningWith: "Bits localDrive::UnMount(void)", in: localSource)
+        let unmount = try productionFunction(beginningWith: "Bits localDrive::UnMount()", in: localSource)
         let fragment = "\(cacheFragment)\n\n\(unmount)"
         let normal = try compileAndRunDriveTeardown(source: fragment, label: "normal")
         XCTAssertEqual(normal.status, 0, normal.output)
@@ -367,7 +367,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             "bool localFile::Seek(uint32_t *pos_addr, uint32_t type)",
             "bool localFile::Close()",
             "uint16_t localFile::GetInformation(void)",
-            "localFile::localFile(const char *_name, FILE *handle, const char *_basedir)",
+            "localFile::localFile(const char* _name, const std_fs::path& path, FILE* handle,",
             "bool localFile::UpdateDateTimeFromHost()",
             "void localFile::willBecomeUnavailable()"
         ]
@@ -636,6 +636,8 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
 
         static uint16_t last_error = 0;
         void DOS_SetError(uint16_t error) { last_error = error; }
+        uint16_t local_drive_get_attributes(const std_fs::path &, FatAttributeFlags &) { return DOSERR_NONE; }
+        uint16_t local_drive_set_attributes(const std_fs::path &, const FatAttributeFlags) { return DOSERR_NONE; }
         uint16_t DOS_PackTime(const struct tm *) { return 1; }
         uint16_t DOS_PackDate(const struct tm *) { return 1; }
         uint8_t IO_ReadB(io_port_t) { return 0; }
@@ -649,6 +651,9 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
         namespace loguru {
         Verbosity current_verbosity_cutoff() { return Verbosity_OFF; }
         void log(Verbosity, const char *, unsigned, const char *, ...) {}
+        const char *terminal_bold() { return ""; }
+        const char *terminal_green() { return ""; }
+        const char *terminal_reset() { return ""; }
         }
 
         #include "\(sourcePath)"
@@ -657,7 +662,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
             FILE *handle = tmpfile();
             if (!handle)
                 return 10;
-            localFile file("SAVE.DAT", handle, "/tmp/");
+            localFile file("SAVE.DAT", std_fs::path("/tmp/SAVE.DAT"), handle, "/tmp/");
             file.flags = OPEN_READWRITE;
             file.willBecomeUnavailable();
 
@@ -732,6 +737,7 @@ final class BoxerFilesystemRuntimeTests: XCTestCase {
 
         struct FakeCache {
             char expanded[CROSS_LEN] = {};
+            const char *GetExpandNameAndNormaliseCase(const char *path) { return path; }
             char *GetExpandName(char *path) {
                 safe_strcpy(expanded, path);
                 return expanded;

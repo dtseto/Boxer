@@ -23,12 +23,12 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
     // Fake dependencies: CParallel base methods and Boxer printer bridge
     // functions recording port, value, width, and ordered calls. A harness-only
     // type-token shim reconciles the production .cpp's signed event parameter
-    // with the v0.79.1 header's unsigned declaration.
-    // Supported adapter/version: DOSBox079Adapter, v0.79.1 only.
+    // with the v0.81.2 header's unsigned declaration.
+    // Supported adapter/version: DOSBox0812Adapter, v0.81.2 only.
     // Required mutation failures: bypassing the Boxer data write or routing
     // the byte twice must fail this same expectation.
     func testRuntimePrinterRedirectionAndRegisterRouting() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let sourceURL = adapter.productionSources(for: .printer)[1]
         let source = try String(contentsOf: sourceURL, encoding: .utf8)
 
@@ -63,10 +63,10 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
     // CParallel::getPrinterStatus from src/hardware/parport/parport.cpp.
     // Fake dependencies: CPU registers, logging, the parallel-port object
     // table, IO handle teardown, and a recording CParallel implementation.
-    // Supported adapter/version: DOSBox079Adapter, v0.79.1 only.
+    // Supported adapter/version: DOSBox0812Adapter, v0.81.2 only.
     // Mutation that must fail: duplicating the real INT 17h Putchar call.
     func testRuntimeINT17PrinterOutputAndStatus() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let biosSource = try String(
             contentsOf: adapter.productionSources(for: .printer)[2],
             encoding: .utf8
@@ -113,10 +113,10 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
     // 05 dispatch clause extracted verbatim from src/dos/dos.cpp at test time.
     // Fake dependencies: DOS/CPU
     // state, emulated memory, IO teardown, and recording parallel-port objects.
-    // Supported adapter/version: DOSBox079Adapter, v0.79.1 only.
+    // Supported adapter/version: DOSBox0812Adapter, v0.81.2 only.
     // Mutations that must fail: bypassing or duplicating Putchar.
     func testRuntimeDOSPrinterOutputSelectsOnePort() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .printer)[3],
             encoding: .utf8
@@ -154,10 +154,10 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
     // equipment bits. Historical references: fd6e3fb60, 4e359684f,
     // 92281b3ee. Real entry point/source: BIOS_SetLPTPort from
     // src/ints/bios.cpp. Fake dependency: isolated emulated BIOS memory.
-    // Supported adapter/version: DOSBox079Adapter, v0.79.1 only.
+    // Supported adapter/version: DOSBox0812Adapter, v0.81.2 only.
     // Mutation that must fail: removing the equipment-count update.
     func testRuntimeBIOSParallelPortRegistrationCount() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .printer)[2],
             encoding: .utf8
@@ -195,11 +195,11 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
     // destructor, PARALLEL_Init, PARALLEL_Destroy, and parallelPortObjects from
     // src/hardware/parport/parport.cpp. Fake dependencies: configured printer
     // backends, command parsing, Section registration, BIOS memory, and the
-    // inert CParallel base. Supported adapter/version: DOSBox079Adapter,
-    // v0.79.1 only. Mutations: bypassing occupied-port suppression or omitting
+    // inert CParallel base. Supported adapter/version: DOSBox0812Adapter,
+    // v0.81.2 only. Mutations: bypassing occupied-port suppression or omitting
     // global-table clearing must fail.
     func testRuntimeParallelPortOccupiedSuppressionAndSecondSession() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .printer)[0],
             encoding: .utf8
@@ -236,10 +236,10 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
     // Real entry points/source: CParallel constructor/destructor from
     // src/hardware/parport/parport.cpp. Fake dependencies: IO handler objects,
     // BIOS registration, DOS device registry, and an inert device_LPT body.
-    // Supported adapter/version: DOSBox079Adapter, v0.79.1 only.
+    // Supported adapter/version: DOSBox0812Adapter, v0.81.2 only.
     // Mutation that must fail: removing one production read-handler install.
     func testRuntimeParallelHandlerInstallationAndTeardown() throws {
-        let adapter = DOSBox079Adapter(productionRoot: dosboxRoot)
+        let adapter = DOSBox0812Adapter(productionRoot: dosboxRoot)
         let source = try String(
             contentsOf: adapter.productionSources(for: .printer)[0],
             encoding: .utf8
@@ -731,7 +731,7 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         uint32_t cpu_direction = 1;
         DOS_Block dos = {};
         DOS_InfoBlock dos_infoblock = {};
-        DOS_Drive *Drives[DOS_DRIVES] = {};
+        std::array<DOS_Drive *, DOS_DRIVES> Drives = {};
         CParallel *parallelPortObjects[3] = {};
 
         uint8_t mem_readb(PhysPt address) { return MemBase[address]; }

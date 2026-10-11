@@ -135,7 +135,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(dosboxHeader.contains("!defined(__OBJC__)"))
         XCTAssertTrue(dosboxHeader.contains("BXDOSBOX_FORCE_LEGACY_COMPATIBILITY"))
         XCTAssertFalse(dosboxHeader.contains("#include \"BXCoalface.h\""))
-        XCTAssertTrue(coalfaceCompatibility.contains("#include \"BXCoalface.h\""))
+        XCTAssertFalse(coalfaceCompatibility.contains("#include \"BXCoalface.h\""))
+        XCTAssertFalse(shellBatch.contains("BXCoalface.h"))
         XCTAssertFalse(try source(at: projectRoot.appendingPathComponent("Boxer/BXCoalface.h")).contains("#define E_Exit"))
         let diagnosticsCompatibility = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxDiagnosticsCompatibility.h"))
         XCTAssertTrue(diagnosticsCompatibility.contains("#define GFX_ShowMsg"))
@@ -577,7 +578,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
     func testPrinterRoutingContracts() throws {
         // Protects BOXER markers: printer-redirection, parport-skip-occupied-lpt, bios-parport-include, int17-printer-emulation, bios-parport-detection-disabled, bios-equipment-parport-count, bios-refresh-parport-count, int21-printer-output
         try requireAnnotated079Migration()
-        try expectBlock("src/hardware/parport/printer_redir.cpp", marker: "printer-redirection", contains: "#import \"BXCoalface.h\"")
+        try expectBlock("src/hardware/parport/printer_redir.cpp", marker: "printer-redirection", contains: "typed printer adapter remains the sole bridge contract")
         try expectBlock("src/hardware/parport/printer_redir.cpp", marker: "printer-redirection", contains: "boxer_PRINTER_isInited")
         try expectBlock("src/hardware/parport/printer_redir.cpp", marker: "printer-redirection", contains: "boxer_PRINTER_writedata")
         try expect("src/hardware/parport/parport.cpp", contains: "parport-skip-occupied-lpt")

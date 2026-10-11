@@ -55,7 +55,7 @@ final class BoxerShellRuntimeTests: XCTestCase {
     // Production entry point: DOSBox 0.81.2 InputCommand.
     func testProductionCommandInputOrderingAndMutation() throws {
         let source = try String(contentsOf: dosboxRoot.appendingPathComponent("src/shell/shell_misc.cpp"), encoding: .utf8)
-        let start = try XCTUnwrap(source.range(of: "void DOS_Shell::InputCommand(char * line)").map(\.lowerBound))
+        let start = try XCTUnwrap(source.range(of: "void DOS_Shell::InputCommand(char* line)").map(\.lowerBound))
         let input = String(source[start...])
         XCTAssertTrue(input.contains("boxer_shellWillReadCommandInputFromHandle"))
         XCTAssertTrue(input.contains("boxer_shellDidReadCommandInputFromHandle"))

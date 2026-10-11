@@ -25,7 +25,9 @@
 		05F9A20224BAA7AB00969496 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0532FBF624BAA1A4008EAD86 /* SDL2.framework */; };
 		05F9A20324BAA7AB00969496 /* SDL2.framework in Copy Bundled Frameworks */ = {isa = PBXBuildFile; fileRef = 0532FBF624BAA1A4008EAD86 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		0981E35883556DAE864FF3DB /* image_capturer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 95E4E82A2ACC5D29C11A2ADB /* image_capturer.cpp */; };
+		0A5CA177F4D2DDA101D84499 /* esfm.c in Sources */ = {isa = PBXBuildFile; fileRef = CE5B1606A6D6240A26C8EA1F /* esfm.c */; };
 		0BBB0F7EBDFF492ABCDC8A9D /* capture_audio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 572428A605E574D1B624ED61 /* capture_audio.cpp */; };
+		0D19479A217F52E5123EDE1E /* esfm_registers.c in Sources */ = {isa = PBXBuildFile; fileRef = B92BF37E61EEC2158459D182 /* esfm_registers.c */; };
 		0F0C768DD2B5C3233405ED86 /* image_scaler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A88AA0E145B66112D78F3D39 /* image_scaler.cpp */; };
 		0F6685A8303BCC790010580F /* loguru.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F6685A3303BCC790010580F /* loguru.cpp */; };
 		0F6685A9303BCC790010580F /* loguru.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F6685A3303BCC790010580F /* loguru.cpp */; };
@@ -173,6 +175,7 @@
 		30C864F3A67D979910DA6E80 /* keyboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D3379CD93528A1C9E77BC6 /* keyboard.cpp */; };
 		3804E0A0C8CF2F986009B9CD /* voodoo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14E847CA73FD6AA9345B6698 /* voodoo.cpp */; };
 		3BCD9961F745DB2F46D5B9B9 /* mouse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 231269A9727FF103E471D343 /* mouse.cpp */; };
+		3C9082D455FDCFF6213310B3 /* opl_capture.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AAE4D44F2EA1365BF1DB4A14 /* opl_capture.cpp */; };
 		3F23A3F42087F05CB9CB56B6 /* program_move.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B87B6AF53FD14EDE45F6BF5D /* program_move.cpp */; };
 		416121E36E4C2A577879F5E1 /* mouse_config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CCFF8C8A92657DAA35F24A0 /* mouse_config.cpp */; };
 		420B585C2EE4FCE0388CD8E7 /* program_setver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A3DB0C12BB1FC278980C0901 /* program_setver.cpp */; };
@@ -350,7 +353,7 @@
 		703B08FB9FB562647FA0C657 /* program_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7665A6AE3EBEBEE49A83AF2 /* program_tree.cpp */; };
 		70D16941BA7AE8609BE54560 /* program_mixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7647EBB75852C4A9D160AEC /* program_mixer.cpp */; };
 		7A1B2C3D4E5F60718293A4BB /* libDOSBoxStaging.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */; };
-		7A1B2C3D4E5F60718293A4C2 /* DOSBox-Staging/contrib/resources/freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */; };
+		7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */; };
 		849EFA1BAF3FE6EB71880EC1 /* sdlmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77211A12B38C4400072AE8 /* sdlmain.cpp */; };
 		85C9BEA44575A8AFB121D674 /* intel8042.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C3D895313FB4F1053AE0F08 /* intel8042.cpp */; };
 		89245D2C2CF33048D86F1367 /* file_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9163306C61021CB2F841DF15 /* file_reader.cpp */; };
@@ -368,6 +371,7 @@
 		9002D6C2021D2E80AE64CD77 /* capture_midi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98C94860F7E71EEC4B55D4F3 /* capture_midi.cpp */; };
 		921FA872B752076B5475B111 /* mouse_manymouse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F24968BC88CA7CFCB98E1FD /* mouse_manymouse.cpp */; };
 		93B548C3B640C7E56F629157 /* program_subst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A71ECAFAD8D2BFF856CFFB1 /* program_subst.cpp */; };
+		964A48C2E4C421D6D28CEDAC /* sdl_mapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A2B0C5C9DCB81A3E9672083 /* sdl_mapper.cpp */; };
 		9C51DEF060534AEE49A9CE8E /* mouseif_virtual_machines.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 026D873FFD9EA9C2F6A498BF /* mouseif_virtual_machines.cpp */; };
 		9F0497C01334C5970001FEE4 /* ADBForwardCompatibility.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F0497BF1334C5970001FEE4 /* ADBForwardCompatibility.m */; };
 		9F06C6D313992E1F00B19DF1 /* BXHIDControllerProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = 9F06C6D213992E1F00B19DF1 /* BXHIDControllerProfile.m */; };
@@ -1029,6 +1033,8 @@
 		E4BB73690F83C4BA63D5159B /* image_decoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4BA650E0F8BE56CC2B130715 /* image_decoder.cpp */; };
 		E5DF5C04A837160A680AF504 /* vmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2247615FDAC3B33B30D7F40 /* vmware.cpp */; };
 		E9F4AF85E99E2727EC17F198 /* program_mixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7647EBB75852C4A9D160AEC /* program_mixer.cpp */; };
+		EB8D326372E64E8BE2EA1FA0 /* titlebar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 279E7863C8A3E2659C4EE4FB /* titlebar.cpp */; };
+		EBCC954068F54C8CFBF908EE /* shell_history.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A3879FCF57148E575ACC9F6 /* shell_history.cpp */; };
 		EC01DB7B059544CAE53BBEE2 /* program_subst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A71ECAFAD8D2BFF856CFFB1 /* program_subst.cpp */; };
 		EC5DECB1AA7BDA48E45818F2 /* autoexec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 15DAD9B6F0909D1909C09051 /* autoexec.cpp */; };
 		F0460A316DF63DEC8C12B4A4 /* bios_pci.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FCB193794E4C457ABEBF015A /* bios_pci.cpp */; };
@@ -1038,6 +1044,8 @@
 		F531E1DB228D207D3068CD73 /* mouse_interfaces.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C26C10F1D41F75970BC2705F /* mouse_interfaces.cpp */; };
 		F9BAA4248272F616F0D416F1 /* vmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2247615FDAC3B33B30D7F40 /* vmware.cpp */; };
 		FB42CFF4C61F0F8835F059B1 /* mouse_manymouse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F24968BC88CA7CFCB98E1FD /* mouse_manymouse.cpp */; };
+		FBB228F0DDA5A0555EF2A5D1 /* mmx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 788E78BA3B478826AB629D75 /* mmx.cpp */; };
+		FEE564939820F5D696DE4B19 /* program_mode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56F10EAEC374787CC3781245 /* program_mode.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1363,10 +1371,13 @@
 		14E847CA73FD6AA9345B6698 /* voodoo.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = voodoo.cpp; sourceTree = "<group>"; };
 		15DAD9B6F0909D1909C09051 /* autoexec.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = autoexec.cpp; sourceTree = "<group>"; };
 		231269A9727FF103E471D343 /* mouse.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse.cpp; sourceTree = "<group>"; };
+		279E7863C8A3E2659C4EE4FB /* titlebar.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = titlebar.cpp; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		3F24968BC88CA7CFCB98E1FD /* mouse_manymouse.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_manymouse.cpp; sourceTree = "<group>"; };
+		4A2B0C5C9DCB81A3E9672083 /* sdl_mapper.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = sdl_mapper.cpp; sourceTree = "<group>"; };
+		4A3879FCF57148E575ACC9F6 /* shell_history.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = shell_history.cpp; sourceTree = "<group>"; };
 		4A3A9783EAC4E0CBB5C541FB /* mouse_common.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_common.cpp; sourceTree = "<group>"; };
 		4B31C9C42B066DEE409533C0 /* intel8255.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = intel8255.cpp; sourceTree = "<group>"; };
 		4BA650E0F8BE56CC2B130715 /* image_decoder.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = image_decoder.cpp; sourceTree = "<group>"; };
@@ -1575,13 +1586,15 @@
 		55F4A93C256315FD00410099 /* program_ls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = program_ls.h; sourceTree = "<group>"; };
 		55F643EF25F41DF5009E1800 /* rwqueue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rwqueue.cpp; sourceTree = "<group>"; };
 		55F643FE25F41E18009E1800 /* rwqueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rwqueue.h; sourceTree = "<group>"; };
+		56F10EAEC374787CC3781245 /* program_mode.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = program_mode.cpp; sourceTree = "<group>"; };
 		572428A605E574D1B624ED61 /* capture_audio.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = capture_audio.cpp; sourceTree = "<group>"; };
 		5F93BE5CD2589EC80D632CBF /* keyboard_scancodes.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard_scancodes.cpp; sourceTree = "<group>"; };
 		6D1EB324438C1209036A6740 /* mouseif_ps2_bios.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouseif_ps2_bios.cpp; sourceTree = "<group>"; };
 		7432A8442FB387A56A498A92 /* mouse_config.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = mouse_config.h; sourceTree = "<group>"; };
 		76DBD7DA6FF2411747C8FEF3 /* mouse_manymouse.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = mouse_manymouse.h; sourceTree = "<group>"; };
+		788E78BA3B478826AB629D75 /* mmx.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mmx.cpp; sourceTree = "<group>"; };
 		7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libDOSBoxStaging.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "DOSBox-Staging/contrib/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
+		7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "DOSBox-Staging/contrib/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
 		7CCFF8C8A92657DAA35F24A0 /* mouse_config.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_config.cpp; sourceTree = "<group>"; };
 		7D7A737128226BDA716E4A30 /* virtualbox.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = virtualbox.cpp; sourceTree = "<group>"; };
 		8C26465EB00C4836561E82B1 /* capture.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = capture.cpp; sourceTree = "<group>"; };
@@ -2303,15 +2316,18 @@
 		9FFF97941232B718009B5EE5 /* ADBMultiPanelWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ADBMultiPanelWindowController.m; sourceTree = "<group>"; };
 		A3DB0C12BB1FC278980C0901 /* program_setver.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = program_setver.cpp; sourceTree = "<group>"; };
 		A88AA0E145B66112D78F3D39 /* image_scaler.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = image_scaler.cpp; sourceTree = "<group>"; };
+		AAE4D44F2EA1365BF1DB4A14 /* opl_capture.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = opl_capture.cpp; sourceTree = "<group>"; };
 		B2044A4ACBDC152AA45C66F4 /* mouse_common.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = mouse_common.h; sourceTree = "<group>"; };
 		B3DA3E00BDBB40CC2CEFEAF9 /* mouseif_dos_driver.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouseif_dos_driver.cpp; sourceTree = "<group>"; };
 		B7900B3D13E47D9E00B37913 /* BXPrecisionProControllerProfile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXPrecisionProControllerProfile.m; sourceTree = "<group>"; };
 		B87B6AF53FD14EDE45F6BF5D /* program_move.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = program_move.cpp; sourceTree = "<group>"; };
+		B92BF37E61EEC2158459D182 /* esfm_registers.c */ = {isa = PBXFileReference; includeInIndex = 1; path = esfm_registers.c; sourceTree = "<group>"; };
 		BDA757B7DBA76543CBFBF750 /* imfc.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = imfc.cpp; sourceTree = "<group>"; };
 		C26C10F1D41F75970BC2705F /* mouse_interfaces.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_interfaces.cpp; sourceTree = "<group>"; };
 		C274D3F1E3EB33F10C1F24CD /* intel8042.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = intel8042.h; sourceTree = "<group>"; };
 		C497E42C5D628A5F39351566 /* image_saver.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = image_saver.cpp; sourceTree = "<group>"; };
 		CC3B2D6F59F34F5FE7355A82 /* command_line.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = command_line.cpp; sourceTree = "<group>"; };
+		CE5B1606A6D6240A26C8EA1F /* esfm.c */ = {isa = PBXFileReference; includeInIndex = 1; path = esfm.c; sourceTree = "<group>"; };
 		D2247615FDAC3B33B30D7F40 /* vmware.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = vmware.cpp; sourceTree = "<group>"; };
 		D819F51A6FB029532E3944E8 /* shader_manager.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = shader_manager.cpp; sourceTree = "<group>"; };
 		DB37BEFEF14F456A6FB4883E /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -2334,7 +2350,17 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Boxer Integration Tests"; sourceTree = "<group>"; };
+		0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = "Boxer Integration Tests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2513,6 +2539,16 @@
 				E2D469D4703C910ABCFA211C /* png_writer.cpp */,
 			);
 			path = image;
+			sourceTree = "<group>";
+		};
+		0DC88CC0A79919D6A38CA25E /* ESFMu */ = {
+			isa = PBXGroup;
+			children = (
+				CE5B1606A6D6240A26C8EA1F /* esfm.c */,
+				B92BF37E61EEC2158459D182 /* esfm_registers.c */,
+			);
+			name = ESFMu;
+			path = ESFMu;
 			sourceTree = "<group>";
 		};
 		0F668600303C92810010580F /* tal-chorus */ = {
@@ -2778,7 +2814,7 @@
 			path = capture;
 			sourceTree = "<group>";
 		};
-		29B97314FDCFA39411CA2CEA /* Boxer */ = {
+		29B97314FDCFA39411CA2CEA = {
 			isa = PBXGroup;
 			children = (
 				080E96DDFE201D6D7F000001 /* Boxer */,
@@ -3593,6 +3629,7 @@
 				9F7720D512B38C4400072AE8 /* modrm.cpp */,
 				9F7720D612B38C4400072AE8 /* modrm.h */,
 				9F7720D712B38C4400072AE8 /* paging.cpp */,
+				788E78BA3B478826AB629D75 /* mmx.cpp */,
 			);
 			path = cpu;
 			sourceTree = "<group>";
@@ -3748,6 +3785,7 @@
 				A3DB0C12BB1FC278980C0901 /* program_setver.cpp */,
 				0A71ECAFAD8D2BFF856CFFB1 /* program_subst.cpp */,
 				F7665A6AE3EBEBEE49A83AF2 /* program_tree.cpp */,
+				56F10EAEC374787CC3781245 /* program_mode.cpp */,
 			);
 			path = dos;
 			sourceTree = "<group>";
@@ -3781,6 +3819,8 @@
 				9F77211812B38C4400072AE8 /* sdl_gui.cpp */,
 				9F77211A12B38C4400072AE8 /* sdlmain.cpp */,
 				D819F51A6FB029532E3944E8 /* shader_manager.cpp */,
+				279E7863C8A3E2659C4EE4FB /* titlebar.cpp */,
+				4A2B0C5C9DCB81A3E9672083 /* sdl_mapper.cpp */,
 			);
 			path = gui;
 			sourceTree = "<group>";
@@ -3851,6 +3891,7 @@
 				7D7A737128226BDA716E4A30 /* virtualbox.cpp */,
 				D2247615FDAC3B33B30D7F40 /* vmware.cpp */,
 				14E847CA73FD6AA9345B6698 /* voodoo.cpp */,
+				AAE4D44F2EA1365BF1DB4A14 /* opl_capture.cpp */,
 			);
 			path = hardware;
 			sourceTree = "<group>";
@@ -3917,6 +3958,7 @@
 				9F77216812B38C4400072AE8 /* zmbv */,
 				0FFCA16E303266110076F2F5 /* whereami */,
 				55DB151E27EDA4B10024AE9E /* loguru */,
+				0DC88CC0A79919D6A38CA25E /* ESFMu */,
 			);
 			path = libs;
 			sourceTree = "<group>";
@@ -3970,6 +4012,7 @@
 				15DAD9B6F0909D1909C09051 /* autoexec.cpp */,
 				CC3B2D6F59F34F5FE7355A82 /* command_line.cpp */,
 				9163306C61021CB2F841DF15 /* file_reader.cpp */,
+				4A3879FCF57148E575ACC9F6 /* shell_history.cpp */,
 			);
 			path = shell;
 			sourceTree = "<group>";
@@ -4195,7 +4238,7 @@
 				55F0B73B26ABFEB80077E58C /* libs */,
 				9F77207312B38C4400072AE8 /* include */,
 				9F77209D12B38C4400072AE8 /* src */,
-				7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */,
+				7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */,
 				9FBC3A7F0F56CEA2001811F2 /* config.h */,
 				0FB959793054521500B88A1D /* README.md */,
 			);
@@ -4564,7 +4607,7 @@
 				es,
 				"pt-BR",
 			);
-			mainGroup = 29B97314FDCFA39411CA2CEA /* Boxer */;
+			mainGroup = 29B97314FDCFA39411CA2CEA;
 			packageReferences = (
 				55D432012504BB65008515E1 /* XCRemoteSwiftPackageReference "CwlDemangle" */,
 				55EB73DE27ED729F00D5F7E0 /* XCRemoteSwiftPackageReference "Sparkle" */,
@@ -4731,7 +4774,7 @@
 				55635A372D35D8E000C70C0E /* InfoPlist.xcstrings in Resources */,
 				9F4199F61BD416E400A2D165 /* Bezel.xib in Resources */,
 				9F4BCCD817E6190A00140390 /* Boxer.help in Resources */,
-				7A1B2C3D4E5F60718293A4C2 /* DOSBox-Staging/contrib/resources/freedos-keyboard in Resources */,
+				7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5056,6 +5099,14 @@
 				5A1EBE396D84A512CE32E31F /* command_line.cpp in Sources */,
 				89245D2C2CF33048D86F1367 /* file_reader.cpp in Sources */,
 				D440A52F64F93C196D99383B /* zmbv.cpp in Sources */,
+				FBB228F0DDA5A0555EF2A5D1 /* mmx.cpp in Sources */,
+				FEE564939820F5D696DE4B19 /* program_mode.cpp in Sources */,
+				EB8D326372E64E8BE2EA1FA0 /* titlebar.cpp in Sources */,
+				3C9082D455FDCFF6213310B3 /* opl_capture.cpp in Sources */,
+				0A5CA177F4D2DDA101D84499 /* esfm.c in Sources */,
+				0D19479A217F52E5123EDE1E /* esfm_registers.c in Sources */,
+				EBCC954068F54C8CFBF908EE /* shell_history.cpp in Sources */,
+				964A48C2E4C421D6D28CEDAC /* sdl_mapper.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6168,7 +6219,7 @@
 		7A1B2C3D4E5F60718293A4BC /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -6203,7 +6254,7 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/manymouse",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 12;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CPLUSPLUSFLAGS = "-mstackrealign";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -6218,7 +6269,7 @@
 		7A1B2C3D4E5F60718293A4BD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -6252,7 +6303,7 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/manymouse",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 12;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CPLUSPLUSFLAGS = "-mstackrealign";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -6577,7 +6628,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = boxer;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;
@@ -6655,7 +6706,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = boxer;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = NO;

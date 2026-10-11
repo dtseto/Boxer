@@ -98,7 +98,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         let declarationCount = coalface.split(separator: "\n").filter {
             $0.range(of: declarationPattern, options: .regularExpression) != nil
         }.count
-        XCTAssertEqual(declarationCount, 84)
+        XCTAssertEqual(declarationCount, 72)
 
         for consumer in [
             "Boxer/BXCoalface.mm",
@@ -270,6 +270,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
         // Protects BOXER markers: gameport-timing-export, gameport-timing-state, mapper-free-autofire, gameport-poll-activation, gameport-timing-config, preserve-controller-ownership, dos-visible-joystick-state, joystick-handler-install-end
         try requireAnnotated079Migration()
         try expect("include/joystick.h", contains: "extern bool gameport_timed;")
+        try expect("include/BXDOSBoxBridgeRegistration.h", contains: "BXDOSBoxJoystickBridgeCallbacks")
+        try expect("include/BXDOSBoxLegacyCompatibility.h", contains: "boxer_setJoystickActive(active) boxer_registeredDOSBoxJoystickBridge")
         try expect("src/hardware/joystick.cpp", contains: "bool gameport_timed")
         try expect("src/hardware/joystick.cpp", contains: "mapper-free-autofire")
         try expectBlock("src/hardware/joystick.cpp", marker: "gameport-poll-activation", contains: "boxer_setJoystickActive(true);")

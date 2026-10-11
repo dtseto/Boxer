@@ -115,9 +115,6 @@ FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtensi
     
 #pragma mark - Drive and file handling
 	
-	/// Called from dos_programs.cpp: verifies that DOSBox is allowed to mount the specified folder.
-	bool boxer_shouldMountPath(const char *filePath);
-    
 	/// Called from drive_cache.cpp: allows Boxer to hide OS X files that DOSBox shouldn't touch.
 	bool boxer_shouldShowFileWithName(const char *name);
 	
@@ -132,19 +129,9 @@ FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtensi
 	void boxer_didCreateLocalFile(const char *path, DOS_Drive *dosboxDrive);
 	void boxer_didRemoveLocalFile(const char *path, DOS_Drive *dosboxDrive);
 	
-    /// Called from drive_local.cpp to wrap local file access.
-    FILE * boxer_openLocalFile(const char *path, DOS_Drive *drive, const char *mode);
-    bool boxer_removeLocalFile(const char *path, DOS_Drive *drive);
-    bool boxer_moveLocalFile(const char *fromPath, const char *toPath, DOS_Drive *drive);
-    bool boxer_createLocalDir(const char *path, DOS_Drive *drive);
-    bool boxer_removeLocalDir(const char *path, DOS_Drive *drive);
-    bool boxer_getLocalPathStats(const char *path, DOS_Drive *drive, struct stat *outStatus);
-    bool boxer_localDirectoryExists(const char *path, DOS_Drive *drive);
-    bool boxer_localFileExists(const char *path, DOS_Drive *drive);
-    
-    void * boxer_openLocalDirectory(const char *path, DOS_Drive *drive);
-    void boxer_closeLocalDirectory(void *handle);
-    bool boxer_getNextDirectoryEntry(void *handle, char *outName, bool &isDirectory);
+	/// The active DOSBox filesystem boundary is declared in
+	/// BXDOSBoxFilesystemCompatibility.h; obsolete direct file wrappers are no
+	/// longer part of the host compatibility shim.
 	
     
 #pragma mark - Runloop and event loop handling

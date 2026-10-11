@@ -474,14 +474,6 @@ FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtensi
     return [emulator _openFileForCaptureOfType:typeDescription extension: fileExtension];
 }
 
-//Whether or not to allow the specified path to be mounted.
-//Called by MOUNT::Run in DOSBox's dos/dos_programs.cpp.
-bool boxer_shouldMountPath(const char *path)
-{
-	BXEmulator *emulator = [BXEmulator currentEmulator];
-	return [emulator _shouldMountLocalPath: path];
-}
-
 //Whether to include a file with the specified name in DOSBox directory listings
 bool boxer_shouldShowFileWithName(const char *name)
 {
@@ -523,24 +515,6 @@ void boxer_didRemoveLocalFile(const char *path, DOS_Drive *dosboxDrive)
 }
 
 
-
-FILE * boxer_openLocalFile(const char *path, DOS_Drive *drive, const char *mode)
-{
-    BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _openFileAtLocalPath: path onDOSBoxDrive: drive inMode: mode];
-}
-
-bool boxer_removeLocalFile(const char *path, DOS_Drive *drive)
-{
-    BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _removeFileAtLocalPath: path onDOSBoxDrive: drive];
-}
-
-bool boxer_moveLocalFile(const char *fromPath, const char *toPath, DOS_Drive *drive)
-{
-    BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _moveLocalPath: fromPath toLocalPath: toPath onDOSBoxDrive: drive];
-}
 
 bool boxer_createLocalDir(const char *path, DOS_Drive *drive)
 {
@@ -585,93 +559,6 @@ const BXDOSBoxFilesystemBridgeCallbacks *boxer_registeredDOSBoxFilesystemBridge(
     }
     return BXDOSBoxFilesystemCallbacksRegistered ? &BXDOSBoxFilesystemCallbacks : NULL;
 }
-
-bool boxer_removeLocalDir(const char *path, DOS_Drive *drive)
-{
-    BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _removeDirectoryAtLocalPath: path onDOSBoxDrive: drive];
-}
-
-bool boxer_getLocalPathStats(const char *path, DOS_Drive *drive, struct stat *outStatus)
-{
-    BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _getStats: outStatus forLocalPath: path onDOSBoxDrive: drive];
-}
-
-bool boxer_localDirectoryExists(const char *path, DOS_Drive *drive)
-{
-    BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _localDirectoryExists: path onDOSBoxDrive: drive];
-}
-
-bool boxer_localFileExists(const char *path, DOS_Drive *drive)
-{
-    BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _localFileExists: path onDOSBoxDrive: drive];
-}
-
-#pragma mark Directory enumeration
-
-void *boxer_openLocalDirectory(const char *path, DOS_Drive *drive)
-{
-    BXEmulator *emulator = [BXEmulator currentEmulator];
-    id <ADBFilesystemFileURLEnumeration> enumerator = [emulator _directoryEnumeratorForLocalPath: path
-                                                                                        onDOSBoxDrive: drive];
-    
-    NSCAssert1(enumerator != nil, @"No enumerator found for %s", path);
-    
-    //Our own enumerators don't include directory entries for . and ..,
-    //which are expected by DOSBox. So, we insert them ourselves during iteration.
-    NSMutableArray *fakeEntries = [NSMutableArray arrayWithObjects: @".", @"..", nil];
-    
-    //The dictionary will be released when the calling context calls boxer_closeLocalDirectory() with the pointer to the dictionary.
-    NSDictionary *enumeratorInfo = @{ @"enumerator": enumerator, @"fakeEntries": fakeEntries };
-    
-    return (void*)CFBridgingRetain(enumeratorInfo);
-}
-
-void boxer_closeLocalDirectory(void *handle)
-{
-    CFRelease(handle);
-}
-
-bool boxer_getNextDirectoryEntry(void *handle, char *outName, bool &isDirectory)
-{
-    NSDictionary *enumeratorInfo = (__bridge NSDictionary *)handle;
-    NSMutableArray *fakeEntries = [enumeratorInfo objectForKey: @"fakeEntries"];
-    
-    if (fakeEntries.count)
-    {
-        const char *nextFakeEntry = [[fakeEntries objectAtIndex: 0] fileSystemRepresentation];
-        strlcpy(outName, nextFakeEntry, CROSS_LEN);
-        
-        [fakeEntries removeObjectAtIndex: 0];
-        isDirectory = YES;
-        return true;
-    }
-    else
-    {
-        id <ADBFilesystemFileURLEnumeration> enumerator = [enumeratorInfo objectForKey: @"enumerator"];
-        NSURL *nextURL = enumerator.nextObject;
-        if (nextURL != nil)
-        {
-            NSNumber *directoryFlag = nil;
-            NSString *fileName = nil;
-            BOOL hasDirFlag = [nextURL getResourceValue: &directoryFlag forKey: NSURLIsDirectoryKey error: NULL];
-            BOOL hasNameFlag = [nextURL getResourceValue: &fileName forKey: NSURLNameKey error: NULL];
-            
-            NSCAssert(hasNameFlag && hasDirFlag, @"Enumerator is missing directory and/or filename resources.");
-            
-            isDirectory = directoryFlag.boolValue;
-            const char *nextEntry = fileName.fileSystemRepresentation;
-            
-            strlcpy(outName, nextEntry, CROSS_LEN);
-            return true;
-        }
-        else return false;
-    }
-}
-
 
 #pragma mark - Input functions
 
@@ -782,6 +669,30 @@ const BXDOSBoxInputBridgeCallbacks *boxer_registeredDOSBoxInputBridge(void)
         boxer_registerDOSBoxInputBridge(&callbacks);
     }
     return BXDOSBoxInputCallbacksRegistered ? &BXDOSBoxInputCallbacks : NULL;
+}
+
+static BXDOSBoxJoystickBridgeCallbacks BXDOSBoxJoystickCallbacks;
+static bool BXDOSBoxJoystickCallbacksRegistered = false;
+
+void boxer_registerDOSBoxJoystickBridge(const BXDOSBoxJoystickBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxJoystickCallbacks = *callbacks;
+        BXDOSBoxJoystickCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxJoystickBridgeCallbacks *boxer_registeredDOSBoxJoystickBridge(void)
+{
+    if (!BXDOSBoxJoystickCallbacksRegistered)
+    {
+        const BXDOSBoxJoystickBridgeCallbacks callbacks = {
+            boxer_setJoystickActive
+        };
+        boxer_registerDOSBoxJoystickBridge(&callbacks);
+    }
+    return BXDOSBoxJoystickCallbacksRegistered ? &BXDOSBoxJoystickCallbacks : NULL;
 }
 
 static void boxer_shellBridgeWillStart(uintptr_t shell) { boxer_shellWillStart((DOS_Shell *)shell); }

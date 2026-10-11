@@ -28,7 +28,7 @@ including `BXCoalface.h` directly.
   candidate.
 - Add contract coverage for the inventory before changing includes.
 
-Current frozen counts are 21 legacy macro remaps, 84 `boxer_*` declarations,
+Current frozen counts are 21 legacy macro remaps, 72 `boxer_*` declarations,
 and six actual direct consumers: `BXCoalface.mm`, `BXEmulatedKeyboard.mm`,
 `BXKeyBuffer.mm`, `BXEmulatedPrinter.mm`, `dosbox.h`, and `shell_batch.cpp`.
 `printer_redir.cpp` retains a documented compatibility comment and uses the
@@ -70,6 +70,12 @@ Keyboard-layout preference lookup now travels through the input callback table;
 the DOSBox source retains the literal `boxer_preferredKeyboardLayout()` call
 through a DOSBox-only compatibility macro, while Boxer supplies the typed
 `preferredKeyboardLayout` callback.
+
+Joystick ownership now has its own opaque callback table and DOSBox-only
+compatibility macro. Filesystem call sites were already using the typed
+filesystem table; the remaining unused local-file, directory-enumeration, and
+mount wrappers have been removed from the Coalface compatibility shim while
+the active emulator filesystem methods remain available internally.
 
 ### Step 3: Migrate Boxer host consumers
 

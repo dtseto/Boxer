@@ -714,7 +714,7 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         uint32_t cpu_direction = 1;
         DOS_Block dos = {};
         DOS_InfoBlock dos_infoblock = {};
-        std::array<DOS_Drive *, DOS_DRIVES> Drives = {};
+        std::array<std::shared_ptr<DOS_Drive>, DOS_DRIVES> Drives = {};
         CParallel *parallelPortObjects[3] = {};
 
         uint8_t mem_readb(PhysPt address) { return MemBase[address]; }
@@ -1061,7 +1061,7 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         bool DOS_Device::Read(uint8_t *, uint16_t *) { return false; }
         bool DOS_Device::Write(uint8_t *, uint16_t *) { return false; }
         bool DOS_Device::Seek(uint32_t *, uint32_t) { return false; }
-        bool DOS_Device::Close() { return false; }
+        void DOS_Device::Close() {}
         uint16_t DOS_Device::GetInformation() { return 0; }
         bool DOS_Device::ReadFromControlChannel(PhysPt, uint16_t, uint16_t *) { return false; }
         bool DOS_Device::WriteToControlChannel(PhysPt, uint16_t, uint16_t *) { return false; }
@@ -1074,7 +1074,7 @@ final class BoxerPrinterRuntimeTests: XCTestCase {
         bool device_LPT::Read(uint8_t *, uint16_t *size) { *size = 0; return true; }
         bool device_LPT::Write(uint8_t *, uint16_t *) { return true; }
         bool device_LPT::Seek(uint32_t *position, uint32_t) { *position = 0; return true; }
-        bool device_LPT::Close() { return false; }
+        void device_LPT::Close() {}
         uint16_t device_LPT::GetInformation() { return 0x80a0; }
         void BIOS_SetLPTPort(Bitu, uint16_t base) { bios_bases.push_back(base); }
         void DOS_AddDevice(DOS_Device *) { ++devices_added; }

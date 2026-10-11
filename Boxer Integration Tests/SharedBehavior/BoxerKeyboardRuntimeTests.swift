@@ -331,7 +331,7 @@ final class BoxerKeyboardRuntimeTests: XCTestCase {
 
         static int preferred_layout_calls = 0;
         static SectionFunction registered_destroy = nullptr;
-        config_ptr_t control = {};
+        ConfigPtr control = {};
         #undef boxer_preferredKeyboardLayout
         const char *boxer_preferredKeyboardLayout() {
             ++preferred_layout_calls;

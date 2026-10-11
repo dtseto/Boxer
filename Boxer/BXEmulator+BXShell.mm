@@ -653,7 +653,7 @@ nil];
                        isBatchFile: (BOOL)isBatchFile
 {
     char driveIndex = dosPath[0] - 'A';
-    DOS_Drive *dosboxDrive = Drives[driveIndex];
+	DOS_Drive *dosboxDrive = Drives[driveIndex].get();
 	BXDrive *drive = [self _driveMatchingDOSBoxDrive: dosboxDrive];
     
     //IMPLEMENTATION NOTE: these lookups are a little messy because the DOS path we receive comes with the drive letter

@@ -926,25 +926,8 @@ void restart_program(std::vector<std::string> & parameters) {
     boxer_die(__PRETTY_FUNCTION__, __FILE__, __LINE__, "Restarting not implemented!");
 }
 
-const char *DOSBOX_GetDetailedVersion() noexcept
-{
-    return "Boxer-build";
-}
-
 #pragma mark - No-ops
 
-//These used to be defined in sdl_mapper.cpp, which we no longer include in Boxer.
-void MAPPER_AddHandler(MAPPER_Handler *handler, SDL_Scancode key, uint32_t mods,
-                       const char *event_name, const char *button_name) {}
-void MAPPER_Init(void) {}
-void MAPPER_StartUp(Section * sec) {}
-void MAPPER_Run(bool pressed) {}
-void MAPPER_RunInternal() {}
-void MAPPER_LosingFocus(void) {}
-void MAPPER_AutoType(std::vector<std::string> &sequence,
-                     const uint32_t wait_ms,
-                     const uint32_t pacing_ms) {}
-std::vector<std::string> MAPPER_GetEventNames(const std::string &prefix) {return std::vector<std::string>();}
 // Boxer owns mouse capture and focus state instead of DOSBox's SDL frontend.
 bool mouse_is_captured = false;
 
@@ -957,8 +940,3 @@ void MAPPER_AutoTypeStopImmediately()
 {
 	// Boxer does not use the SDL mapper's auto-typing queue.
 }
-void MAPPER_BindKeys(Section *sec) {}
-void MAPPER_DisplayUI() {}
-bool MAPPER_IsUsingJoysticks() { return false; }
-void MAPPER_CheckEvent(SDL_Event *event) {}
-void MAPPER_UpdateJoysticks() {}

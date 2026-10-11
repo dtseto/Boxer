@@ -16,6 +16,7 @@
 #import "BXEmulatorPrivate.h"
 #import "BXVideoHandler.h"
 #import "callback.h"
+#import "control.h"
 #import "dos_inc.h"
 #import "dosbox.h"
 #import "shell.h"

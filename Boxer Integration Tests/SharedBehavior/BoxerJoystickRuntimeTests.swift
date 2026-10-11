@@ -142,7 +142,8 @@ final class BoxerJoystickRuntimeTests: XCTestCase {
         static bool configured_timed = true;
         static std::string configured_type = "auto";
 
-        config_ptr_t control = {};
+        ConfigPtr control = {};
+        bool autofire = false;
         uint32_t PIC_Ticks = 0;
         uint32_t PIC_IRQCheck = 0;
         int32_t CPU_Cycles = 0;

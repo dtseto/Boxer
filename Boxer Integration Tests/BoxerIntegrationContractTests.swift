@@ -153,8 +153,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("src/dosbox.cpp", contains: "BXDOSBoxRunLoopCompatibility.h")
         try expectBlock("src/dosbox.cpp", marker: "runloop-context", contains: "boxer_runLoopWillStartWithContextInfo(&contextInfo);")
         try expectBlock("src/dosbox.cpp", marker: "runloop-context", contains: "boxer_runLoopDidFinishWithContextInfo(contextInfo);")
-        try expect("src/dos/dos_files.cpp", contains: "for (uint8_t i = 0; i < DOS_DRIVES; ++i)")
-        try expect("src/dos/dos_files.cpp", contains: "Drives[i] = nullptr;")
+        try expect("src/dos/dos_files.cpp", contains: "Drives.fill(nullptr);")
         let emulator = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator.mm"))
         XCTAssertTrue(emulator.contains("InitConfigDir();"))
     }
@@ -200,7 +199,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
             endingBefore: "- (MixerChannel *) _MIDIMixerChannel"
         )
 
-        XCTAssertTrue(audioBridge.contains("static mixer_channel_t BXMIDIChannel;"))
+        XCTAssertTrue(audioBridge.contains("static MixerChannelPtr BXMIDIChannel;"))
         XCTAssertTrue(callback.contains("BXMIDIChannel.get()"))
         XCTAssertFalse(callback.contains("MIXER_FindChannel(BXMIDIChannelName)"))
     }
@@ -227,7 +226,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "BXDOSBoxLegacyCompatibility.h")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "boxer_masterVolume(BXLeftChannel)")
         try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "boxer_masterVolume(BXRightChannel)")
-        try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "channel->RecalcCombinedVolume();")
+        try expectBlock("src/hardware/mixer.cpp", marker: "mixer-volume-bridge", contains: "combined_volume_gain = user_volume_gain * app_volume_gain")
         try expect("src/dos/program_mixer.cpp", contains: "const AudioFrame boxer_master_volume")
         try expect("src/dos/program_mixer.cpp", contains: "show_channel(convert_ansi_markup(master_channel_string)")
     }
@@ -247,7 +246,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("../Boxer/BXVideoHandler.mm", contains: "registeredDOSBoxRenderingBridge()->setCGAComponentMode")
         try expect("../Boxer/BXVideoHandler.mm", contains: "registeredDOSBoxRenderingBridge()->setCGACompositeHueOffset")
         try expectBlock("src/capture/capture.cpp", marker: "capture-file-routing", contains: "boxer_openCaptureFile(boxer_type, boxer_ext)")
-        try expect("src/dos/dos_execute.cpp", contains: "GFX_SetTitle(-1, false);")
+        try expect("src/dos/dos_execute.cpp", contains: "GFX_NotifyProgramName(segment_name, canonical_name);")
     }
 
     func testKeyboardContracts() throws {
@@ -607,7 +606,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         let program = try source(at: dosboxRoot.appendingPathComponent("src/dos/program_mixer.cpp"))
         XCTAssertTrue(mixer.contains("boxer_masterVolume(BXLeftChannel)"))
         XCTAssertTrue(mixer.contains("boxer_masterVolume(BXRightChannel)"))
-        XCTAssertTrue(mixer.contains("channel->RecalcCombinedVolume()"))
+        XCTAssertTrue(mixer.contains("channel->UpdateCombinedVolume()"))
         XCTAssertTrue(program.contains("const AudioFrame boxer_master_volume"))
         XCTAssertTrue(program.contains("show_channel"))
     }

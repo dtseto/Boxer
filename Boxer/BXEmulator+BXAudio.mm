@@ -18,7 +18,7 @@
 
 
 static const char *BXMIDIChannelName = "MIDI";
-static mixer_channel_t BXMIDIChannel;
+static MixerChannelPtr BXMIDIChannel;
 
 NSString * const BXEmulatorDidDisplayMT32MessageNotification = @"BXEmulatorDidDisplayMT32MessageNotification";
 
@@ -224,10 +224,13 @@ void _renderMIDIOutput(Bitu numFrames)
                        toChannel: (MixerChannel *)channel
                           frames: (NSUInteger)numFrames
 {
-    NSUInteger sampleRate = 0;
-    BXAudioFormat format = BXAudioFormatAny;
-    
-    void *buffer = (void *)MixTemp;
+	NSUInteger sampleRate = 0;
+	BXAudioFormat format = BXAudioFormatAny;
+	// MixTemp and mixer_channel_t were removed in DOSBox-Staging 0.82.
+	// Allocate the maximum channel/32-bit sample buffer requested by the
+	// source, then feed the modern MixerChannel API below.
+	std::vector<uint8_t> bufferStorage(numFrames * 2 * sizeof(int32_t));
+	void *buffer = bufferStorage.data();
     BOOL audioRendered = [source renderOutputToBuffer: buffer
                                                frames: numFrames
                                            sampleRate: &sampleRate
@@ -235,7 +238,7 @@ void _renderMIDIOutput(Bitu numFrames)
     
     if (audioRendered)
     {
-        [self _renderBuffer: MixTemp
+		[self _renderBuffer: buffer
                   toChannel: channel
                      frames: numFrames
                      format: format];
@@ -284,9 +287,15 @@ void _renderMIDIOutput(Bitu numFrames)
             break;
             
         case BXAudioFormat32Bit:
-            if (isStereo)       channel->AddSamples_s32(numFrames, (const int32_t *)buffer);
-            else                channel->AddSamples_m32(numFrames, (const int32_t *)buffer);
-    }
+			const int sampleCount = (int)(numFrames * (isStereo ? 2 : 1));
+			std::vector<float> converted(sampleCount);
+			const int32_t *samples = (const int32_t *)buffer;
+			for (int i = 0; i < sampleCount; ++i)
+				converted[i] = (float)samples[i] / (float)INT32_MAX;
+			if (isStereo) channel->AddSamples_sfloat((int)numFrames, converted.data());
+			else          channel->AddSamples_mfloat((int)numFrames, converted.data());
+			break;
+	}
 }
 
 - (void) _resetMIDIDevice

@@ -68,6 +68,10 @@ extern const char* RunningProgram;
 //defined in dosbox.cpp
 extern bool ticksLocked;
 
+// DOSBox-Staging 0.82 removed the legacy CPU auto-determine bitfield. Boxer
+// still needs to restore the prior fixed cycle value when toggling auto speed.
+static int CPU_OldCycleMax = 0;
+
 #if (C_DYNAMIC_X86)
 //defined in core_dyn_x86.cpp
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
@@ -423,10 +427,7 @@ static BOOL _hasStartedEmulator = NO;
 		//Turn off automatic speed scaling
         self.autoSpeed = NO;
         
-		CPU_OldCycleMax = CPU_CycleMax = (int32_t)newSpeed;
-		
-		//Stop DOSBox from resetting the cycles after a program exits
-		CPU_AutoDetermineMode &= ~CPU_AUTODETERMINE_CYCLES;
+		CPU_OldCycleMax = CPU_CycleMax = (int)newSpeed;
 		
 		//Wipe out the cycles queue: we do this because DOSBox's CPU functions do whenever they modify the cycles
 		CPU_CycleLeft	= 0;
@@ -559,9 +560,6 @@ static BOOL _hasStartedEmulator = NO;
 				cpudecoder = &CPU_Core_Full_Run;
 				break;
 		}
-		
-		//Prevent DOSBox from resetting the core mode after a program exits
-		CPU_AutoDetermineMode &= ~CPU_AUTODETERMINE_CORE;
 		
 		//Reset DOSBox's emulated cycles counters
 		CPU_CycleLeft=0;

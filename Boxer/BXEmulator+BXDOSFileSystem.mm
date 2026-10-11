@@ -42,10 +42,6 @@ BXDriveGeometry BXCDROMGeometry			= {2048, 1, 65535, 0};		//~650MB, no free spac
 
 #pragma mark - Externs
 
-//Defined in dos_files.cpp
-extern DOS_File * Files[DOS_FILES];
-extern std::array<DOS_Drive *, DOS_DRIVES> Drives;
-
 //Defined in dos_mscdex.cpp
 void MSCDEX_SetCDInterface(int intNr, int forceCD);
 
@@ -455,7 +451,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	{
 		for (NSUInteger i=0; i < DOS_DRIVES; i++)
 		{
-			if (Drives[i]) Drives[i]->EmptyCache();
+		if (Drives[i]) Drives[i]->EmptyCache();
 		}
 	}
 }
@@ -534,9 +530,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		dosPath = [dosPath substringFromIndex: 2];
 		
         NSUInteger driveIndex = [self _indexOfDriveLetter: driveLetter];
-        dosDrive = Drives[driveIndex];
+		dosDrive = Drives[driveIndex].get();
 	}
-    else dosDrive = Drives[DOS_GetDefaultDrive()];
+	else dosDrive = Drives[DOS_GetDefaultDrive()].get();
     
     if (!dosDrive) return NO;
     
@@ -568,7 +564,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	if (self.isExecuting)
 	{
-        DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()];
+		DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()].get();
         const char *currentDir = currentDOSBoxDrive->curdir;
 		return [NSString stringWithCString: currentDir
                                   encoding: BXDirectStringEncoding];
@@ -590,7 +586,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                 
 		if (resolved)
 		{
-			DOS_Drive *dosboxDrive = Drives[driveIndex];
+			DOS_Drive *dosboxDrive = Drives[driveIndex].get();
             return [self _driveMatchingDOSBoxDrive: dosboxDrive];
 		}
 		else return nil;
@@ -630,7 +626,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	if (self.isExecuting)
 	{
-		DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()];
+		DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()].get();
 		const char *currentDir = currentDOSBoxDrive->curdir;
 		
 		NSURL *localURL	= [self _filesystemURLForDOSPath: currentDir
@@ -665,7 +661,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         
 		if (resolved)
 		{
-			DOS_Drive *dosboxDrive = Drives[driveIndex];
+			DOS_Drive *dosboxDrive = Drives[driveIndex].get();
 			NSURL *localURL	= [self _filesystemURLForDOSPath: fullPath onDOSBoxDrive: dosboxDrive];
 			
 			if (localURL)
@@ -759,7 +755,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	if (!self.isExecuting) return nil;
 	
 	NSUInteger driveIndex	= [self _indexOfDriveLetter: drive.letter];
-	DOS_Drive *DOSBoxDrive	= Drives[driveIndex];
+	DOS_Drive *DOSBoxDrive	= Drives[driveIndex].get();
     //The drive is not mounted in DOS: give up
 	if (!DOSBoxDrive) return nil;
     
@@ -896,7 +892,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	NSUInteger i;
 	for (i=0; i < DOS_DRIVES; i++)
 	{
-		if (Drives[i] == dosDrive)
+		if (Drives[i].get() == dosDrive)
 		{
 			return [_driveCache objectForKey: [self _driveLetterForIndex: i]];
 		}
@@ -913,7 +909,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 - (DOS_Drive *)_DOSBoxDriveMatchingDrive: (BXDrive *)drive
 {
 	NSUInteger index = [self _indexOfDriveLetter: drive.letter];
-	if (Drives[index]) return Drives[index];
+	if (Drives[index]) return Drives[index].get();
 	else return NULL;
 }
 
@@ -927,7 +923,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	NSUInteger i;
 	for (i=0; i < DOS_DRIVES; i++)
 	{
-		if (Drives[i] == drive) return i;
+		if (Drives[i].get() == drive) return i;
 	}
 	return NSNotFound;
 }
@@ -942,7 +938,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	//TODO: populate an NSError object as well?
 	if (Drives[index]) return NO;
 	
-	Drives[index] = drive;
+	Drives[index] = std::shared_ptr<DOS_Drive>(drive);
 	mem_writeb(RealToPhysical(dos.tables.mediaid)+((PhysPt)index)*2, drive->GetMediaByte());
 	
 	return YES;
@@ -985,7 +981,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     {
         if (Files[i] && Files[i]->GetDrive() == index)
         {
-            DOS_File *origFile = Files[i];
+			DOS_File *origFile = Files[i].get();
             //DOS_File->GetDrive() returns 0 for the special CON system file,
             //which also corresponds to the drive index for A, so ignore this file.
             if (index == 0 && origFile->IsName("CON")) continue;
@@ -1004,7 +1000,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	NSAssert1(index < DOS_DRIVES, @"index %lu passed to _driveFromDOSBoxDriveAtIndex was beyond the range of DOSBox's drive array.", (unsigned long)index);
     
-    DOS_Drive *dosboxDrive = Drives[index];
+    DOS_Drive *dosboxDrive = Drives[index].get();
 	if (dosboxDrive != NULL)
 	{
 		NSString *driveLetter	= [[self.class driveLetters] objectAtIndex: index];
@@ -1110,7 +1106,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	//If the path couldn't be encoded, don't attempt to go further
 	if (!drivePath) return nil;
 	
-	fatDrive *drive = new fatDrive(drivePath, 0, 0, 0, 0, 0, false);
+	fatDrive *drive = new fatDrive(drivePath, 0, 0, 0, 0, false);
 	if (!drive || !drive->created_successfully)
     {
         delete drive;
@@ -1152,11 +1148,8 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	//Check that any audio CDs are actually present before enabling CD audio:
 	//this fixes Warcraft II's copy protection, which will fail if audio tracks
 	//are reported to be present but cannot be found.
-	if (useCDAudio && SDL_CDNumDrives() > 0)
-	{
-        //NOTE: SDL's CD audio API for OS X only ever exposes one CD, which will be #0.
-        SDLCDNum = 0;
-	}
+	// DOSBox-Staging 0.82 no longer exposes SDL's legacy CD-audio API here.
+	// Physical CD audio detection is handled by the current CD interface.
 #endif
     
 	//NOTE: ioctl is currently unimplemented for OS X in DOSBox 0.74, so this will always fall back to SDL.
@@ -1253,7 +1246,8 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 						  geometry.sectorsPerCluster,
 						  geometry.numClusters,
 						  geometry.freeClusters,
-						  mediaID);
+						  mediaID,
+						  false);
 }
 
 - (DOS_Drive *) _DOSBoxDriveFromPath: (NSString *)path
@@ -1464,10 +1458,10 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         else
             driveRelativePath = dosPath;
         
-		char filePath[CROSS_LEN];
-		localDOSBoxDrive->GetSystemFilename(filePath, driveRelativePath);
-        
-        NSURL *localURL = [NSURL URLFromFileSystemRepresentation: filePath].URLByStandardizingPath;
+		const std::string filePath = localDOSBoxDrive->MapDosToHostFilename(driveRelativePath);
+		NSURL *localURL = [NSURL fileURLWithFileSystemRepresentation: filePath.c_str()
+								 isDirectory: NO
+								   relativeToURL: nil].URLByStandardizingPath;
         
         //Roundtrip the URL through the filesystem, in case it remaps it to another location.
         NSString *logicalPath = [filesystem pathForFileURL: localURL];

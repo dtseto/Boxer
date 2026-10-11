@@ -179,6 +179,7 @@
 		3F23A3F42087F05CB9CB56B6 /* program_move.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B87B6AF53FD14EDE45F6BF5D /* program_move.cpp */; };
 		416121E36E4C2A577879F5E1 /* mouse_config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CCFF8C8A92657DAA35F24A0 /* mouse_config.cpp */; };
 		420B585C2EE4FCE0388CD8E7 /* program_setver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A3DB0C12BB1FC278980C0901 /* program_setver.cpp */; };
+		484394ACC05B8A7721BB0383 /* BXEmulatorCore.m in Sources */ = {isa = PBXBuildFile; fileRef = 063AE2B935B53D4418311E17 /* BXEmulatorCore.m */; };
 		493DA43BEB4717D23A320743 /* bios_pci.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FCB193794E4C457ABEBF015A /* bios_pci.cpp */; };
 		4B8A9DC71221F6ECA7DF9D20 /* keyboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D3379CD93528A1C9E77BC6 /* keyboard.cpp */; };
 		4DFD06CD9C3095BA057EA2A6 /* dos_locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F0C5ACB4B9589C9E8FE0AF47 /* dos_locale.cpp */; };
@@ -353,7 +354,7 @@
 		703B08FB9FB562647FA0C657 /* program_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7665A6AE3EBEBEE49A83AF2 /* program_tree.cpp */; };
 		70D16941BA7AE8609BE54560 /* program_mixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7647EBB75852C4A9D160AEC /* program_mixer.cpp */; };
 		7A1B2C3D4E5F60718293A4BB /* libDOSBoxStaging.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */; };
-		7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */; };
+		7A1B2C3D4E5F60718293A4C2 /* DOSBox-Staging/contrib/resources/freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */; };
 		849EFA1BAF3FE6EB71880EC1 /* sdlmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77211A12B38C4400072AE8 /* sdlmain.cpp */; };
 		85C9BEA44575A8AFB121D674 /* intel8042.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C3D895313FB4F1053AE0F08 /* intel8042.cpp */; };
 		89245D2C2CF33048D86F1367 /* file_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9163306C61021CB2F841DF15 /* file_reader.cpp */; };
@@ -1017,6 +1018,7 @@
 		BB8D9BE0DE01B6D193AB5E32 /* mouse_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A3A9783EAC4E0CBB5C541FB /* mouse_common.cpp */; };
 		BDCADA05C4FF9C90FE048B57 /* capture_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DEA07786B0A3B2C9D91C1F32 /* capture_video.cpp */; };
 		BFE940BAA2001FCDC0D0752D /* capture_video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DEA07786B0A3B2C9D91C1F32 /* capture_video.cpp */; };
+		C2226BB7CCD7D41CEB0ADD2A /* BXConfigKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 23450C1565373F4D3C011F5C /* BXConfigKey.m */; };
 		C2250E18DD3372295CD7AC07 /* intel8255.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4B31C9C42B066DEE409533C0 /* intel8255.cpp */; };
 		C24ADDA835D561316C08AC98 /* shader_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D819F51A6FB029532E3944E8 /* shader_manager.cpp */; };
 		C38594BFEB9B553712F72BC7 /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2D469D4703C910ABCFA211C /* png_writer.cpp */; };
@@ -1243,6 +1245,7 @@
 		05E6BA7324BA26FD00BAAD2D /* BXMetalRenderingView+BXImageCapture.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "BXMetalRenderingView+BXImageCapture.m"; sourceTree = "<group>"; };
 		05E6BA7524BA279000BAAD2D /* BXMetalRenderingView+Private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "BXMetalRenderingView+Private.h"; sourceTree = "<group>"; };
 		05F9A1FE24BAA64100969496 /* SDL2_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_net.framework; sourceTree = "<group>"; };
+		063AE2B935B53D4418311E17 /* BXEmulatorCore.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BXEmulatorCore.m; sourceTree = "<group>"; };
 		0A71ECAFAD8D2BFF856CFFB1 /* program_subst.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = program_subst.cpp; sourceTree = "<group>"; };
 		0C3D895313FB4F1053AE0F08 /* intel8042.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = intel8042.cpp; sourceTree = "<group>"; };
 		0F6685A2303BCC790010580F /* loguru.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = loguru.hpp; sourceTree = "<group>"; };
@@ -1347,6 +1350,7 @@
 		0FB95A023054589000B88A1D /* manymouse.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = manymouse.c; sourceTree = "<group>"; };
 		0FB95A053054589000B88A1D /* windows_wminput.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = windows_wminput.c; sourceTree = "<group>"; };
 		0FB95A063054589000B88A1D /* x11_xinput2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = x11_xinput2.c; sourceTree = "<group>"; };
+		0FE5D939307C4DC000070538 /* BXEmulatorCoreAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BXEmulatorCoreAudio.h; sourceTree = "<group>"; };
 		0FF6D2673079BAB600A4DF68 /* BXHostBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BXHostBridge.h; sourceTree = "<group>"; };
 		0FFCA146303264D20076F2F5 /* ide.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ide.cpp; sourceTree = "<group>"; };
 		0FFCA149303265380076F2F5 /* program_serial.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = program_serial.cpp; sourceTree = "<group>"; };
@@ -1370,7 +1374,9 @@
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		14E847CA73FD6AA9345B6698 /* voodoo.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = voodoo.cpp; sourceTree = "<group>"; };
 		15DAD9B6F0909D1909C09051 /* autoexec.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = autoexec.cpp; sourceTree = "<group>"; };
+		2031DA2CB415A23F676AA54D /* BXEmulatorCore.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BXEmulatorCore.h; sourceTree = "<group>"; };
 		231269A9727FF103E471D343 /* mouse.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse.cpp; sourceTree = "<group>"; };
+		23450C1565373F4D3C011F5C /* BXConfigKey.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BXConfigKey.m; sourceTree = "<group>"; };
 		279E7863C8A3E2659C4EE4FB /* titlebar.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = titlebar.cpp; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -1593,8 +1599,9 @@
 		7432A8442FB387A56A498A92 /* mouse_config.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = mouse_config.h; sourceTree = "<group>"; };
 		76DBD7DA6FF2411747C8FEF3 /* mouse_manymouse.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = mouse_manymouse.h; sourceTree = "<group>"; };
 		788E78BA3B478826AB629D75 /* mmx.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mmx.cpp; sourceTree = "<group>"; };
+		78BAECC1B03F2566403A5B5A /* BXConfigKey.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BXConfigKey.h; sourceTree = "<group>"; };
 		7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libDOSBoxStaging.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "DOSBox-Staging/contrib/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
+		7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "DOSBox-Staging/contrib/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
 		7CCFF8C8A92657DAA35F24A0 /* mouse_config.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_config.cpp; sourceTree = "<group>"; };
 		7D7A737128226BDA716E4A30 /* virtualbox.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = virtualbox.cpp; sourceTree = "<group>"; };
 		8C26465EB00C4836561E82B1 /* capture.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = capture.cpp; sourceTree = "<group>"; };
@@ -2321,13 +2328,13 @@
 		B3DA3E00BDBB40CC2CEFEAF9 /* mouseif_dos_driver.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouseif_dos_driver.cpp; sourceTree = "<group>"; };
 		B7900B3D13E47D9E00B37913 /* BXPrecisionProControllerProfile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXPrecisionProControllerProfile.m; sourceTree = "<group>"; };
 		B87B6AF53FD14EDE45F6BF5D /* program_move.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = program_move.cpp; sourceTree = "<group>"; };
-		B92BF37E61EEC2158459D182 /* esfm_registers.c */ = {isa = PBXFileReference; includeInIndex = 1; path = esfm_registers.c; sourceTree = "<group>"; };
+		B92BF37E61EEC2158459D182 /* esfm_registers.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; path = esfm_registers.c; sourceTree = "<group>"; };
 		BDA757B7DBA76543CBFBF750 /* imfc.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = imfc.cpp; sourceTree = "<group>"; };
 		C26C10F1D41F75970BC2705F /* mouse_interfaces.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_interfaces.cpp; sourceTree = "<group>"; };
 		C274D3F1E3EB33F10C1F24CD /* intel8042.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = intel8042.h; sourceTree = "<group>"; };
 		C497E42C5D628A5F39351566 /* image_saver.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = image_saver.cpp; sourceTree = "<group>"; };
 		CC3B2D6F59F34F5FE7355A82 /* command_line.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = command_line.cpp; sourceTree = "<group>"; };
-		CE5B1606A6D6240A26C8EA1F /* esfm.c */ = {isa = PBXFileReference; includeInIndex = 1; path = esfm.c; sourceTree = "<group>"; };
+		CE5B1606A6D6240A26C8EA1F /* esfm.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; path = esfm.c; sourceTree = "<group>"; };
 		D2247615FDAC3B33B30D7F40 /* vmware.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = vmware.cpp; sourceTree = "<group>"; };
 		D819F51A6FB029532E3944E8 /* shader_manager.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = shader_manager.cpp; sourceTree = "<group>"; };
 		DB37BEFEF14F456A6FB4883E /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -2350,17 +2357,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = "Boxer Integration Tests";
-			sourceTree = "<group>";
-		};
+		0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Boxer Integration Tests"; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2524,6 +2521,11 @@
 				9F496E3F108EEBB200282261 /* UI helpers */,
 				9F496E3C108EEAD700282261 /* UI controllers */,
 				9F2AC6DB10EFFE2C00CFFF72 /* Artwork */,
+				78BAECC1B03F2566403A5B5A /* BXConfigKey.h */,
+				23450C1565373F4D3C011F5C /* BXConfigKey.m */,
+				2031DA2CB415A23F676AA54D /* BXEmulatorCore.h */,
+				063AE2B935B53D4418311E17 /* BXEmulatorCore.m */,
+				0FE5D939307C4DC000070538 /* BXEmulatorCoreAudio.h */,
 			);
 			path = Boxer;
 			sourceTree = "<group>";
@@ -2547,7 +2549,6 @@
 				CE5B1606A6D6240A26C8EA1F /* esfm.c */,
 				B92BF37E61EEC2158459D182 /* esfm_registers.c */,
 			);
-			name = ESFMu;
 			path = ESFMu;
 			sourceTree = "<group>";
 		};
@@ -2814,7 +2815,7 @@
 			path = capture;
 			sourceTree = "<group>";
 		};
-		29B97314FDCFA39411CA2CEA = {
+		29B97314FDCFA39411CA2CEA /* Boxer */ = {
 			isa = PBXGroup;
 			children = (
 				080E96DDFE201D6D7F000001 /* Boxer */,
@@ -4238,7 +4239,7 @@
 				55F0B73B26ABFEB80077E58C /* libs */,
 				9F77207312B38C4400072AE8 /* include */,
 				9F77209D12B38C4400072AE8 /* src */,
-				7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */,
+				7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */,
 				9FBC3A7F0F56CEA2001811F2 /* config.h */,
 				0FB959793054521500B88A1D /* README.md */,
 			);
@@ -4607,7 +4608,7 @@
 				es,
 				"pt-BR",
 			);
-			mainGroup = 29B97314FDCFA39411CA2CEA;
+			mainGroup = 29B97314FDCFA39411CA2CEA /* Boxer */;
 			packageReferences = (
 				55D432012504BB65008515E1 /* XCRemoteSwiftPackageReference "CwlDemangle" */,
 				55EB73DE27ED729F00D5F7E0 /* XCRemoteSwiftPackageReference "Sparkle" */,
@@ -4774,7 +4775,7 @@
 				55635A372D35D8E000C70C0E /* InfoPlist.xcstrings in Resources */,
 				9F4199F61BD416E400A2D165 /* Bezel.xib in Resources */,
 				9F4BCCD817E6190A00140390 /* Boxer.help in Resources */,
-				7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */,
+				7A1B2C3D4E5F60718293A4C2 /* DOSBox-Staging/contrib/resources/freedos-keyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5315,6 +5316,8 @@
 				556C41AA2B6E35A80092AFB3 /* NSImage+ADBImageEffects.swift in Sources */,
 				55296E992AD4B86400845EB5 /* DummyMIDIDevice.swift in Sources */,
 				9F8B282A1709C4A100B31A14 /* ADBFilesystemBase.m in Sources */,
+				C2226BB7CCD7D41CEB0ADD2A /* BXConfigKey.m in Sources */,
+				484394ACC05B8A7721BB0383 /* BXEmulatorCore.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

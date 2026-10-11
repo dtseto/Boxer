@@ -184,7 +184,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
     func testMIDIRoutingContracts() throws {
         // Protects BOXER marker: midi-routing
         try requireAnnotatedDOSBoxMigration()
-        try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "#include \"BXCoalfaceAudio.h\"")
+        try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "#include \"BXEmulatorCoreAudio.h\"")
         try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "boxer_sendMIDIMessage")
         try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "boxer_sendMIDISysex")
         try expectBlock("src/midi/midi.cpp", marker: "midi-routing", contains: "upstream MIDI backend headers stay disabled")
@@ -1098,6 +1098,66 @@ final class BoxerIntegrationContractTests: XCTestCase {
             }
         }
         return inventory
+    }
+
+    func testBXEmulatorCorePublicBoundary() throws {
+        let header = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatorCore.h"))
+        XCTAssertTrue(header.contains("initWithGamebox"))
+        for declaration in [
+            "supportsPentiumMMX",
+            "currentCPUType",
+            "setCPUType",
+            "supportsVoodoo",
+            "supportsDOSBoxShaders",
+            "maximumMouseCount",
+            "versionSpecificConfigKeys"
+        ] {
+            XCTAssertTrue(header.contains(declaration), "Missing BXEmulatorCore API: \\(declaration)")
+        }
+        XCTAssertFalse(header.contains("BXCoalface"))
+        XCTAssertFalse(header.contains("dosbox.h"))
+        XCTAssertFalse(header.contains("DOS_Shell"))
+        XCTAssertFalse(header.contains("Bitu"))
+    }
+
+    func testBXConfigKeyIsAnImmutableValueType() throws {
+        let header = try source(at: projectRoot.appendingPathComponent("Boxer/BXConfigKey.h"))
+        let implementation = try source(at: projectRoot.appendingPathComponent("Boxer/BXConfigKey.m"))
+        XCTAssertTrue(header.contains("NSCopying"))
+        XCTAssertTrue(header.contains("initWithSection"))
+        XCTAssertTrue(implementation.contains("isEqual"))
+        XCTAssertTrue(implementation.contains("hash"))
+        XCTAssertTrue(implementation.contains("section = [section copy]"))
+        XCTAssertTrue(implementation.contains("key = [key copy]"))
+    }
+
+    func testBXEmulatorCoreConfigurationTranslation() throws {
+        let implementation = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatorCore.m"))
+        for mapping in [
+            "cputype",
+            "pentium_mmx",
+            "voodoo_memsize",
+            "reelmagic",
+            "glshader",
+            "integer_scaling",
+            "imfc"
+        ] {
+            XCTAssertTrue(implementation.contains(mapping), "Missing adapter mapping: \\(mapping)")
+        }
+        XCTAssertTrue(implementation.contains("defaultValue:@\"pentium_mmx\""))
+        XCTAssertTrue(implementation.contains("defaultValue:@\"false\""))
+        XCTAssertTrue(implementation.contains("removeValueForKey"))
+        XCTAssertTrue(implementation.contains("supportsDeinterlacing"))
+        XCTAssertTrue(implementation.contains("return NO;"))
+        XCTAssertTrue(implementation.contains("return 1;"))
+    }
+
+    func testMIDIUsesTheAdapterAudioHeader() throws {
+        let midi = try source(at: projectRoot.appendingPathComponent("DOSBox-Staging/src/midi/midi.cpp"))
+        let legacyHeader = try source(at: projectRoot.appendingPathComponent("Boxer/BXCoalfaceAudio.h"))
+        XCTAssertTrue(midi.contains("BXEmulatorCoreAudio.h"))
+        XCTAssertFalse(midi.contains("#include \"BXCoalfaceAudio.h\""))
+        XCTAssertTrue(legacyHeader.contains("BXEmulatorCoreAudio.h"))
     }
 
     private func expect(_ relativePath: String, contains needle: String, file: StaticString = #filePath, line: UInt = #line) throws {

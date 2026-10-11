@@ -24,7 +24,7 @@
 #import "BXEmulatedMouse.h"
 #import "BXKeyBuffer.h"
 #import "BXAudioSource.h"
-#import "BXCoalfaceAudio.h"
+#import "BXEmulatorCoreAudio.h"
 #import "BXDrive.h"
 #include <stdexcept>
 #include <execinfo.h>

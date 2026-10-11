@@ -1,0 +1,394 @@
+/*
+ Copyright (c) 2026 Alun Bestor and contributors. All rights reserved.
+ This source file is released under the GNU General Public License 2.0. A full copy of this license
+ can be found in this XCode project at Resources/English.lproj/BoxerHelp/pages/legalese.html, or read
+ online at [http://www.gnu.org/licenses/gpl-2.0.txt].
+ */
+
+#import "BXEmulatorCore.h"
+#import "BXConfigKey.h"
+#import "BXGamebox.h"
+#import "BXEmulatorConfiguration.h"
+
+static NSString * const BXCPUSection = @"cpu";
+static NSString * const BXCPUTypeKey = @"cputype";
+static NSString * const BXVoodooSection = @"voodoo";
+static NSString * const BXVoodooKey = @"voodoo";
+static NSString * const BXVoodooMemoryKey = @"voodoo_memsize";
+static NSString * const BXReelMagicSection = @"reelmagic";
+static NSString * const BXReelMagicKey = @"reelmagic";
+static NSString * const BXSBlasterSection = @"sblaster";
+static NSString * const BXSBlasterTypeKey = @"sbtype";
+static NSString * const BXRenderSection = @"render";
+static NSString * const BXShaderKey = @"glshader";
+static NSString * const BXIntegerScalingKey = @"integer_scaling";
+static NSString * const BXIMFCSection = @"imfc";
+static NSString * const BXIMFCKey = @"imfc";
+
+static NSString *BXCPUTypeString(BXCPUType type)
+{
+    switch (type)
+    {
+        case BXCPUType386:
+            return @"386";
+        case BXCPUType486:
+            return @"486";
+        case BXCPUTypePentium:
+            return @"pentium";
+        case BXCPUTypePentiumMMX:
+            return @"pentium_mmx";
+        case BXCPUTypeAuto:
+        default:
+            return @"auto";
+    }
+}
+
+static BXCPUType BXCPUTypeFromString(NSString *value)
+{
+    if ([value isEqualToString:@"386"])
+        return BXCPUType386;
+    if ([value isEqualToString:@"486"])
+        return BXCPUType486;
+    if ([value isEqualToString:@"pentium"])
+        return BXCPUTypePentium;
+    if ([value isEqualToString:@"pentium_mmx"])
+        return BXCPUTypePentiumMMX;
+    return BXCPUTypeAuto;
+}
+
+static BOOL BXConfigurationBoolean(NSString *value)
+{
+    return [value boolValue];
+}
+
+@interface BXEmulatorCore ()
+
+@property (nonatomic, strong) BXGamebox *gamebox;
+@property (nonatomic, weak) BXSession *session;
+
+@end
+
+@implementation BXEmulatorCore
+
+- (instancetype)initWithGamebox:(BXGamebox *)gamebox
+                         session:(BXSession *)session
+{
+    self = [super init];
+    if (self)
+    {
+        _gamebox = gamebox;
+        _session = session;
+    }
+    return self;
+}
+
+#pragma mark - Configuration helpers
+
+- (BXEmulatorConfiguration *)configurationForCurrentGamebox
+{
+    if (!self.gamebox)
+        return nil;
+
+    NSError *error = nil;
+    BXEmulatorConfiguration *configuration =
+        [[BXEmulatorConfiguration alloc] initWithContentsOfURL:self.gamebox.configurationFileURL
+                                                         error:&error];
+
+    if (!configuration && ![[NSFileManager defaultManager] fileExistsAtPath:self.gamebox.configurationFileURL.path])
+        configuration = [[BXEmulatorConfiguration alloc] init];
+
+    return configuration;
+}
+
+- (BOOL)writeConfiguration:(BXEmulatorConfiguration *)configuration
+{
+    if (!self.gamebox || !configuration)
+        return NO;
+
+    return [configuration writeToURL:self.gamebox.configurationFileURL error:NULL];
+}
+
+- (NSString *)valueForKey:(NSString *)key
+                 section:(NSString *)section
+                defaultValue:(NSString *)defaultValue
+{
+    BXEmulatorConfiguration *configuration = [self configurationForCurrentGamebox];
+    return [configuration valueForKey:key inSection:section] ?: defaultValue;
+}
+
+- (void)setValue:(nullable NSString *)value
+              key:(NSString *)key
+          section:(NSString *)section
+       defaultValue:(NSString *)defaultValue
+{
+    BXEmulatorConfiguration *configuration = [self configurationForCurrentGamebox];
+    if (!configuration)
+        return;
+
+    NSString *currentValue = [configuration valueForKey:key inSection:section];
+    BOOL shouldRemove = value == nil || [value isEqualToString:defaultValue];
+
+    if (shouldRemove)
+    {
+        if (!currentValue)
+            return;
+
+        [configuration removeValueForKey:key inSection:section];
+    }
+    else
+    {
+        if ([currentValue isEqualToString:value])
+            return;
+
+        [configuration setValue:value forKey:key inSection:section];
+    }
+
+    [self writeConfiguration:configuration];
+}
+
+- (NSArray<BXConfigKey *> *)allVersionSpecificKeys
+{
+    return @[
+        [[BXConfigKey alloc] initWithSection:BXVoodooSection key:BXVoodooKey],
+        [[BXConfigKey alloc] initWithSection:BXVoodooSection key:BXVoodooMemoryKey],
+        [[BXConfigKey alloc] initWithSection:BXReelMagicSection key:BXReelMagicKey],
+        [[BXConfigKey alloc] initWithSection:BXSBlasterSection key:BXSBlasterTypeKey],
+        [[BXConfigKey alloc] initWithSection:BXRenderSection key:BXShaderKey],
+        [[BXConfigKey alloc] initWithSection:BXRenderSection key:BXIntegerScalingKey],
+        [[BXConfigKey alloc] initWithSection:BXIMFCSection key:BXIMFCKey],
+        [[BXConfigKey alloc] initWithSection:BXCPUSection key:BXCPUTypeKey],
+    ];
+}
+
+#pragma mark - CPU
+
+- (BOOL)supportsPentiumMMX
+{
+    return YES;
+}
+
+- (BXCPUType)currentCPUType
+{
+    return BXCPUTypeFromString([self valueForKey:BXCPUTypeKey
+                                         section:BXCPUSection
+                                    defaultValue:@"pentium_mmx"]);
+}
+
+- (void)setCPUType:(BXCPUType)type
+{
+    [self setValue:BXCPUTypeString(type)
+               key:BXCPUTypeKey
+           section:BXCPUSection
+        defaultValue:@"pentium_mmx"];
+}
+
+#pragma mark - Advanced hardware
+
+- (BOOL)supportsVoodoo
+{
+    return YES;
+}
+
+- (BOOL)voodooEnabledForCurrentGamebox
+{
+    return BXConfigurationBoolean([self valueForKey:BXVoodooKey
+                                            section:BXVoodooSection
+                                       defaultValue:@"false"]);
+}
+
+- (void)setVoodooEnabled:(BOOL)enabled
+{
+    [self setValue:enabled ? @"true" : nil
+               key:BXVoodooKey
+           section:BXVoodooSection
+        defaultValue:@"false"];
+}
+
+- (void)setVoodooMemorySize:(NSUInteger)megabytes
+{
+    if (megabytes != 2 && megabytes != 4)
+        return;
+
+    [self setValue:[NSString stringWithFormat:@"%lu", (unsigned long)megabytes]
+               key:BXVoodooMemoryKey
+           section:BXVoodooSection
+        defaultValue:@"4"];
+}
+
+- (BOOL)supportsReelMagic
+{
+    return YES;
+}
+
+- (BOOL)reelMagicEnabledForCurrentGamebox
+{
+    NSString *value = [self valueForKey:BXReelMagicKey
+                                    section:BXReelMagicSection
+                               defaultValue:@"off"];
+    return [value isEqualToString:@"on"] || [value isEqualToString:@"cardonly"];
+}
+
+- (void)setReelMagicEnabled:(BOOL)enabled
+{
+    [self setValue:enabled ? @"on" : nil
+               key:BXReelMagicKey
+           section:BXReelMagicSection
+        defaultValue:@"off"];
+}
+
+- (BOOL)supportsESSAudio
+{
+    return YES;
+}
+
+- (BOOL)essEnabledForCurrentGamebox
+{
+    return [[self valueForKey:BXSBlasterTypeKey
+                       section:BXSBlasterSection
+                  defaultValue:@"sb16"] isEqualToString:@"ess"];
+}
+
+- (void)setESSEnabled:(BOOL)enabled
+{
+    [self setValue:enabled ? @"ess" : nil
+               key:BXSBlasterTypeKey
+           section:BXSBlasterSection
+        defaultValue:@"sb16"];
+}
+
+- (BOOL)supportsDeinterlacing
+{
+    return NO;
+}
+
+- (BOOL)deinterlacingEnabledForCurrentGamebox
+{
+    return NO;
+}
+
+- (void)setDeinterlacingEnabled:(BOOL)enabled
+{
+    (void)enabled;
+}
+
+- (BOOL)supportsIBMMusicFeatureCard
+{
+    return YES;
+}
+
+- (BOOL)ibmMFCEnabledForCurrentGamebox
+{
+    return BXConfigurationBoolean([self valueForKey:BXIMFCKey
+                                            section:BXIMFCSection
+                                       defaultValue:@"false"]);
+}
+
+- (void)setIBMMFCEnabled:(BOOL)enabled
+{
+    [self setValue:enabled ? @"true" : nil
+               key:BXIMFCKey
+           section:BXIMFCSection
+        defaultValue:@"false"];
+}
+
+#pragma mark - Rendering
+
+- (BOOL)supportsDOSBoxShaders
+{
+    return YES;
+}
+
+- (BOOL)supportsOpenEmuShaders
+{
+    return YES;
+}
+
+- (BXShaderSystem)currentShaderSystem
+{
+    NSString *shader = [self valueForKey:BXShaderKey
+                                 section:BXRenderSection
+                            defaultValue:@""];
+
+    return [shader isEqualToString:@"none"]
+        ? BXShaderSystemOpenEmu
+        : BXShaderSystemDOSBoxStaging;
+}
+
+- (void)setShaderSystem:(BXShaderSystem)system
+{
+    if (system == BXShaderSystemOpenEmu)
+    {
+        [self setValue:@"none"
+                   key:BXShaderKey
+               section:BXRenderSection
+            defaultValue:@""];
+    }
+    else
+    {
+        [self setValue:nil
+                   key:BXShaderKey
+               section:BXRenderSection
+            defaultValue:@""];
+    }
+}
+
+- (BOOL)supportsIntegerScaling
+{
+    return YES;
+}
+
+- (BOOL)integerScalingEnabledForCurrentGamebox
+{
+    NSString *value = [self valueForKey:BXIntegerScalingKey
+                                section:BXRenderSection
+                           defaultValue:@"auto"];
+    return ![value isEqualToString:@"off"];
+}
+
+- (void)setIntegerScalingEnabled:(BOOL)enabled
+{
+    [self setValue:enabled ? @"full" : nil
+               key:BXIntegerScalingKey
+           section:BXRenderSection
+        defaultValue:@"auto"];
+}
+
+#pragma mark - Input
+
+- (NSUInteger)maximumMouseCount
+{
+    return 1;
+}
+
+- (NSUInteger)currentMouseCount
+{
+    return 1;
+}
+
+- (void)setMouseCount:(NSUInteger)count
+{
+    (void)count;
+}
+
+#pragma mark - Version compatibility
+
+- (NSArray<BXConfigKey *> *)versionSpecificConfigKeys
+{
+    return [self allVersionSpecificKeys];
+}
+
+- (NSArray<BXConfigKey *> *)configKeysNewerThanVersion:(BXStagingVersion)version
+{
+    switch (version)
+    {
+        case BXStagingVersion0822:
+            return @[];
+        case BXStagingVersion080:
+        case BXStagingVersion081:
+            return [self allVersionSpecificKeys];
+    }
+
+    return @[];
+}
+
+@end

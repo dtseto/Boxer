@@ -15,6 +15,7 @@
 #import "BXGamebox.h"
 #import "NSURL+ADBFilesystemHelpers.h"
 #import "NSString+ADBPaths.h"
+#import "BXGameboxSettingsWindowController.h"
 
 
 //Used by syncMenuItems to determine where to fill the program menu with program items
@@ -27,6 +28,8 @@ enum {
 #pragma mark -
 #pragma mark Private method declarations
 @interface BXGameboxPanelController ()
+
+@property (strong, nonatomic) BXGameboxSettingsWindowController *settingsWindowController;
 
 //Returns a sorted array of NSMenuItems for the available programs on each drive.
 //Used internally by syncMenuItems.
@@ -42,6 +45,19 @@ enum {
 #pragma mark Implementation
 
 @implementation BXGameboxPanelController
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+
+    NSButton *settingsButton = [NSButton buttonWithTitle:NSLocalizedString(@"Emulator Settings…", @"Gamebox emulator settings button.")
+                                                 target:self
+                                                 action:@selector(showEmulatorSettings:)];
+    settingsButton.controlSize = NSControlSizeSmall;
+    settingsButton.frame = NSMakeRect(20, 8, 256, 26);
+    settingsButton.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
+    [self.view addSubview:settingsButton];
+}
 
 - (BXSession *) session
 {
@@ -123,6 +139,18 @@ enum {
 {
 	NSString *search = self.session.displayName;
 	[(BXBaseAppController *)[NSApp delegate] searchURLFromKey: @"CoverArtSearchURL" withSearchString: search];
+}
+
+- (IBAction)showEmulatorSettings:(id)sender
+{
+    BXSession *session = self.session;
+    if (!session.gamebox)
+        return;
+
+    self.settingsWindowController = [[BXGameboxSettingsWindowController alloc] initWithGamebox:session.gamebox
+                                                                                        session:session];
+    [self.settingsWindowController showWindow:self];
+    [self.settingsWindowController.window makeKeyAndOrderFront:self];
 }
 
 - (IBAction) showProgramChooserPanel: (id)sender

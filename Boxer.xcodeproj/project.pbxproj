@@ -345,6 +345,7 @@
 		57B242AE16F2FF5A04840DFB /* mouse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 231269A9727FF103E471D343 /* mouse.cpp */; };
 		5A1EBE396D84A512CE32E31F /* command_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC3B2D6F59F34F5FE7355A82 /* command_line.cpp */; };
 		5CC5160F64C19AB5A325B677 /* virtualbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7D7A737128226BDA716E4A30 /* virtualbox.cpp */; };
+		611F4881F29EA49C0FB96AB4 /* BXGameboxSettingsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D94A307C505800070538 /* BXGameboxSettingsWindowController.m */; };
 		6258376279EA13A9F509CAC7 /* mouseif_ps2_bios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1EB324438C1209036A6740 /* mouseif_ps2_bios.cpp */; };
 		634CDC0DB58DBBC7109A08DF /* voodoo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14E847CA73FD6AA9345B6698 /* voodoo.cpp */; };
 		6858C4D6697DC94515BD6D59 /* mouseif_ps2_bios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1EB324438C1209036A6740 /* mouseif_ps2_bios.cpp */; };
@@ -354,7 +355,7 @@
 		703B08FB9FB562647FA0C657 /* program_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7665A6AE3EBEBEE49A83AF2 /* program_tree.cpp */; };
 		70D16941BA7AE8609BE54560 /* program_mixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7647EBB75852C4A9D160AEC /* program_mixer.cpp */; };
 		7A1B2C3D4E5F60718293A4BB /* libDOSBoxStaging.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */; };
-		7A1B2C3D4E5F60718293A4C2 /* DOSBox-Staging/contrib/resources/freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */; };
+		7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */; };
 		849EFA1BAF3FE6EB71880EC1 /* sdlmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77211A12B38C4400072AE8 /* sdlmain.cpp */; };
 		85C9BEA44575A8AFB121D674 /* intel8042.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C3D895313FB4F1053AE0F08 /* intel8042.cpp */; };
 		89245D2C2CF33048D86F1367 /* file_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9163306C61021CB2F841DF15 /* file_reader.cpp */; };
@@ -1022,6 +1023,7 @@
 		C2250E18DD3372295CD7AC07 /* intel8255.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4B31C9C42B066DEE409533C0 /* intel8255.cpp */; };
 		C24ADDA835D561316C08AC98 /* shader_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D819F51A6FB029532E3944E8 /* shader_manager.cpp */; };
 		C38594BFEB9B553712F72BC7 /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2D469D4703C910ABCFA211C /* png_writer.cpp */; };
+		C4324D304D200CCC52C5FB3C /* BXGameboxConfigurationEditor.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D948307C505700070538 /* BXGameboxConfigurationEditor.m */; };
 		C6523FA8E51055AC5F4A624D /* program_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7665A6AE3EBEBEE49A83AF2 /* program_tree.cpp */; };
 		C925AF4D45AB540C2347331F /* command_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CC3B2D6F59F34F5FE7355A82 /* command_line.cpp */; };
 		D18E2CB44DE1775D7A264C67 /* program_setver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A3DB0C12BB1FC278980C0901 /* program_setver.cpp */; };
@@ -1351,6 +1353,10 @@
 		0FB95A053054589000B88A1D /* windows_wminput.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = windows_wminput.c; sourceTree = "<group>"; };
 		0FB95A063054589000B88A1D /* x11_xinput2.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = x11_xinput2.c; sourceTree = "<group>"; };
 		0FE5D939307C4DC000070538 /* BXEmulatorCoreAudio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BXEmulatorCoreAudio.h; sourceTree = "<group>"; };
+		0FE5D942307C4FFC00070538 /* BXGameboxConfigurationEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BXGameboxConfigurationEditor.h; sourceTree = "<group>"; };
+		0FE5D945307C502500070538 /* BXGameboxSettingsWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BXGameboxSettingsWindowController.h; sourceTree = "<group>"; };
+		0FE5D948307C505700070538 /* BXGameboxConfigurationEditor.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BXGameboxConfigurationEditor.m; sourceTree = "<group>"; };
+		0FE5D94A307C505800070538 /* BXGameboxSettingsWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BXGameboxSettingsWindowController.m; sourceTree = "<group>"; };
 		0FF6D2673079BAB600A4DF68 /* BXHostBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BXHostBridge.h; sourceTree = "<group>"; };
 		0FFCA146303264D20076F2F5 /* ide.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ide.cpp; sourceTree = "<group>"; };
 		0FFCA149303265380076F2F5 /* program_serial.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = program_serial.cpp; sourceTree = "<group>"; };
@@ -1601,7 +1607,7 @@
 		788E78BA3B478826AB629D75 /* mmx.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mmx.cpp; sourceTree = "<group>"; };
 		78BAECC1B03F2566403A5B5A /* BXConfigKey.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BXConfigKey.h; sourceTree = "<group>"; };
 		7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libDOSBoxStaging.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "DOSBox-Staging/contrib/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
+		7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "DOSBox-Staging/contrib/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
 		7CCFF8C8A92657DAA35F24A0 /* mouse_config.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_config.cpp; sourceTree = "<group>"; };
 		7D7A737128226BDA716E4A30 /* virtualbox.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = virtualbox.cpp; sourceTree = "<group>"; };
 		8C26465EB00C4836561E82B1 /* capture.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = capture.cpp; sourceTree = "<group>"; };
@@ -2357,7 +2363,17 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Boxer Integration Tests"; sourceTree = "<group>"; };
+		0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
+			explicitFileTypes = {
+			};
+			explicitFolders = (
+			);
+			path = "Boxer Integration Tests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2815,7 +2831,7 @@
 			path = capture;
 			sourceTree = "<group>";
 		};
-		29B97314FDCFA39411CA2CEA /* Boxer */ = {
+		29B97314FDCFA39411CA2CEA = {
 			isa = PBXGroup;
 			children = (
 				080E96DDFE201D6D7F000001 /* Boxer */,
@@ -2828,6 +2844,10 @@
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				0FF6D2673079BAB600A4DF68 /* BXHostBridge.h */,
+				0FE5D942307C4FFC00070538 /* BXGameboxConfigurationEditor.h */,
+				0FE5D945307C502500070538 /* BXGameboxSettingsWindowController.h */,
+				0FE5D948307C505700070538 /* BXGameboxConfigurationEditor.m */,
+				0FE5D94A307C505800070538 /* BXGameboxSettingsWindowController.m */,
 			);
 			name = Boxer;
 			sourceTree = "<group>";
@@ -4239,7 +4259,7 @@
 				55F0B73B26ABFEB80077E58C /* libs */,
 				9F77207312B38C4400072AE8 /* include */,
 				9F77209D12B38C4400072AE8 /* src */,
-				7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */,
+				7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */,
 				9FBC3A7F0F56CEA2001811F2 /* config.h */,
 				0FB959793054521500B88A1D /* README.md */,
 			);
@@ -4608,7 +4628,7 @@
 				es,
 				"pt-BR",
 			);
-			mainGroup = 29B97314FDCFA39411CA2CEA /* Boxer */;
+			mainGroup = 29B97314FDCFA39411CA2CEA;
 			packageReferences = (
 				55D432012504BB65008515E1 /* XCRemoteSwiftPackageReference "CwlDemangle" */,
 				55EB73DE27ED729F00D5F7E0 /* XCRemoteSwiftPackageReference "Sparkle" */,
@@ -4775,7 +4795,7 @@
 				55635A372D35D8E000C70C0E /* InfoPlist.xcstrings in Resources */,
 				9F4199F61BD416E400A2D165 /* Bezel.xib in Resources */,
 				9F4BCCD817E6190A00140390 /* Boxer.help in Resources */,
-				7A1B2C3D4E5F60718293A4C2 /* DOSBox-Staging/contrib/resources/freedos-keyboard in Resources */,
+				7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5318,6 +5338,8 @@
 				9F8B282A1709C4A100B31A14 /* ADBFilesystemBase.m in Sources */,
 				C2226BB7CCD7D41CEB0ADD2A /* BXConfigKey.m in Sources */,
 				484394ACC05B8A7721BB0383 /* BXEmulatorCore.m in Sources */,
+				C4324D304D200CCC52C5FB3C /* BXGameboxConfigurationEditor.m in Sources */,
+				611F4881F29EA49C0FB96AB4 /* BXGameboxSettingsWindowController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

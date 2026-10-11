@@ -23,6 +23,7 @@ static NSString * const BXRenderSection = @"render";
 static NSString * const BXShaderKey = @"glshader";
 static NSString * const BXIntegerScalingKey = @"integer_scaling";
 static NSString * const BXIMFCSection = @"imfc";
+static NSString * const BXDefaultDOSBoxShaderPreset = @"crt-auto";
 static NSString * const BXIMFCKey = @"imfc";
 
 static NSString *BXCPUTypeString(BXCPUType type)
@@ -204,6 +205,15 @@ static BOOL BXConfigurationBoolean(NSString *value)
         defaultValue:@"false"];
 }
 
+- (NSUInteger)voodooMemorySizeForCurrentGamebox
+{
+    NSString *value = [self valueForKey:BXVoodooMemoryKey
+                                 section:BXVoodooSection
+                            defaultValue:@"4"];
+    NSUInteger megabytes = value.integerValue;
+    return (megabytes == 2) ? 2 : 4;
+}
+
 - (void)setVoodooMemorySize:(NSUInteger)megabytes
 {
     if (megabytes != 2 && megabytes != 4)
@@ -330,6 +340,29 @@ static BOOL BXConfigurationBoolean(NSString *value)
                section:BXRenderSection
             defaultValue:@""];
     }
+}
+
+- (NSArray<NSString *> *)availableDOSBoxShaderPresets
+{
+    return @[@"crt-auto", @"crt-auto-machine", @"crt-auto-arcade", @"sharp", @"custom"];
+}
+
+- (NSString *)currentDOSBoxShaderPreset
+{
+    return [self valueForKey:BXShaderKey
+                      section:BXRenderSection
+                 defaultValue:BXDefaultDOSBoxShaderPreset];
+}
+
+- (void)setDOSBoxShaderPreset:(NSString *)preset
+{
+    if (![self.availableDOSBoxShaderPresets containsObject:preset])
+        return;
+
+    [self setValue:[preset isEqualToString:BXDefaultDOSBoxShaderPreset] ? nil : preset
+               key:BXShaderKey
+           section:BXRenderSection
+        defaultValue:BXDefaultDOSBoxShaderPreset];
 }
 
 - (BOOL)supportsIntegerScaling

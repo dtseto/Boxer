@@ -42,6 +42,9 @@
 /// Search online for cover art for this game.
 - (IBAction) searchForCoverArt: (id)sender;
 
+/// Opens the per-gamebox emulator settings editor.
+- (IBAction) showEmulatorSettings: (id)sender;
+
 /// Synchronise the program selector's currently selected item with the default program
 /// of the current gamebox.
 - (void) syncSelection;

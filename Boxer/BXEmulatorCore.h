@@ -52,6 +52,7 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 - (BOOL)supportsVoodoo;
 - (BOOL)voodooEnabledForCurrentGamebox;
 - (void)setVoodooEnabled:(BOOL)enabled;
+- (NSUInteger)voodooMemorySizeForCurrentGamebox;
 - (void)setVoodooMemorySize:(NSUInteger)megabytes;
 
 - (BOOL)supportsReelMagic;
@@ -74,6 +75,9 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 - (BOOL)supportsOpenEmuShaders;
 - (BXShaderSystem)currentShaderSystem;
 - (void)setShaderSystem:(BXShaderSystem)system;
+- (NSArray<NSString *> *)availableDOSBoxShaderPresets;
+- (NSString *)currentDOSBoxShaderPreset;
+- (void)setDOSBoxShaderPreset:(NSString *)preset;
 
 - (BOOL)supportsIntegerScaling;
 - (BOOL)integerScalingEnabledForCurrentGamebox;

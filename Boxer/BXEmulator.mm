@@ -1034,7 +1034,7 @@ static BOOL _hasStartedEmulator = NO;
             
             //DOSBox Staging 0.79 caches its platform configuration directory
             //before DOS and the virtual Z: drive are initialized.
-            CROSS_DetermineConfigPaths();
+            InitConfigDir();
 
             //Sets up the vast swathes of DOSBox configuration file parameters,
             //and registers the shell to start up when we finish initializing.

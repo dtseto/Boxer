@@ -380,7 +380,7 @@
 	
 	
 	//Finally, apply the values to DOSBox
-	render.aspect		= NO; //We apply our own aspect correction separately
+	// Aspect correction is handled by the Boxer rendering adapter.
     render.scale.size = (Bitu)filterScale;
     
     

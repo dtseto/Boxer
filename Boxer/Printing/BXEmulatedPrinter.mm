@@ -10,6 +10,8 @@
 #import "printer_charmaps.h"
 #import "BXPrintSession.h"
 
+#include <algorithm>
+
 
 #pragma mark -
 #pragma mark Private constants
@@ -2128,7 +2130,7 @@ typedef NS_OPTIONS(uint8_t, BXEmulatedPrinterStatus) {
             //and technically we ought to ignore it.
             double reverse = WIDEPARAM(params, 0) / 216.0;
             
-            double newY = MAX(self.headPosition.y - reverse, self.topMargin);
+            double newY = std::max(self.headPosition.y - reverse, self.topMargin);
             [self _moveHeadToY: newY];
             break;
         }

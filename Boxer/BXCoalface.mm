@@ -11,6 +11,8 @@
 #import "../DOSBox-Staging/include/BXDOSBoxBridgeRegistration.h"
 #undef BXDOSBOX_BRIDGE_IMPLEMENTATION
 #import "BXEmulatorPrivate.h"
+#import "BXVideoHandler.h"
+#import "Rendering/BXVideoFrame.h"
 #import "setup.h"
 #import "mapper.h"
 #import "mouse.h"
@@ -25,7 +27,7 @@
 bool boxer_processEvents()
 {
 	[[BXEmulator currentEmulator] _processEvents];
-    return !shutdown_requested || !boxer_runLoopShouldContinue();
+	return !shutdown_requested && boxer_runLoopShouldContinue();
 }
 
 /*
@@ -252,6 +254,17 @@ Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double s
 	[[emulator videoHandler] prepareForOutputSize: outputSize atScale: scale withCallback: callback];
 	
 	return GFX_CAN_32;
+}
+
+extern "C" void boxer_getCanvasSizeInPixels(int *width, int *height)
+{
+	BXEmulator *emulator = [BXEmulator currentEmulator];
+	BXVideoHandler *videoHandler = [emulator videoHandler];
+	NSSize size = videoHandler.currentFrame.size;
+	if (NSEqualSizes(size, NSZeroSize))
+		size = videoHandler.resolution;
+	if (width) *width = (int)size.width;
+	if (height) *height = (int)size.height;
 }
 
 Bitu boxer_idealOutputMode(Bitu flags)
@@ -944,3 +957,8 @@ void MAPPER_AutoTypeStopImmediately()
 {
 	// Boxer does not use the SDL mapper's auto-typing queue.
 }
+void MAPPER_BindKeys(Section *sec) {}
+void MAPPER_DisplayUI() {}
+bool MAPPER_IsUsingJoysticks() { return false; }
+void MAPPER_CheckEvent(SDL_Event *event) {}
+void MAPPER_UpdateJoysticks() {}

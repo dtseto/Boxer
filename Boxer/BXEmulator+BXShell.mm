@@ -425,7 +425,7 @@ nil];
             
             //The printing behaviour below matches DOSBox's handling of batch file lines:
             //q.v. shell.cpp.
-            if (printCommand && (shell->bf == NULL || [command characterAtIndex: 0] != '@'))
+            if (printCommand && (shell->hasNoBatchFiles() || [command characterAtIndex: 0] != '@'))
             {
                 shell->ShowPrompt();
                 

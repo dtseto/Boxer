@@ -886,8 +886,13 @@ static NSArray<NSURL*>* removeUserDirs(NSArray<NSURL*>* oldArrs)
     self.autoPaused = NO;
 	[self resume: self];
 	
-    //If this was an executable, launch it now.
-	if ([URL matchingFileType: [BXFileTypes executableTypes]] != nil)
+	//If this was an executable, launch it now.  macOS can report a .BAT as a
+	//generic data file when the custom UTI is not registered in the current
+	//launch environment, but DOSBox identifies batch programs by extension.
+	NSString *extension = URL.pathExtension.lowercaseString;
+	BOOL isDOSExecutable = [URL matchingFileType: [BXFileTypes executableTypes]] != nil ||
+                       [@[@"bat", @"com", @"exe"] containsObject: extension];
+	if (isDOSExecutable)
 	{
         if (completionBehavior == BXSessionProgramCompletionBehaviorAuto || completionBehavior == BXSessionShowDOSPromptOnCompletionIfDirectory)
         {

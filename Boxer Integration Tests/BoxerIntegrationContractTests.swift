@@ -152,7 +152,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("src/dos/dos.cpp", contains: "for (uint16_t i = 0; i < DOS_DRIVES; i++)")
         try expect("src/dos/dos.cpp", contains: "Drives[i] = nullptr;")
         let emulator = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator.mm"))
-        XCTAssertTrue(emulator.contains("CROSS_DetermineConfigPaths();"))
+        XCTAssertTrue(emulator.contains("InitConfigDir();"))
     }
 
     func testBuildCompatibilityContracts() throws {

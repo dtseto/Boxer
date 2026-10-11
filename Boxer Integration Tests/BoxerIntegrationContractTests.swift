@@ -98,7 +98,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         let declarationCount = coalface.split(separator: "\n").filter {
             $0.range(of: declarationPattern, options: .regularExpression) != nil
         }.count
-        XCTAssertEqual(declarationCount, 85)
+        XCTAssertEqual(declarationCount, 84)
 
         for consumer in [
             "Boxer/BXCoalface.mm",
@@ -262,6 +262,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/dos/dos_keyboard_layout.cpp", marker: "keyboard-layout-bridge", contains: "boxer_keyboardLayoutName()")
         try expectBlock("src/dos/dos_keyboard_layout.cpp", marker: "keyboard-layout-bridge", contains: "boxer_setKeyboardLayoutActive")
         try expect("src/dos/dos_keyboard_layout.cpp", contains: "boxer_preferredKeyboardLayout()")
+        try expect("include/BXDOSBoxBridgeRegistration.h", contains: "preferredKeyboardLayout")
+        try expect("include/BXDOSBoxLegacyCompatibility.h", contains: "boxer_preferredKeyboardLayout() boxer_registeredDOSBoxInputBridge()")
     }
 
     func testJoystickOwnershipContracts() throws {

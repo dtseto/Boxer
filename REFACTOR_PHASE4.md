@@ -28,7 +28,7 @@ including `BXCoalface.h` directly.
   candidate.
 - Add contract coverage for the inventory before changing includes.
 
-Current frozen counts are 22 legacy macro remaps, 85 `boxer_*` declarations,
+Current frozen counts are 21 legacy macro remaps, 84 `boxer_*` declarations,
 and six actual direct consumers: `BXCoalface.mm`, `BXEmulatedKeyboard.mm`,
 `BXKeyBuffer.mm`, `BXEmulatedPrinter.mm`, `dosbox.h`, and `shell_batch.cpp`.
 `printer_redir.cpp` retains a documented compatibility comment and uses the
@@ -56,16 +56,20 @@ callsite macro into Boxer Objective-C++ translation units.
 
 The include-context split is now in place: `dosbox.h` exposes the legacy
 compatibility header to DOSBox C++ translation units, but suppresses it for
-Objective-C++ host translation units unless they explicitly opt in. The
-Coalface implementation is the explicit host-side opt-in because it still
-owns the legacy `E_Exit` call site. This keeps DOSBox-only remaps out of the
-rest of the host while preserving the standalone runtime harness.
+Objective-C++ host translation units. `BXCoalface.mm` now calls the typed
+fatal host entry point directly, keeping DOSBox-only remaps out of the host
+while preserving the standalone runtime harness.
 
 Diagnostics now use the same boundary: `GFX_ShowMsg` and `E_Exit` remain
 literal DOSBox call expressions, but their remaps and formatting live in
 `BXDOSBoxDiagnosticsCompatibility.h`. The typed adapter formats messages once
 and dispatches them through `BXDOSBoxDiagnosticsBridgeCallbacks`; standalone
 harnesses retain weak legacy fallbacks.
+
+Keyboard-layout preference lookup now travels through the input callback table;
+the DOSBox source retains the literal `boxer_preferredKeyboardLayout()` call
+through a DOSBox-only compatibility macro, while Boxer supplies the typed
+`preferredKeyboardLayout` callback.
 
 ### Step 3: Migrate Boxer host consumers
 

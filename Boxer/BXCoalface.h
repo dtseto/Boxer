@@ -184,9 +184,6 @@ FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtensi
     void boxer_setCapsLockActive(bool active);
     void boxer_setScrollLockActive(bool active);
     
-	/// Called from dos_keyboard_layout.cpp: provides the current OS X keyboard layout as a DOSBox layout code.
-	const char * boxer_preferredKeyboardLayout();
-    
     /// Called in bios_keyboard.cpp to allow Boxer to interrupt the INT16 keyboard handling loop.
     /// (Used by the DOS prompt, among others.)
     bool boxer_continueListeningForKeyEvents();

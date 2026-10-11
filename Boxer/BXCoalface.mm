@@ -774,6 +774,7 @@ const BXDOSBoxInputBridgeCallbacks *boxer_registeredDOSBoxInputBridge(void)
             boxer_numKeyCodesInPasteBuffer,
             boxer_continueListeningForKeyEvents,
             boxer_getNextKeyCodeInPasteBuffer,
+            boxer_preferredKeyboardLayout,
             boxer_setCapsLockActive,
             boxer_setNumLockActive,
             boxer_setScrollLockActive

@@ -28,11 +28,12 @@ including `BXCoalface.h` directly.
   candidate.
 - Add contract coverage for the inventory before changing includes.
 
-Current frozen counts are 21 legacy macro remaps, 72 `boxer_*` declarations,
-and six actual direct consumers: `BXCoalface.mm`, `BXEmulatedKeyboard.mm`,
-`BXKeyBuffer.mm`, `BXEmulatedPrinter.mm`, `dosbox.h`, and `shell_batch.cpp`.
-`printer_redir.cpp` retains a documented compatibility comment and uses the
-typed printer adapter at its callsites.
+The initial frozen inventory contained 23 legacy macro remaps, 85 `boxer_*`
+declarations, and six direct consumers. At Phase 4 closure, the shim contains
+21 legacy macro remaps and 72 declarations. The only remaining DOSBox-side
+references are the documented compatibility include in
+`BXDOSBoxCoalfaceCompatibility.h` and the printer harness contract comment;
+both use approved transition paths.
 
 ### Step 2: Introduce a host declaration boundary
 
@@ -43,16 +44,11 @@ typed printer adapter at its callsites.
   not edit the project file directly while Xcode is open.
 - Preserve `BXCoalface.h` as a compatibility shim during the transition.
 
-Step 2 has begun with the project-integrated `BXHostBridge.h`, which contains
-only keyboard buffer and keyboard-layout declarations. `BXEmulatedKeyboard.mm` now uses that header,
-while `BXKeyBuffer.mm` and `BXEmulatedPrinter.mm` no longer import
-`BXCoalface.h` directly. The project-aware Xcode integration added the header;
-the mixed pre-existing project-file diff remains uncommitted.
-
-The DOSBox umbrella boundary now also owns the legacy `E_Exit` remap. Typed
-fatal-message formatting is intentionally deferred until the host and DOSBox
-include contexts are separated; attempting it globally leaks the DOSBox
-callsite macro into Boxer Objective-C++ translation units.
+Step 2 is complete with the project-integrated `BXHostBridge.h`, which contains
+only keyboard buffer and keyboard-layout declarations. `BXEmulatedKeyboard.mm`
+uses that header, while `BXKeyBuffer.mm` and `BXEmulatedPrinter.mm` no longer
+import `BXCoalface.h` directly. The project-aware Xcode integration added the
+header; the pre-existing project-file diff remains uncommitted.
 
 The include-context split is now in place: `dosbox.h` exposes the legacy
 compatibility header to DOSBox C++ translation units, but suppresses it for
@@ -84,6 +80,9 @@ the active emulator filesystem methods remain available internally.
 - Keep `BXCoalface.mm` as the single host implementation/registration point.
 - Preserve any Objective-C++ type declarations required by the current ABI.
 
+Step 3 is complete. `BXCoalface.mm` is the single host implementation and
+registration point for the typed bridge tables.
+
 ### Step 4: Reduce DOSBox umbrella-header coupling
 
 - Replace direct `BXCoalface.h` inclusion in `dosbox.h` and the shell/printer
@@ -93,6 +92,9 @@ the active emulator filesystem methods remain available internally.
 - Do not remove a legacy symbol solely because it is unused in the production
   build; first verify the standalone harness and extracted-source tests.
 
+Step 4 is complete. The remaining direct references are limited to the two
+documented transition paths listed in Step 1.
+
 ### Step 5: Remove obsolete remaps incrementally
 
 - Remove only one remap family at a time after its typed adapter is active.
@@ -100,6 +102,10 @@ the active emulator filesystem methods remain available internally.
   then remaining filesystem operations.
 - After each family, run the focused contract/runtime tests and both build
   modes.
+
+Step 5 is complete for capture/diagnostics, keyboard layout, joystick
+ownership, and filesystem policy/callbacks. Each boundary retained its
+standalone harness coverage.
 
 ### Step 6: Phase 4 acceptance
 
@@ -110,6 +116,11 @@ the active emulator filesystem methods remain available internally.
 - Full runtime baseline remains green, including launch and DOS exit shutdown.
 - Boxer and DOSBox changes are committed separately, with unrelated Xcode,
   vendor, and untracked files left untouched.
+
+Phase 4 acceptance is complete. The DOSBox closure commits are `b297f4368`,
+`8c543bfdb`, and `304ca118`; the corresponding Boxer commits are `47999f38`,
+`ac143368`, and `9cf5fabc`. Build-for-testing passed, the full test plan is
+71/71, and launch smoke validation showed no KVO, exception, or fatal errors.
 
 ## Safety rules
 

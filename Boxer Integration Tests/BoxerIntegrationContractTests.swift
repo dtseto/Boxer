@@ -82,7 +82,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
             XCTAssertFalse(header.contains(legacyType), "Registration header leaked legacy type: \(legacyType)")
         }
         for callbackTable in ["BXDOSBoxAudioBridgeCallbacks", "BXDOSBoxPrinterBridgeCallbacks",
-                              "BXDOSBoxInputBridgeCallbacks", "BXDOSBoxShellBridgeCallbacks",
+                              "BXDOSBoxInputBridgeCallbacks", "BXDOSBoxJoystickBridgeCallbacks",
+                              "BXDOSBoxShellBridgeCallbacks",
                               "BXDOSBoxFilesystemBridgeCallbacks", "BXDOSBoxRunLoopBridgeCallbacks",
                               "BXDOSBoxEventBridgeCallbacks", "BXDOSBoxRenderingBridgeCallbacks",
                               "BXDOSBoxDiagnosticsBridgeCallbacks"] {

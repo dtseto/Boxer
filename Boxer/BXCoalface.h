@@ -42,7 +42,6 @@ extern "C" {
 #define GFX_SetShader boxer_setShader
 #define GFX_GetBestMode boxer_idealOutputMode
 #define GFX_MaybeProcessEvents boxer_MaybeProcessEvents
-#define GFX_ShowMsg boxer_log
 #define MIDI_Available boxer_MIDIAvailable
 #define OpenCaptureFile boxer_openCaptureFile
 FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtension);

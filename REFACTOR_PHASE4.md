@@ -54,6 +54,19 @@ fatal-message formatting is intentionally deferred until the host and DOSBox
 include contexts are separated; attempting it globally leaks the DOSBox
 callsite macro into Boxer Objective-C++ translation units.
 
+The include-context split is now in place: `dosbox.h` exposes the legacy
+compatibility header to DOSBox C++ translation units, but suppresses it for
+Objective-C++ host translation units unless they explicitly opt in. The
+Coalface implementation is the explicit host-side opt-in because it still
+owns the legacy `E_Exit` call site. This keeps DOSBox-only remaps out of the
+rest of the host while preserving the standalone runtime harness.
+
+Diagnostics now use the same boundary: `GFX_ShowMsg` and `E_Exit` remain
+literal DOSBox call expressions, but their remaps and formatting live in
+`BXDOSBoxDiagnosticsCompatibility.h`. The typed adapter formats messages once
+and dispatches them through `BXDOSBoxDiagnosticsBridgeCallbacks`; standalone
+harnesses retain weak legacy fallbacks.
+
 ### Step 3: Migrate Boxer host consumers
 
 - Move `BXEmulatedKeyboard.mm`, `BXKeyBuffer.mm`, and

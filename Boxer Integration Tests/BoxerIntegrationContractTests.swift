@@ -93,7 +93,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
     func testPhase4CoalfaceCompatibilityInventory() throws {
         let coalfaceURL = projectRoot.appendingPathComponent("Boxer/BXCoalface.h")
         let coalface = try source(at: coalfaceURL)
-        XCTAssertEqual(coalface.components(separatedBy: "#define ").count - 1, 22)
+        XCTAssertEqual(coalface.components(separatedBy: "#define ").count - 1, 21)
         let declarationPattern = #"^\s*(bool|void|Bitu|uint8_t|double|int|FILE \*|const char \*|void \*)\s+boxer_"#
         let declarationCount = coalface.split(separator: "\n").filter {
             $0.range(of: declarationPattern, options: .regularExpression) != nil
@@ -131,10 +131,14 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertFalse(printer.contains("#import \"BXCoalface.h\""))
         XCTAssertFalse(shellBatch.contains("#include \"BXCoalface.h\""))
         XCTAssertTrue(dosboxHeader.contains("#include \"BXDOSBoxCoalfaceCompatibility.h\""))
+        XCTAssertTrue(dosboxHeader.contains("!defined(__OBJC__)"))
+        XCTAssertTrue(dosboxHeader.contains("BXDOSBOX_FORCE_LEGACY_COMPATIBILITY"))
         XCTAssertFalse(dosboxHeader.contains("#include \"BXCoalface.h\""))
         XCTAssertTrue(coalfaceCompatibility.contains("#include \"BXCoalface.h\""))
         XCTAssertFalse(try source(at: projectRoot.appendingPathComponent("Boxer/BXCoalface.h")).contains("#define E_Exit"))
-        XCTAssertTrue(coalfaceCompatibility.contains("#define E_Exit"))
+        let diagnosticsCompatibility = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxDiagnosticsCompatibility.h"))
+        XCTAssertTrue(diagnosticsCompatibility.contains("#define GFX_ShowMsg"))
+        XCTAssertTrue(diagnosticsCompatibility.contains("#define E_Exit"))
     }
 
     func testRunLoopAndShutdownContracts() throws {

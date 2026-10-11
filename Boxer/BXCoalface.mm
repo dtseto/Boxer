@@ -998,7 +998,7 @@ const BXDOSBoxDiagnosticsBridgeCallbacks *boxer_registeredDOSBoxDiagnosticsBridg
 
 void restart_program(std::vector<std::string> & parameters) {
     // TODO: re-write?
-    E_Exit("Restarting not implemented!");
+    boxer_die(__PRETTY_FUNCTION__, __FILE__, __LINE__, "Restarting not implemented!");
 }
 
 const char *DOSBOX_GetDetailedVersion() noexcept

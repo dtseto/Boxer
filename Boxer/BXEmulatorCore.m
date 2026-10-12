@@ -383,6 +383,45 @@ static BOOL BXConfigurationBoolean(NSString *value)
         bridge->emptyDriveCache(drive);
 }
 
++ (BOOL)addDOSBoxDrive:(uintptr_t)drive atIndex:(NSUInteger)index mediaByte:(uint8_t)mediaByte
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->addDrive && bridge->addDrive(drive, (uint8_t)index, mediaByte);
+}
+
++ (int32_t)unmountDOSBoxDriveAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->unmountDrive ? bridge->unmountDrive((uint8_t)index) : -1;
+}
+
++ (void)closeDOSBoxFilesForDriveAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    if (bridge && bridge->closeFilesForDrive)
+        bridge->closeFilesForDrive((uint8_t)index);
+}
+
++ (void)destroyDOSBoxDrive:(uintptr_t)drive
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    if (bridge && bridge->destroyDrive)
+        bridge->destroyDrive(drive);
+}
+
++ (void)setDOSBoxDrive:(uintptr_t)drive label:(const char *)label isCDROM:(BOOL)isCDROM
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    if (bridge && bridge->setDriveLabel)
+        bridge->setDriveLabel(drive, label, isCDROM);
+}
+
++ (const char *)DOSBoxDriveLabel:(uintptr_t)drive
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveLabel ? bridge->driveLabel(drive) : NULL;
+}
+
 - (instancetype)initWithGamebox:(BXGamebox *)gamebox
                          session:(BXSession *)session
 {

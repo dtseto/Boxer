@@ -92,6 +92,12 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
           driveIndex:(uint8_t *)outDriveIndex;
 + (uintptr_t)DOSBoxDriveAtIndex:(NSUInteger)index;
 + (void)emptyDOSBoxDriveCache:(uintptr_t)drive;
++ (BOOL)addDOSBoxDrive:(uintptr_t)drive atIndex:(NSUInteger)index mediaByte:(uint8_t)mediaByte;
++ (int32_t)unmountDOSBoxDriveAtIndex:(NSUInteger)index;
++ (void)closeDOSBoxFilesForDriveAtIndex:(NSUInteger)index;
++ (void)destroyDOSBoxDrive:(uintptr_t)drive;
++ (void)setDOSBoxDrive:(uintptr_t)drive label:(const char *)label isCDROM:(BOOL)isCDROM;
++ (const char *)DOSBoxDriveLabel:(uintptr_t)drive;
 
 - (instancetype)initWithGamebox:(nullable BXGamebox *)gamebox
                          session:(nullable BXSession *)session NS_DESIGNATED_INITIALIZER;

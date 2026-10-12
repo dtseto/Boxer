@@ -22,6 +22,7 @@
 #import "mouse.h"
 #import "cross.h"
 #import "shell.h"
+#import "drives.h"
 #import "src/dos/dos_keyboard_layout.h"
 #import "ADBFilesystem.h"
 
@@ -708,13 +709,65 @@ static void boxer_filesystemControlEmptyDriveCache(uintptr_t drive)
         ((DOS_Drive *)drive)->EmptyCache();
 }
 
+static bool boxer_filesystemControlAddDrive(uintptr_t drive, uint8_t driveIndex, uint8_t mediaByte)
+{
+    if (driveIndex >= DOS_DRIVES || !drive || Drives[driveIndex])
+        return false;
+    DOS_Drive *dosDrive = (DOS_Drive *)drive;
+    Drives[driveIndex] = std::shared_ptr<DOS_Drive>(dosDrive);
+    mem_writeb(RealToPhysical(dos.tables.mediaid) + ((PhysPt)driveIndex) * 2, mediaByte);
+    return true;
+}
+
+static int32_t boxer_filesystemControlUnmountDrive(uint8_t driveIndex)
+{
+    if (driveIndex >= DOS_DRIVES || !Drives[driveIndex])
+        return -1;
+    return (int32_t)DriveManager::UnmountDrive((int)driveIndex);
+}
+
+static void boxer_filesystemControlCloseFiles(uint8_t driveIndex)
+{
+    for (int i = 0; i < DOS_FILES; i++)
+    {
+        if (Files[i] && Files[i]->GetDrive() == driveIndex)
+        {
+            DOS_File *file = Files[i].get();
+            if (driveIndex == 0 && file->IsName("CON")) continue;
+            file->willBecomeUnavailable();
+        }
+    }
+}
+
+static void boxer_filesystemControlDestroyDrive(uintptr_t drive)
+{
+    delete (DOS_Drive *)drive;
+}
+
+static void boxer_filesystemControlSetDriveLabel(uintptr_t drive, const char *label, bool isCDROM)
+{
+    if (drive && label)
+        ((DOS_Drive *)drive)->SetLabel(label, isCDROM, false);
+}
+
+static const char *boxer_filesystemControlDriveLabel(uintptr_t drive)
+{
+    return drive ? ((DOS_Drive *)drive)->GetLabel() : NULL;
+}
+
 static BXDOSBoxFilesystemControlBridgeCallbacks BXDOSBoxFilesystemControlCallbacks = {
     boxer_filesystemControlDriveCount,
     boxer_filesystemControlDefaultDriveIndex,
     boxer_filesystemControlMaximumPathLength,
     boxer_filesystemControlMakeName,
     boxer_filesystemControlDriveAtIndex,
-    boxer_filesystemControlEmptyDriveCache
+    boxer_filesystemControlEmptyDriveCache,
+    boxer_filesystemControlAddDrive,
+    boxer_filesystemControlUnmountDrive,
+    boxer_filesystemControlCloseFiles,
+    boxer_filesystemControlDestroyDrive,
+    boxer_filesystemControlSetDriveLabel,
+    boxer_filesystemControlDriveLabel
 };
 
 static bool BXDOSBoxFilesystemControlCallbacksRegistered = false;

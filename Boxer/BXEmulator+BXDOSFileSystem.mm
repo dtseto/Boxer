@@ -294,20 +294,20 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	if (DOSBoxDrive)
 	{
 		//Now add the drive to DOSBox's own drive list
-		if ([self _addDOSBoxDrive: DOSBoxDrive atIndex: index])
-		{
+			if ([self _addDOSBoxDrive: DOSBoxDrive atIndex: index])
+			{
 			//And set its label appropriately (unless its an image, which carry their own labels)
 			if (!isImage && driveLabel)
 			{
 				const char *cLabel = [driveLabel cStringUsingEncoding: BXDirectStringEncoding];
                 if (cLabel) {
-					DOSBoxDrive->SetLabel(cLabel, drive.isCDROM, false);
+					[BXEmulatorCore setDOSBoxDrive:(uintptr_t)DOSBoxDrive label:cLabel isCDROM:drive.isCDROM];
                 }
 			}
 			
 			//Populate the drive with the settings we ended up using, and add the drive to our own drives cache
             drive.letter = driveLetter;
-            drive.DOSVolumeLabel = [NSString stringWithCString: DOSBoxDrive->GetLabel()
+            drive.DOSVolumeLabel = [NSString stringWithCString: [BXEmulatorCore DOSBoxDriveLabel:(uintptr_t)DOSBoxDrive]
                                                       encoding: BXDirectStringEncoding];
             
 			[self _addDriveToCache: drive];
@@ -327,7 +327,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
             //TODO: let _addDOSBoxDrive:atIndex: populate an error.
             if (outError) *outError = [BXEmulatorDriveLetterOccupiedError errorWithDrive: drive];
             
-			delete DOSBoxDrive;
+					[BXEmulatorCore destroyDOSBoxDrive:(uintptr_t)DOSBoxDrive];
             
             _driveBeingMounted = nil;
             
@@ -393,7 +393,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     }
 	
 	NSUInteger index	= [self _indexOfDriveLetter: drive.letter];
-	BOOL isCurrentDrive = (index == DOS_GetDefaultDrive());
+	BOOL isCurrentDrive = (index == [BXEmulatorCore DOSBoxDefaultDriveIndex]);
 
     NSError *unmountError = nil;
 	BOOL unmounted = [self _unmountDOSBoxDriveAtIndex: index
@@ -955,12 +955,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	
 	//There was already a drive at that index, bail out
 	//TODO: populate an NSError object as well?
-	if (Drives[index]) return NO;
-	
-	Drives[index] = std::shared_ptr<DOS_Drive>(drive);
-	mem_writeb(RealToPhysical(dos.tables.mediaid)+((PhysPt)index)*2, drive->GetMediaByte());
-	
-	return YES;
+	return [BXEmulatorCore addDOSBoxDrive:(uintptr_t)drive
+	                              atIndex:index
+	                           mediaByte:drive->GetMediaByte()];
 }
     
 //Unmounts the DOSBox drive at the specified index and clears any references to the drive.
@@ -969,14 +966,12 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	//The specified drive is not mounted, don't continue
     //(We don't treat this as an error situation either.)
-	if (!Drives[index]) return NO;
-	
-    NSInteger result = DriveManager::UnmountDrive((int)index);
+	if (![BXEmulatorCore DOSBoxDriveAtIndex:index]) return NO;
+
+    NSInteger result = [BXEmulatorCore unmountDOSBoxDriveAtIndex:index];
 	if (result == BXDOSBoxUnmountSuccess)
 	{
         [self _closeFilesForDOSBoxDriveAtIndex: index];
-        
-		Drives[index] = NULL;
 		return YES;
 	}
 	else
@@ -995,22 +990,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     //resources (i.e. POSIX file handles) that were opened by the file, while
     //ensuring that any program that still expects its file to be open will
     //get a file that won't give them back any data.
-    int i;
-    for (i=0; i<DOS_FILES; i++)
-    {
-        if (Files[i] && Files[i]->GetDrive() == index)
-        {
-			DOS_File *origFile = Files[i].get();
-            //DOS_File->GetDrive() returns 0 for the special CON system file,
-            //which also corresponds to the drive index for A, so ignore this file.
-            if (index == 0 && origFile->IsName("CON")) continue;
-            
-            //Tell the file that its backing media may become unavailable.
-            //(Currently only necessary for files with a folder or volume backing,
-            //but harmless for others.)
-            origFile->willBecomeUnavailable();
-        }
-    }
+	[BXEmulatorCore closeDOSBoxFilesForDriveAtIndex:index];
 }
 
 
@@ -1096,7 +1076,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     }
     else
     {
-		delete drive;
+					[BXEmulatorCore destroyDOSBoxDrive:(uintptr_t)drive];
      
         if (outError) 
         {

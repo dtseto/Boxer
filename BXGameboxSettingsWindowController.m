@@ -204,7 +204,7 @@ static NSInteger const BXVersion0822 = 402;
 - (void)mouseChanged:(NSPopUpButton *)sender { [self.core setMouseCount:sender.selectedTag]; }
 - (BXStagingVersion)selectedVersion { return self.versionPopup.selectedTag==BXVersion080?BXStagingVersion080:(self.versionPopup.selectedTag==BXVersion0822?BXStagingVersion0822:BXStagingVersion081); }
 - (void)clearAll:(id)sender {
-    NSAlert *a=[NSAlert new]; a.messageText=@"Clear all gamebox overrides?"; a.informativeText=@"The original configuration will be backed up first."; [a addButtonWithTitle:@"Clear Overrides"]; [a addButtonWithTitle:@"Cancel"];
+    NSAlert *a=[NSAlert new]; a.messageText=@"Clear all gamebox overrides?"; a.informativeText=@"This will remove all per-gamebox configuration settings and startup commands. The original configuration will be backed up first."; [a addButtonWithTitle:@"Clear Overrides"]; [a addButtonWithTitle:@"Cancel"];
     [a beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse code){ if(code!=NSAlertFirstButtonReturn)return; NSURL *backup=nil; NSError *error=nil; if([self.configurationEditor clearAllOverridesWithBackupURL:&backup error:&error]) [self showResult:@"All overrides cleared." backup:backup]; else [self showError:error]; }];
 }
 - (void)removeNewer:(id)sender {

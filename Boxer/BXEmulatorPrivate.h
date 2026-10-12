@@ -234,20 +234,10 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @return The uppercase drive letter for the specified drive index.
 - (NSString *)_driveLetterForIndex: (NSUInteger)driveIndex;
 
-/// @param dosDrive The DOSBox drive instance to look up.
-/// @return The Boxer drive that corresponds to the specified DOSBox drive, or @c nil if no matching drive was found.
-- (BXDrive *)_driveMatchingDOSBoxDrive: (DOS_Drive *)dosDrive;
-
-/// @param drive The Boxer drive instance to look up.
-/// @return The DOSBox drive that corresponds to the specified Boxer drive, or @c NULL if no matching drive was found.
-- (nullable DOS_Drive *)_DOSBoxDriveMatchingDrive: (BXDrive *)drive;
-
-
 #pragma mark - Adding and removing DOSBox drives
 
-/// @param drive The DOSBox drive instance to look up.
+/// @param drive An opaque DOSBox drive handle.
 /// @return The drive index at which the specified DOSBox drive is mounted. Returns @c NSNotFound if specified drive is not mounted.
-- (NSUInteger) _indexOfDOSBoxDrive: (DOS_Drive *)drive;
 - (NSUInteger) _indexOfDOSBoxDriveHandle: (uintptr_t)drive;
 
 /// Registers a new drive with DOSBox and adds it to the Drives array. This does no further preparation of the drive.
@@ -276,9 +266,6 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @return A Boxer drive instance based on the DOS drive at the specified index.
 /// @see _driveMatchingDOSBoxDrive:
 - (nullable BXDrive *)_driveFromDOSBoxDriveAtIndex: (NSUInteger)driveIndex;
-
-/// Returns the Boxer drive type for the DOSBox drive at the specified index.
-- (BXDriveType) _typeOfDOSBoxDrive: (DOS_Drive *)drive;
 
 /// Creates a new DOSBox floppy drive instance from a disk image. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param imagePath        The local filesystem path to the image to mount for the drive.
@@ -424,7 +411,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @param dosboxDrive  The DOSBox drive instance which is requesting write access to the path.
 /// @return YES if DOSBox should be allowed to write to the specified path, or NO otherwise.
 - (BOOL) _shouldAllowWriteAccessToLocalPath: (const char *)localPath
-                              onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                              onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 #pragma mark - Local filesystem access
 
@@ -463,7 +450,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 ///                     used by the POSIX @c file() function.
 /// @return a POSIX file handle for the open file. Returns @c NULL if the file could not be opened.
 - (nullable FILE *) _openFileAtLocalPath: (const char *)localPath
-                           onDOSBoxDrive: (DOS_Drive *)dosboxDrive
+                           onDOSBoxDrive: (uintptr_t)dosboxDrive
                                   inMode: (const char *)mode;
 
 /// Attempts to delete a file on the local filesystem.
@@ -472,7 +459,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @return YES if the file was successfully deleted, or NO if the file could not be deleted.
 /// @return @c YES if the file was deleted successfully, or @c NO otherwise.
 - (BOOL) _removeFileAtLocalPath: (const char *)localPath
-                  onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                  onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Called by local filesystem drives to move a file or folder on the local filesystem to another location.
 /// This is also used when renaming files.
@@ -482,7 +469,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @return @c YES if the resource was moved successfully, or @c NO otherwise.
 - (BOOL) _moveLocalPath: (const char *)fromPath
             toLocalPath: (const char *)toPath
-          onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+          onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Called by local filesystem drives to create a new directory at a specified local filesystem locaiton.
 /// @param localPath    The POSIX path to the location on the local filesystem where the directory is to be created.
@@ -490,28 +477,28 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @param dosboxDrive  The drive on which the directory is being created.
 /// @return @c YES if the directory was created successfully, or @c NO otherwise.
 - (BOOL) _createDirectoryAtLocalPath: (const char *)localPath
-                       onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                       onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Called by local filesystem drives to remove a directory and its contents from a specified local filesystem locaiton.
 /// @param localPath    The POSIX path to the directory on the local filesystem to be removed.
 /// @param dosboxDrive  The drive from which the directory is being removed.
 /// @return @c YES if the directory was removed successfully, or @c NO otherwise.
 - (BOOL) _removeDirectoryAtLocalPath: (const char *)localPath
-                       onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                       onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Called by local filesystem drives when a new file is created on that drive.
 /// @note This notification is not called when moving or renaming files or when creating new directories.
 /// @param localPath    The POSIX path to the file on the local filesystem that was created.
 /// @param dosboxDrive  The DOSBox drive instance on which the file was created.
 - (void) _didCreateFileAtLocalPath: (const char *)localPath
-                     onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                     onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Called by local filesystem drives when a file is removed from that drive.
 /// @note This notification is not called when moving or renaming files or when removing directories.
 /// @param localPath    The POSIX path to the file on the local filesystem that was removed.
 /// @param dosboxDrive  The DOSBox drive instance from which the file was removed.
 - (void) _didRemoveFileAtLocalPath: (const char *)localPath
-                     onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                     onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Gets a POSIX file stat block for the specified resource on the local filesystem.
 /// @param outStatus[out]   If the method returns @c YES, this will be populated with a POSIX file stat block.
@@ -521,7 +508,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// (in which case the resource did not exist or could not be read.)
 - (BOOL) _getStats: (out struct stat *)outStatus
       forLocalPath: (const char *)localPath
-     onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+     onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Checks whether a directory exists at a specified location on the local filesystem.
 /// @param localPath        The POSIX path on the local filesystem to check.
@@ -529,7 +516,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @return YES if a directory exists at the specified location, or NO otherwise
 /// (including if the resource at the specified location was a file rather than a directory.)
 - (BOOL) _localDirectoryExists: (const char *)localPath
-                 onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                 onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Checks whether a file exists at a specified location on the local filesystem.
 /// @param localPath        The POSIX path on the local filesystem to check.
@@ -537,7 +524,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @return YES if a regular file exists at the specified location, or NO otherwise
 /// (including if the resource at the specified location was a directory rather than a file.)
 - (BOOL) _localFileExists: (const char *)path
-            onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+            onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Enumerates a location on the local filesystem.
 /// @param localPath    The POSIX path on the local filesystem for the directory to enumerate.
@@ -545,7 +532,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @param dosboxDrive  The DOSBox drive which is performing the enumeration.
 /// @return An enumerator to use for listing the contents of the specified location.
 - (id <ADBFilesystemFileURLEnumeration>) _directoryEnumeratorForLocalPath: (const char *)path
-                                                            onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                                                            onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 @end
 

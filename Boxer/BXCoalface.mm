@@ -599,7 +599,7 @@ bool boxer_shouldShowFileWithName(const char *name)
 bool boxer_shouldAllowWriteAccessToPath(const char *path, DOS_Drive *dosboxDrive)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
-	return [emulator _shouldAllowWriteAccessToLocalPath: path onDOSBoxDrive: dosboxDrive];
+	return [emulator _shouldAllowWriteAccessToLocalPath: path onDOSBoxDrive: (uintptr_t)dosboxDrive];
 }
 
 //Tells Boxer to resync its cached drives - called by DOSBox functions that add/remove drives
@@ -618,13 +618,13 @@ void boxer_driveDidUnmount(uint8_t driveIndex)
 void boxer_didCreateLocalFile(const char *path, DOS_Drive *dosboxDrive)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
-	[emulator _didCreateFileAtLocalPath: path onDOSBoxDrive: dosboxDrive];
+	[emulator _didCreateFileAtLocalPath: path onDOSBoxDrive: (uintptr_t)dosboxDrive];
 }
 
 void boxer_didRemoveLocalFile(const char *path, DOS_Drive *dosboxDrive)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
-	[emulator _didRemoveFileAtLocalPath: path onDOSBoxDrive: dosboxDrive];
+	[emulator _didRemoveFileAtLocalPath: path onDOSBoxDrive: (uintptr_t)dosboxDrive];
 }
 
 
@@ -632,14 +632,22 @@ void boxer_didRemoveLocalFile(const char *path, DOS_Drive *dosboxDrive)
 bool boxer_createLocalDir(const char *path, DOS_Drive *drive)
 {
     BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _createDirectoryAtLocalPath: path onDOSBoxDrive: drive];
+    return [emulator _createDirectoryAtLocalPath: path onDOSBoxDrive: (uintptr_t)drive];
 }
 
 static bool boxer_filesystemBridgeShouldShowFileWithName(const char *name) { return boxer_shouldShowFileWithName(name); }
-static bool boxer_filesystemBridgeShouldAllowWriteAccessToPath(const char *path, uintptr_t drive) { return boxer_shouldAllowWriteAccessToPath(path, (DOS_Drive *)drive); }
-static void boxer_filesystemBridgeDidCreateLocalFile(const char *path, uintptr_t drive) { boxer_didCreateLocalFile(path, (DOS_Drive *)drive); }
-static void boxer_filesystemBridgeDidRemoveLocalFile(const char *path, uintptr_t drive) { boxer_didRemoveLocalFile(path, (DOS_Drive *)drive); }
-static bool boxer_filesystemBridgeCreateLocalDir(const char *path, uintptr_t drive) { return boxer_createLocalDir(path, (DOS_Drive *)drive); }
+static bool boxer_filesystemBridgeShouldAllowWriteAccessToPath(const char *path, uintptr_t drive) {
+    return [[BXEmulator currentEmulator] _shouldAllowWriteAccessToLocalPath:path onDOSBoxDrive:drive];
+}
+static void boxer_filesystemBridgeDidCreateLocalFile(const char *path, uintptr_t drive) {
+    [[BXEmulator currentEmulator] _didCreateFileAtLocalPath:path onDOSBoxDrive:drive];
+}
+static void boxer_filesystemBridgeDidRemoveLocalFile(const char *path, uintptr_t drive) {
+    [[BXEmulator currentEmulator] _didRemoveFileAtLocalPath:path onDOSBoxDrive:drive];
+}
+static bool boxer_filesystemBridgeCreateLocalDir(const char *path, uintptr_t drive) {
+    return [[BXEmulator currentEmulator] _createDirectoryAtLocalPath:path onDOSBoxDrive:drive];
+}
 static void boxer_filesystemBridgeDriveDidMount(uint8_t driveIndex) { boxer_driveDidMount(driveIndex); }
 static void boxer_filesystemBridgeDriveDidUnmount(uint8_t driveIndex) { boxer_driveDidUnmount(driveIndex); }
 

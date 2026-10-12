@@ -232,6 +232,7 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 
 - (NSArray<BXConfigKey *> *)versionSpecificConfigKeys;
 - (NSArray<BXConfigKey *> *)configKeysNewerThanVersion:(BXStagingVersion)version;
+- (NSString *)displayNameForConfigKey:(BXConfigKey *)key;
 
 @end
 

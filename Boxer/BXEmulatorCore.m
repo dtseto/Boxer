@@ -1035,4 +1035,25 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return @[];
 }
 
+- (NSString *)displayNameForConfigKey:(BXConfigKey *)key
+{
+    if ([key.section isEqualToString:BXVoodooSection] && [key.key isEqualToString:BXVoodooKey])
+        return NSLocalizedString(@"3dfx Voodoo", @"Gamebox sharing summary label.");
+    if ([key.section isEqualToString:BXVoodooSection] && [key.key isEqualToString:BXVoodooMemoryKey])
+        return NSLocalizedString(@"3dfx Voodoo memory size", @"Gamebox sharing summary label.");
+    if ([key.section isEqualToString:BXReelMagicSection])
+        return NSLocalizedString(@"ReelMagic", @"Gamebox sharing summary label.");
+    if ([key.section isEqualToString:BXSBlasterSection])
+        return NSLocalizedString(@"ESS Enhanced FM audio", @"Gamebox sharing summary label.");
+    if ([key.section isEqualToString:BXRenderSection] && [key.key isEqualToString:BXShaderKey])
+        return NSLocalizedString(@"Shader system or preset", @"Gamebox sharing summary label.");
+    if ([key.section isEqualToString:BXRenderSection] && [key.key isEqualToString:BXIntegerScalingKey])
+        return NSLocalizedString(@"Integer scaling", @"Gamebox sharing summary label.");
+    if ([key.section isEqualToString:BXIMFCSection])
+        return NSLocalizedString(@"IBM Music Feature Card", @"Gamebox sharing summary label.");
+    if ([key.section isEqualToString:BXCPUSection] && [key.key isEqualToString:BXCPUTypeKey])
+        return NSLocalizedString(@"CPU type", @"Gamebox sharing summary label.");
+    return NSLocalizedString(@"Advanced emulator setting", @"Fallback gamebox sharing summary label.");
+}
+
 @end

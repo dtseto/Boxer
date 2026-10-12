@@ -21,6 +21,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// Returns the version-specific overrides currently present in the gamebox.
 - (NSArray<BXConfigKey *> *)currentVersionSpecificOverrides;
 
+/// Returns only the newer overrides currently present in the gamebox.
+- (NSArray<BXConfigKey *> *)currentOverridesNewerThanVersion:(BXStagingVersion)version;
+
 /// Removes every setting and startup command from the gamebox configuration.
 - (BOOL)clearAllOverridesWithBackupURL:(NSURL * _Nullable * _Nullable)backupURL
                                   error:(NSError * _Nullable * _Nullable)error;

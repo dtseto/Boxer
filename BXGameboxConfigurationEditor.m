@@ -48,6 +48,15 @@
     return result.copy;
 }
 
+- (NSArray<BXConfigKey *> *)currentOverridesNewerThanVersion:(BXStagingVersion)version
+{
+    BXEmulatorConfiguration *configuration = [self configurationWithError:NULL];
+    NSMutableArray *result = [NSMutableArray array];
+    for (BXConfigKey *key in [self.core configKeysNewerThanVersion:version])
+        if ([configuration valueForKey:key.key inSection:key.section]) [result addObject:key];
+    return result.copy;
+}
+
 - (BOOL)clearAllOverridesWithBackupURL:(NSURL **)backupURL error:(NSError **)error
 {
     BXEmulatorConfiguration *configuration = [self configurationWithError:error];
@@ -69,9 +78,7 @@
 {
     BXEmulatorConfiguration *configuration = [self configurationWithError:error];
     if (!configuration) return NO;
-    NSMutableArray *keys = [NSMutableArray array];
-    for (BXConfigKey *key in [self.core configKeysNewerThanVersion:version])
-        if ([configuration valueForKey:key.key inSection:key.section]) [keys addObject:key];
+    NSArray *keys = [self currentOverridesNewerThanVersion:version];
     if (!keys.count) return YES;
     NSURL *backup = [self backupWithError:error];
     if (!backup) return NO;

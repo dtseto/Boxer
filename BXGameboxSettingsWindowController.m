@@ -1,5 +1,6 @@
 #import "BXGameboxSettingsWindowController.h"
 #import "BXEmulatorCore.h"
+#import "BXConfigKey.h"
 #import "BXGameboxConfigurationEditor.h"
 #import "BXGamebox.h"
 #import "BXSession.h"
@@ -207,8 +208,12 @@ static NSInteger const BXVersion0822 = 402;
     [a beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse code){ if(code!=NSAlertFirstButtonReturn)return; NSURL *backup=nil; NSError *error=nil; if([self.configurationEditor clearAllOverridesWithBackupURL:&backup error:&error]) [self showResult:@"All overrides cleared." backup:backup]; else [self showError:error]; }];
 }
 - (void)removeNewer:(id)sender {
-    NSArray *keys=[self.core configKeysNewerThanVersion:[self selectedVersion]]; NSString *summary=keys.count?@"newer settings":@"no newer settings";
-    NSAlert *a=[NSAlert new]; a.messageText=[NSString stringWithFormat:@"Remove %@?",summary]; a.informativeText=@"Only settings present in this gamebox will be removed. The original configuration will be backed up first."; [a addButtonWithTitle:@"Remove Settings"]; [a addButtonWithTitle:@"Cancel"];
+    NSArray *keys=[self.configurationEditor currentOverridesNewerThanVersion:[self selectedVersion]];
+    if (!keys.count) { self.status.stringValue=@"No newer overrides are present in this gamebox."; return; }
+    NSMutableArray *names=[NSMutableArray arrayWithCapacity:keys.count];
+    for (BXConfigKey *key in keys) [names addObject:[self.core displayNameForConfigKey:key]];
+    NSString *summary=[names componentsJoinedByString:@"\n• "];
+    NSAlert *a=[NSAlert new]; a.messageText=@"Remove newer settings?"; a.informativeText=[NSString stringWithFormat:@"The following overrides will be removed:\n• %@\n\nOnly these settings will change. The original configuration will be backed up first.",summary]; [a addButtonWithTitle:@"Remove Settings"]; [a addButtonWithTitle:@"Cancel"];
     [a beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse code){ if(code!=NSAlertFirstButtonReturn)return; NSURL *backup=nil; NSError *error=nil; if([self.configurationEditor removeNewerOverridesThanVersion:[self selectedVersion] backupURL:&backup error:&error]) [self showResult:@"Newer settings removed." backup:backup]; else [self showError:error]; }];
 }
 - (void)showResult:(NSString *)message backup:(NSURL *)backup { self.status.stringValue=backup?[NSString stringWithFormat:@"%@ Backup: %@",message,backup.path]:message; }

@@ -248,6 +248,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @param drive The DOSBox drive instance to look up.
 /// @return The drive index at which the specified DOSBox drive is mounted. Returns @c NSNotFound if specified drive is not mounted.
 - (NSUInteger) _indexOfDOSBoxDrive: (DOS_Drive *)drive;
+- (NSUInteger) _indexOfDOSBoxDriveHandle: (uintptr_t)drive;
 
 /// Registers a new drive with DOSBox and adds it to the Drives array. This does no further preparation of the drive.
 /// @param drive    The DOSBox drive instance to add.
@@ -434,7 +435,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @return The local filesystem location corresponding to the specified DOS path on the specified drive.
 /// Returns @c nil if no local filesystem URL could be determined (e.g. if the drive is a disk image or DOSBox-internal drive.)
 - (nullable NSURL *) _filesystemURLForDOSPath: (const char *)dosPath
-                                onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                       onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Resolves a DOS path on a particular drive to a logical URL.
 /// @note Used internally by many methods; the public API version of this is @c -logicalURLForDOSPath:.
@@ -443,7 +444,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @return the logical location corresponding to the specified DOS path on the specified drive.
 /// Returns nil if there is no corresponding logical location (This will be the case if the drive is a DOSBox-internal drive.)
 - (nullable NSURL *) _logicalURLForDOSPath: (const char *)dosPath
-                             onDOSBoxDrive: (DOS_Drive *)dosboxDrive;
+                      onDOSBoxDrive: (uintptr_t)dosboxDrive;
 
 /// Opens a local file handle for DOSBox to record captured output to, in write-only mode.
 /// DOSBox is expected to close the file when done.

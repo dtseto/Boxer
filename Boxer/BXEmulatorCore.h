@@ -101,6 +101,10 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
                                                         name:(const char *)name
                                                     intoBuffer:(char *)buffer
                                                       capacity:(NSUInteger)capacity;
++ (NSUInteger)maximumDOSBoxHostPathLength;
++ (BOOL)DOSBoxDrive:(uintptr_t)drive mapDOSPath:(const char *)path
+                                                     intoBuffer:(char *)buffer
+                                                       capacity:(NSUInteger)capacity;
 + (void)emptyDOSBoxDriveCache:(uintptr_t)drive;
 + (BOOL)addDOSBoxDrive:(uintptr_t)drive atIndex:(NSUInteger)index mediaByte:(uint8_t)mediaByte;
 + (int32_t)unmountDOSBoxDriveAtIndex:(NSUInteger)index;

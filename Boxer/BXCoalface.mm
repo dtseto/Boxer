@@ -747,6 +747,23 @@ static bool boxer_filesystemControlDriveGetShortName(uintptr_t drive, const char
     return ((DOS_Drive *)drive)->getShortName(directory, name, outName);
 }
 
+static uintptr_t boxer_filesystemControlMaximumHostPathLength(void)
+{
+    return PATH_MAX;
+}
+
+static bool boxer_filesystemControlDriveMapDOSPath(uintptr_t drive, const char *dosPath,
+                                                   char *outPath, uintptr_t outPathLength)
+{
+    if (!drive || !dosPath || !outPath || !outPathLength)
+        return false;
+    const std::string path = ((localDrive *)drive)->MapDosToHostFilename(dosPath);
+    if (path.size() + 1 > outPathLength)
+        return false;
+    memcpy(outPath, path.c_str(), path.size() + 1);
+    return true;
+}
+
 static void boxer_filesystemControlEmptyDriveCache(uintptr_t drive)
 {
     if (drive)
@@ -894,6 +911,8 @@ static BXDOSBoxFilesystemControlBridgeCallbacks BXDOSBoxFilesystemControlCallbac
     boxer_filesystemControlDriveTestDirectory,
     boxer_filesystemControlMaximumShortNameLength,
     boxer_filesystemControlDriveGetShortName,
+    boxer_filesystemControlMaximumHostPathLength,
+    boxer_filesystemControlDriveMapDOSPath,
     boxer_filesystemControlEmptyDriveCache,
     boxer_filesystemControlAddDrive,
     boxer_filesystemControlUnmountDrive,

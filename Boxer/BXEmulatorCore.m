@@ -421,6 +421,20 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->driveGetShortName && bridge->driveGetShortName(drive, directory, name, buffer, capacity);
 }
 
++ (NSUInteger)maximumDOSBoxHostPathLength
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->maximumHostPathLength ? bridge->maximumHostPathLength() : 0;
+}
+
++ (BOOL)DOSBoxDrive:(uintptr_t)drive mapDOSPath:(const char *)path
+                                          intoBuffer:(char *)buffer
+                                            capacity:(NSUInteger)capacity
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveMapDOSPath && bridge->driveMapDOSPath(drive, path, buffer, capacity);
+}
+
 + (void)emptyDOSBoxDriveCache:(uintptr_t)drive
 {
     const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();

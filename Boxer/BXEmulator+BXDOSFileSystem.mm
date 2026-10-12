@@ -595,8 +595,8 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	if (self.isExecuting)
 	{
-		DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()].get();
-        const char *currentDir = currentDOSBoxDrive->curdir;
+		uintptr_t currentDOSBoxDrive = [BXEmulatorCore DOSBoxDriveAtIndex:[BXEmulatorCore DOSBoxDefaultDriveIndex]];
+        const char *currentDir = [BXEmulatorCore DOSBoxDriveCurrentDirectory:currentDOSBoxDrive];
 		return [NSString stringWithCString: currentDir
                                   encoding: BXDirectStringEncoding];
 	}
@@ -621,8 +621,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                 
 		if (resolved)
 		{
-			DOS_Drive *dosboxDrive = Drives[driveIndex].get();
-            return [self _driveMatchingDOSBoxDrive: dosboxDrive];
+			return [self _driveFromDOSBoxDriveAtIndex:driveIndex];
 		}
 		else return nil;
 	}
@@ -665,11 +664,11 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	if (self.isExecuting)
 	{
-		DOS_Drive *currentDOSBoxDrive = Drives[DOS_GetDefaultDrive()].get();
-		const char *currentDir = currentDOSBoxDrive->curdir;
+		uintptr_t currentDOSBoxDrive = [BXEmulatorCore DOSBoxDriveAtIndex:[BXEmulatorCore DOSBoxDefaultDriveIndex]];
+		const char *currentDir = [BXEmulatorCore DOSBoxDriveCurrentDirectory:currentDOSBoxDrive];
 		
 		NSURL *localURL	= [self _filesystemURLForDOSPath: currentDir
-                                           onDOSBoxDrive: currentDOSBoxDrive];
+											   onDOSBoxDrive: currentDOSBoxDrive];
 		
         if (localURL)
         {
@@ -704,7 +703,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         
 		if (resolved)
 		{
-			DOS_Drive *dosboxDrive = Drives[driveIndex].get();
+			uintptr_t dosboxDrive = [BXEmulatorCore DOSBoxDriveAtIndex:driveIndex];
 			NSURL *localURL	= [self _filesystemURLForDOSPath: fullPath.data() onDOSBoxDrive: dosboxDrive];
 			
 			if (localURL)
@@ -713,7 +712,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
             }
 			else
 			{
-				BXDrive *drive = [self _driveMatchingDOSBoxDrive: dosboxDrive];
+				BXDrive *drive = [self _driveFromDOSBoxDriveAtIndex:driveIndex];
 				return drive.sourceURL;
 			}
 		}
@@ -979,6 +978,16 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		if (Drives[i].get() == drive) return i;
 	}
 	return NSNotFound;
+}
+
+- (NSUInteger) _indexOfDOSBoxDriveHandle: (uintptr_t)drive
+{
+    for (NSUInteger i = 0; i < [BXEmulatorCore DOSBoxDriveCount]; i++)
+    {
+        if ([BXEmulatorCore DOSBoxDriveAtIndex:i] == drive)
+            return i;
+    }
+    return NSNotFound;
 }
 
 //Registers a new drive with DOSBox and adds it to the drive list.
@@ -1476,13 +1485,14 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 
 #pragma mark - Mapping local filesystem access
 
+
 - (NSURL *) _filesystemURLForDOSPath: (const char *)dosPath
-                       onDOSBoxDrive: (DOS_Drive *)dosboxDrive
+                       onDOSBoxDrive: (uintptr_t)dosboxDrive
 {
-	localDrive *localDOSBoxDrive = dynamic_cast<localDrive *>(dosboxDrive);
-	if (localDOSBoxDrive)
+	if ([BXEmulatorCore DOSBoxDriveType:dosboxDrive] == 4 ||
+	    [BXEmulatorCore DOSBoxDriveType:dosboxDrive] == 3)
 	{
-        BXDrive *drive = [self _driveMatchingDOSBoxDrive: dosboxDrive];
+		BXDrive *drive = [self _driveFromDOSBoxDriveAtIndex:[self _indexOfDOSBoxDriveHandle:dosboxDrive]];
         id <ADBFilesystemFileURLAccess> filesystem = (id)drive.filesystem;
         NSAssert2([filesystem conformsToProtocol: @protocol(ADBFilesystemFileURLAccess)],
                   @"Filesystem %@ for drive %@ does not support local URL file access.", filesystem, drive);
@@ -1494,8 +1504,12 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         else
             driveRelativePath = dosPath;
         
-		const std::string filePath = localDOSBoxDrive->MapDosToHostFilename(driveRelativePath);
-		NSURL *localURL = [NSURL fileURLWithFileSystemRepresentation: filePath.c_str()
+		NSUInteger hostPathLength = [BXEmulatorCore maximumDOSBoxHostPathLength];
+		if (!hostPathLength) return nil;
+		std::vector<char> filePath(hostPathLength);
+		if (![BXEmulatorCore DOSBoxDrive:dosboxDrive mapDOSPath:driveRelativePath intoBuffer:filePath.data() capacity:filePath.size()])
+			return nil;
+		NSURL *localURL = [NSURL fileURLWithFileSystemRepresentation: filePath.data()
 								 isDirectory: NO
 								   relativeToURL: nil].URLByStandardizingPath;
         
@@ -1512,10 +1526,11 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     }
 }
 
+
 - (NSURL *) _logicalURLForDOSPath: (const char *)dosCPath
-                    onDOSBoxDrive: (DOS_Drive *)dosboxDrive
+                    onDOSBoxDrive: (uintptr_t)dosboxDrive
 {
-    BXDrive *drive = [self _driveMatchingDOSBoxDrive: dosboxDrive];
+    BXDrive *drive = [self _driveFromDOSBoxDriveAtIndex:[self _indexOfDOSBoxDriveHandle:dosboxDrive]];
     NSString *dosPath = [NSString stringWithCString: dosCPath encoding: BXDirectStringEncoding];
     //FIXME: this will leave short filenames intact instead of resolving them back to the filesystem's own long filenames.
     return [drive logicalURLForDOSPath: dosPath];

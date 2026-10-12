@@ -38,7 +38,7 @@ class DOS_Shell;
 class DOS_Drive;
 class MixerChannel;
 
-/// The drive geometry settings used by @c -_DOSBoxDriveFromPath:freeSpace:geometry:mediaID:error:
+/// The drive geometry settings passed to BXEmulatorCore drive-construction methods
 /// for mounting local folders as FAT drives.
 typedef struct BXDriveGeometry {
 	NSUInteger bytesPerSector;
@@ -48,13 +48,13 @@ typedef struct BXDriveGeometry {
 } BXDriveGeometry;
 
 
-/// The media descriptor ID for FAT12 1.44MB floppies. Used by @c -_DOSBoxDriveFromPath:freeSpace:geometry:mediaID:error:
+/// The media descriptor ID for FAT12 1.44MB floppies.
 #define BXFloppyMediaID		0xF0
 
-/// The media descriptor ID for fixed disk volumes. Used by @c -_DOSBoxDriveFromPath:freeSpace:geometry:mediaID:error:
+/// The media descriptor ID for fixed disk volumes.
 #define BXHardDiskMediaID	0xF8
 
-/// The media descriptor ID for CD-ROM volumes. Used by @c -_DOSBoxDriveFromPath:freeSpace:geometry:mediaID:error:
+/// The media descriptor ID for CD-ROM volumes.
 #define BXCDROMMediaID		0xF8
 
 

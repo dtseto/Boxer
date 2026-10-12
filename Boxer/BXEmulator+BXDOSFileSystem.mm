@@ -36,7 +36,7 @@ NSString * const BXEmulatorDidRemoveFileNotification    = @"BXEmulatorDidRemoveF
 
 
 
-//Drive geometry constants passed to _DOSBoxDriveFromPath:freeSpace:geometry:mediaID:error:
+//Drive geometry constants passed to BXEmulatorCore drive-construction methods.
 BXDriveGeometry BXHardDiskGeometry		= {512, 127, 16383, 4031};	//~1GB, ~250MB free space
 BXDriveGeometry BXFloppyDiskGeometry	= {512, 1, 2880, 2880};		//1.44MB, 1.44MB free space
 BXDriveGeometry BXCDROMGeometry			= {2048, 1, 65535, 0};		//~650MB, no free space

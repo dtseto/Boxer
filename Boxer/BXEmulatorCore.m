@@ -440,6 +440,24 @@ static BOOL BXConfigurationBoolean(NSString *value)
         bridge->clearScreen();
 }
 
++ (const uint16_t *)DOSBoxPrinterCharmapForCodepage:(NSUInteger)codepage
+{
+    const BXDOSBoxPrinterBridgeCallbacks *bridge = boxer_registeredDOSBoxPrinterBridge();
+    return bridge && bridge->charmapForCodepage ? bridge->charmapForCodepage((uint32_t)codepage) : NULL;
+}
+
++ (const uint16_t *)DOSBoxPrinterInternationalCharsetAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxPrinterBridgeCallbacks *bridge = boxer_registeredDOSBoxPrinterBridge();
+    return bridge && bridge->internationalCharset ? bridge->internationalCharset((uint32_t)index) : NULL;
+}
+
++ (uint32_t)DOSBoxPrinterCodepageAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxPrinterBridgeCallbacks *bridge = boxer_registeredDOSBoxPrinterBridge();
+    return bridge && bridge->codepageAtIndex ? bridge->codepageAtIndex((uint32_t)index) : 0;
+}
+
 + (NSUInteger)DOSBoxDriveCount
 {
     const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();

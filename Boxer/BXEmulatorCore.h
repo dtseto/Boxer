@@ -116,6 +116,9 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (BOOL)setDOSBoxDrive:(NSUInteger)driveIndex;
 + (NSUInteger)maximumDOSBoxShellCommandLineLength;
 + (void)clearDOSBoxShellScreen;
++ (const uint16_t *)DOSBoxPrinterCharmapForCodepage:(NSUInteger)codepage;
++ (const uint16_t *)DOSBoxPrinterInternationalCharsetAtIndex:(NSUInteger)index;
++ (uint32_t)DOSBoxPrinterCodepageAtIndex:(NSUInteger)index;
 + (NSUInteger)DOSBoxDriveCount;
 + (NSUInteger)DOSBoxDefaultDriveIndex;
 + (NSUInteger)maximumDOSBoxPathLength;

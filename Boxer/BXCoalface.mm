@@ -28,6 +28,7 @@
 #import "callback.h"
 #import "drives.h"
 #import "src/dos/dos_keyboard_layout.h"
+#import "src/hardware/parport/printer_charmaps.h"
 #import "ADBFilesystem.h"
 
 #if (C_DYNAMIC_X86)
@@ -1503,6 +1504,26 @@ const BXDOSBoxShellControlBridgeCallbacks *boxer_registeredDOSBoxShellControlBri
 static BXDOSBoxPrinterBridgeCallbacks BXDOSBoxPrinterCallbacks;
 static bool BXDOSBoxPrinterCallbacksRegistered = false;
 
+static const uint16_t *boxer_printerCharmapForCodepage(uint32_t codepage)
+{
+    for (size_t index = 0; charmap[index].codepage != 0; index++)
+    {
+        if (charmap[index].codepage == codepage)
+            return charmap[index].map;
+    }
+    return NULL;
+}
+
+static const uint16_t *boxer_printerInternationalCharset(uint32_t index)
+{
+    return index < 15 ? intCharSets[index] : NULL;
+}
+
+static uint32_t boxer_printerCodepageAtIndex(uint32_t index)
+{
+    return index < 15 ? codepages[index] : 0;
+}
+
 void boxer_registerDOSBoxPrinterBridge(const BXDOSBoxPrinterBridgeCallbacks *callbacks)
 {
     if (callbacks)
@@ -1522,7 +1543,10 @@ const BXDOSBoxPrinterBridgeCallbacks *boxer_registeredDOSBoxPrinterBridge(void)
             boxer_PRINTER_readcontrol,
             boxer_PRINTER_readstatus,
             boxer_PRINTER_writedata,
-            boxer_PRINTER_writecontrol
+            boxer_PRINTER_writecontrol,
+            boxer_printerCharmapForCodepage,
+            boxer_printerInternationalCharset,
+            boxer_printerCodepageAtIndex
         };
         boxer_registerDOSBoxPrinterBridge(&callbacks);
     }

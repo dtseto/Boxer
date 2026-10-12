@@ -7,8 +7,7 @@
 
 #import "BXEmulatorPrivate.h"
 #import "BXEmulatedPrinter.h"
-#import "../DOSBox-Staging/include/types.h"
-#import "printer_charmaps.h"
+#import "BXEmulatorCore.h"
 #import "BXPrintSession.h"
 
 #include <algorithm>
@@ -282,17 +281,10 @@ typedef NS_OPTIONS(uint8_t, BXEmulatedPrinterStatus) {
 
 + (const uint16_t *) _charmapForCodepage: (NSUInteger)codepage
 {
-	NSUInteger i=0;
-    while(charmap[i].codepage != 0)
-    {
-		if (charmap[i].codepage == codepage)
-			return charmap[i].map;
-		i++;
-	}
-    
-    //If we get this far, no matching codepage could be found.
-    NSLog(@"No charmap found for codepage %lu", (unsigned long)codepage);
-    return NULL;
+    const uint16_t *map = [BXEmulatorCore DOSBoxPrinterCharmapForCodepage:codepage];
+    if (!map)
+        NSLog(@"No charmap found for codepage %lu", (unsigned long)codepage);
+    return map;
 }
 
 + (NSColor *) _colorForColorCode: (BXESCPColor)colorCode
@@ -797,7 +789,7 @@ typedef NS_OPTIONS(uint8_t, BXEmulatedPrinterStatus) {
     
     if (charsetIndex <= 14)
     {
-        const uint16_t *charsetChars = intCharSets[charsetIndex];
+        const uint16_t *charsetChars = [BXEmulatorCore DOSBoxPrinterInternationalCharsetAtIndex:charsetIndex];
         
         //Replace certain codepoints in our ASCII->Unicode mapping table with
         //the characters appropriate for the specified international charset.
@@ -2223,7 +2215,7 @@ typedef NS_OPTIONS(uint8_t, BXEmulatedPrinterStatus) {
             uint8_t codepageIndex = params[3];
             if (charTable < BXESCPCharTableMax && codepageIndex < 16)
             {
-                [self _assignCodepage: codepages[codepageIndex]
+                [self _assignCodepage: [BXEmulatorCore DOSBoxPrinterCodepageAtIndex:codepageIndex]
                           toCharTable: charTable];
             }
         }

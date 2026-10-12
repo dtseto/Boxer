@@ -30,6 +30,13 @@
 #import "src/dos/dos_keyboard_layout.h"
 #import "ADBFilesystem.h"
 
+#if (C_DYNAMIC_X86)
+void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
+void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
+#elif (C_DYNREC)
+void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
+#endif
+
 static CommandLine *BXDOSBoxCommandLine;
 
 static uintptr_t boxer_configurationCreate(void)
@@ -114,6 +121,57 @@ static void boxer_cpuControlResetCycleCounters(void)
     CPU_Cycles = 0;
 }
 
+static uint8_t boxer_cpuControlCoreMode(void)
+{
+    if (cpudecoder == &CPU_Core_Normal_Run || cpudecoder == &CPU_Core_Normal_Trap_Run)
+        return 0;
+#if (C_DYNAMIC_X86)
+    if (cpudecoder == &CPU_Core_Dyn_X86_Run || cpudecoder == &CPU_Core_Dyn_X86_Trap_Run)
+        return 1;
+#endif
+#if (C_DYNREC)
+    if (cpudecoder == &CPU_Core_Dynrec_Run || cpudecoder == &CPU_Core_Dynrec_Trap_Run)
+        return 1;
+#endif
+    if (cpudecoder == &CPU_Core_Simple_Run)
+        return 2;
+    if (cpudecoder == &CPU_Core_Full_Run)
+        return 3;
+    return UINT8_MAX;
+}
+
+static bool boxer_cpuControlSetCoreMode(uint8_t mode)
+{
+    switch (mode)
+    {
+        case 0:
+            cpudecoder = &CPU_Core_Normal_Run;
+            break;
+        case 1:
+#if (C_DYNAMIC_X86)
+            CPU_Core_Dyn_X86_Cache_Init(true);
+            CPU_Core_Dyn_X86_SetFPUMode(true);
+            cpudecoder = &CPU_Core_Dyn_X86_Run;
+#elif (C_DYNREC)
+            CPU_Core_Dynrec_Cache_Init(true);
+            cpudecoder = &CPU_Core_Dynrec_Run;
+#else
+            return false;
+#endif
+            break;
+        case 2:
+            cpudecoder = &CPU_Core_Simple_Run;
+            break;
+        case 3:
+            cpudecoder = &CPU_Core_Full_Run;
+            break;
+        default:
+            return false;
+    }
+    boxer_cpuControlResetCycleCounters();
+    return true;
+}
+
 static BXDOSBoxConfigurationBridgeCallbacks BXDOSBoxConfigurationCallbacks = {
     boxer_configurationCreate,
     boxer_configurationInitializeConfigDirectory,
@@ -152,7 +210,9 @@ static BXDOSBoxCPUControlBridgeCallbacks BXDOSBoxCPUControlCallbacks = {
     boxer_cpuControlCycleAutoAdjust,
     boxer_cpuControlSetCycleAutoAdjust,
     boxer_cpuControlSetCyclePercentageUsed,
-    boxer_cpuControlResetCycleCounters
+    boxer_cpuControlResetCycleCounters,
+    boxer_cpuControlCoreMode,
+    boxer_cpuControlSetCoreMode
 };
 
 const BXDOSBoxCPUControlBridgeCallbacks *boxer_registeredDOSBoxCPUControlBridge(void)

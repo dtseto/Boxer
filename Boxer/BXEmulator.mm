@@ -10,8 +10,6 @@
 #import "BXEmulatorCore.h"
 
 #import <SDL2/SDL.h>
-#import "cpu.h"
-#import "shell.h"
 
 
 #pragma mark - Constants
@@ -68,17 +66,6 @@ extern bool ticksLocked;
 // DOSBox-Staging 0.82 removed the legacy CPU auto-determine bitfield. Boxer
 // still needs to restore the prior fixed cycle value when toggling auto speed.
 static int CPU_OldCycleMax = 0;
-
-#if (C_DYNAMIC_X86)
-//defined in core_dyn_x86.cpp
-void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
-void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
-
-#elif (C_DYNREC)
-//defined in core_dynrec.cpp
-void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
-#endif
-
 
 #pragma mark - Implementation
 
@@ -509,22 +496,8 @@ static BOOL _hasStartedEmulator = NO;
 {
 	if (self.isExecuting)
 	{
-		if (cpudecoder == &CPU_Core_Normal_Run ||
-			cpudecoder == &CPU_Core_Normal_Trap_Run)	return BXCoreNormal;
-		
-#if (C_DYNAMIC_X86)
-		if (cpudecoder == &CPU_Core_Dyn_X86_Run ||
-			cpudecoder == &CPU_Core_Dyn_X86_Trap_Run)	return BXCoreDynamic;
-#endif
-		
-#if (C_DYNREC)
-		if (cpudecoder == &CPU_Core_Dynrec_Run ||
-			cpudecoder == &CPU_Core_Dynrec_Trap_Run)	return BXCoreDynamic;
-#endif
-		
-		if (cpudecoder == &CPU_Core_Simple_Run)			return BXCoreSimple;
-		if (cpudecoder == &CPU_Core_Full_Run)			return BXCoreFull;
-		
+		uint8_t mode = [BXEmulatorCore DOSBoxCoreMode];
+		if (mode <= BXCoreFull) return (BXCoreMode)mode;
 		return BXCoreUnknown;
 	}
 	else return BXCoreUnknown;
@@ -533,34 +506,7 @@ static BOOL _hasStartedEmulator = NO;
 {
 	if (self.isExecuting && self.coreMode != coreMode)
 	{
-		switch(coreMode)
-		{
-			case BXCoreNormal:
-				cpudecoder = &CPU_Core_Normal_Run;
-				break;
-				
-			case BXCoreDynamic:
-#if (C_DYNAMIC_X86)
-				CPU_Core_Dyn_X86_Cache_Init(true);
-				CPU_Core_Dyn_X86_SetFPUMode(true);
-				cpudecoder = &CPU_Core_Dyn_X86_Run;
-#endif
-				
-#if (C_DYNREC)
-				CPU_Core_Dynrec_Cache_Init(true);
-				cpudecoder = &CPU_Core_Dynrec_Run;
-#endif
-				break;
-			case BXCoreSimple:	
-				cpudecoder = &CPU_Core_Simple_Run;
-				break;
-			case BXCoreFull:
-				cpudecoder = &CPU_Core_Full_Run;
-				break;
-		}
-		
-		//Reset DOSBox's emulated cycles counters
-		[BXEmulatorCore resetDOSBoxCycleCounters];
+		[BXEmulatorCore setDOSBoxCoreMode:(uint8_t)coreMode];
 	}
 }
 

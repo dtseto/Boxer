@@ -338,6 +338,18 @@ static BOOL BXConfigurationBoolean(NSString *value)
         bridge->resetCycleCounters();
 }
 
++ (uint8_t)DOSBoxCoreMode
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    return bridge && bridge->coreMode ? bridge->coreMode() : UINT8_MAX;
+}
+
++ (BOOL)setDOSBoxCoreMode:(uint8_t)mode
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    return bridge && bridge->setCoreMode && bridge->setCoreMode(mode);
+}
+
 + (uintptr_t)currentDOSBoxShell
 {
     const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();

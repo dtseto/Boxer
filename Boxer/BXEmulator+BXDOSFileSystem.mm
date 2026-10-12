@@ -214,7 +214,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     //we finish putting the drive in place.
 	_driveBeingMounted = drive;
 	
-	DOS_Drive *DOSBoxDrive = NULL;
+	uintptr_t DOSBoxDrive = 0;
 	NSUInteger index = [self _indexOfDriveLetter: driveLetter];
     
     
@@ -224,22 +224,36 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         mountPath = [mountPath stringByAppendingString: @"/"];
 	
     NSError *mountError = nil;
+    int32_t mountErrorCode = BXDOSBoxMountUnknownError;
+    const uint16_t cdromGeometry[] = { (uint16_t)BXCDROMGeometry.bytesPerSector,
+                                       (uint16_t)BXCDROMGeometry.sectorsPerCluster,
+                                       (uint16_t)BXCDROMGeometry.numClusters,
+                                       (uint16_t)BXCDROMGeometry.freeClusters };
+    const uint16_t hardDiskGeometry[] = { (uint16_t)BXHardDiskGeometry.bytesPerSector,
+                                          (uint16_t)BXHardDiskGeometry.sectorsPerCluster,
+                                          (uint16_t)BXHardDiskGeometry.numClusters,
+                                          (uint16_t)BXHardDiskGeometry.freeClusters };
+    const uint16_t floppyGeometry[] = { (uint16_t)BXFloppyDiskGeometry.bytesPerSector,
+                                         (uint16_t)BXFloppyDiskGeometry.sectorsPerCluster,
+                                         (uint16_t)BXFloppyDiskGeometry.numClusters,
+                                         (uint16_t)BXFloppyDiskGeometry.freeClusters };
+    const char *cMountPath = [mountPath fileSystemRepresentation];
     if (isImage)
     {
         switch (drive.type)
         {
             case BXDriveCDROM:
-                DOSBoxDrive = [self _CDROMDriveFromImageAtPath: mountPath
-                                                      forIndex: index
-                                                         error: &mountError];
+                DOSBoxDrive = [BXEmulatorCore createDOSBoxCDROMImage:cMountPath
+                                                           driveIndex:index
+                                                            mediaByte:BXCDROMMediaID
+                                                            errorCode:&mountErrorCode];
                 break;
             case BXDriveHardDisk:
-                DOSBoxDrive = [self _hardDriveFromImageAtPath: mountPath
-                                                        error: &mountError];
+                mountErrorCode = BXDOSBoxMountInvalidImageFormat;
                 break;
             case BXDriveFloppyDisk:
-                DOSBoxDrive = [self _floppyDriveFromImageAtPath: mountPath
-                                                          error: &mountError];
+                DOSBoxDrive = [BXEmulatorCore createDOSBoxFloppyImage:cMountPath
+                                                              errorCode:&mountErrorCode];
                 break;
                 
             default:
@@ -251,10 +265,12 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         switch (drive.type)
         {
             case BXDriveCDROM:
-                DOSBoxDrive = [self _CDROMDriveFromPath: mountPath
-                                               forIndex: index
-                                              withAudio: drive.usesCDAudio
-                                                  error: &mountError];
+                DOSBoxDrive = [BXEmulatorCore createDOSBoxCDROMDirectory:cMountPath
+                                                               driveIndex:index
+                                                                useAudio:drive.usesCDAudio
+                                                                geometry:cdromGeometry
+                                                                mediaByte:BXCDROMMediaID
+                                                                errorCode:&mountErrorCode];
                 break;
                 
             case BXDriveHardDisk:
@@ -268,33 +284,46 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                 if (isDir && ![shadowPath hasSuffix: @"/"])
                     shadowPath = [shadowPath stringByAppendingString: @"/"];
 
-                DOSBoxDrive = [self _hardDriveFromPath: mountPath
-                                       overlayedByPath: shadowPath
-                                             freeSpace: drive.freeSpace
-                                                 error: &mountError];
+                DOSBoxDrive = [BXEmulatorCore createDOSBoxLocalDirectory:cMountPath
+                                                               shadowPath:[shadowPath fileSystemRepresentation]
+                                                                freeSpace:drive.freeSpace
+                                                                 geometry:hardDiskGeometry
+                                                                 mediaByte:BXHardDiskMediaID
+                                                                errorCode:&mountErrorCode];
             } else {
-                DOSBoxDrive = [self _hardDriveFromPath: mountPath
-                                             freeSpace: drive.freeSpace
-                                                 error: &mountError];
+                DOSBoxDrive = [BXEmulatorCore createDOSBoxLocalDirectory:cMountPath
+                                                               shadowPath:NULL
+                                                                freeSpace:drive.freeSpace
+                                                                 geometry:hardDiskGeometry
+                                                                 mediaByte:BXHardDiskMediaID
+                                                                errorCode:&mountErrorCode];
             }
                 break;
                 
             case BXDriveFloppyDisk:
-                DOSBoxDrive = [self _floppyDriveFromPath: mountPath
-                                               freeSpace: drive.freeSpace
-                                                   error: &mountError];
+                DOSBoxDrive = [BXEmulatorCore createDOSBoxFloppyDirectory:cMountPath
+                                                                  freeSpace:drive.freeSpace
+                                                                   geometry:floppyGeometry
+                                                                   mediaByte:BXFloppyMediaID
+                                                                  errorCode:&mountErrorCode];
                 break;
                 
             default:
                 NSAssert1(NO, @"Drive type cannot be mounted: %li", (long)drive.type);
         }
     }
+
+    if (!DOSBoxDrive && !mountError)
+        mountError = [NSError errorWithDomain:BXDOSBoxMountErrorDomain
+                                          code:mountErrorCode
+                                      userInfo:@{NSFilePathErrorKey: mountPath}];
     
 	//DOSBox successfully created the drive object
 	if (DOSBoxDrive)
 	{
 		//Now add the drive to DOSBox's own drive list
-			if ([self _addDOSBoxDrive: DOSBoxDrive atIndex: index])
+			uint8_t mediaByte = (drive.type == BXDriveFloppyDisk) ? BXFloppyMediaID : BXHardDiskMediaID;
+			if ([self _addDOSBoxDrive: DOSBoxDrive atIndex: index mediaByte: mediaByte])
 			{
 			//And set its label appropriately (unless its an image, which carry their own labels)
 			if (!isImage && driveLabel)
@@ -948,8 +977,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 }
 
 //Registers a new drive with DOSBox and adds it to the drive list.
-- (BOOL) _addDOSBoxDrive: (DOS_Drive *)drive
+- (BOOL) _addDOSBoxDrive: (uintptr_t)drive
                  atIndex: (NSUInteger)index
+               mediaByte: (uint8_t)mediaByte
 {
 	NSAssert1(index < DOS_DRIVES, @"index %lu passed to _addDOSBoxDrive was beyond the range of DOSBox's drive array.", (unsigned long)index);
 	
@@ -957,7 +987,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	//TODO: populate an NSError object as well?
 	return [BXEmulatorCore addDOSBoxDrive:(uintptr_t)drive
 	                              atIndex:index
-	                           mediaByte:drive->GetMediaByte()];
+	                           mediaByte:mediaByte];
 }
     
 //Unmounts the DOSBox drive at the specified index and clears any references to the drive.

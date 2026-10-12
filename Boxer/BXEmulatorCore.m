@@ -422,6 +422,43 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->driveLabel ? bridge->driveLabel(drive) : NULL;
 }
 
++ (uintptr_t)createDOSBoxCDROMImage:(const char *)path driveIndex:(NSUInteger)driveIndex
+                           mediaByte:(uint8_t)mediaByte errorCode:(int32_t *)outErrorCode
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->createCDROMImage ? bridge->createCDROMImage(path, (uint8_t)driveIndex, mediaByte, outErrorCode) : 0;
+}
+
++ (uintptr_t)createDOSBoxFloppyImage:(const char *)path errorCode:(int32_t *)outErrorCode
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->createFloppyImage ? bridge->createFloppyImage(path, outErrorCode) : 0;
+}
+
++ (uintptr_t)createDOSBoxCDROMDirectory:(const char *)path driveIndex:(NSUInteger)driveIndex
+                               useAudio:(BOOL)useAudio geometry:(const uint16_t *)geometry
+                              mediaByte:(uint8_t)mediaByte errorCode:(int32_t *)outErrorCode
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->createCDROMDirectory ? bridge->createCDROMDirectory(path, (uint8_t)driveIndex, useAudio, geometry, mediaByte, outErrorCode) : 0;
+}
+
++ (uintptr_t)createDOSBoxLocalDirectory:(const char *)path shadowPath:(const char *)shadowPath
+                              freeSpace:(int64_t)freeSpace geometry:(const uint16_t *)geometry
+                              mediaByte:(uint8_t)mediaByte errorCode:(int32_t *)outErrorCode
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->createLocalDirectory ? bridge->createLocalDirectory(path, shadowPath, freeSpace, geometry, mediaByte, outErrorCode) : 0;
+}
+
++ (uintptr_t)createDOSBoxFloppyDirectory:(const char *)path freeSpace:(int64_t)freeSpace
+                                geometry:(const uint16_t *)geometry mediaByte:(uint8_t)mediaByte
+                               errorCode:(int32_t *)outErrorCode
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->createFloppyDirectory ? bridge->createFloppyDirectory(path, freeSpace, geometry, mediaByte, outErrorCode) : 0;
+}
+
 - (instancetype)initWithGamebox:(BXGamebox *)gamebox
                          session:(BXSession *)session
 {

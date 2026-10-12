@@ -253,8 +253,9 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @param drive    The DOSBox drive instance to add.
 /// @return @c YES if the drive was successfully added to the Drives array, or @c NO if there was an error.
 //TODO: should populate an optional NSError object for cases like this.
-- (BOOL) _addDOSBoxDrive: (DOS_Drive *)drive
-                 atIndex: (NSUInteger)driveIndex;
+- (BOOL) _addDOSBoxDrive: (uintptr_t)drive
+                 atIndex: (NSUInteger)driveIndex
+               mediaByte: (uint8_t)mediaByte;
 
 /// Unmounts the DOSBox drive at the specified index and clears any references to the drive.
 /// @param driveIndex       The index of the drive to unmount.

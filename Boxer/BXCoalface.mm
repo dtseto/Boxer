@@ -755,6 +755,88 @@ static const char *boxer_filesystemControlDriveLabel(uintptr_t drive)
     return drive ? ((DOS_Drive *)drive)->GetLabel() : NULL;
 }
 
+static uintptr_t boxer_filesystemControlCreateCDROMImage(const char *path, uint8_t driveIndex,
+                                                         uint8_t mediaByte, int32_t *outErrorCode)
+{
+    int errorCode = BXDOSBoxMountUnknownError;
+    isoDrive *drive = new isoDrive((char)(driveIndex + 'A'), path, mediaByte, errorCode);
+    if (errorCode == BXDOSBoxMountSuccess || errorCode == BXDOSBoxMountSuccessCDROMLimited)
+        return (uintptr_t)drive;
+    delete drive;
+    if (errorCode == BXDOSBoxMountCouldNotReadSource)
+        errorCode = BXDOSBoxMountInvalidImageFormat;
+    if (outErrorCode) *outErrorCode = errorCode;
+    return 0;
+}
+
+static uintptr_t boxer_filesystemControlCreateFloppyImage(const char *path, int32_t *outErrorCode)
+{
+    fatDrive *drive = new fatDrive(path, 0, 0, 0, 0, false);
+    if (drive && drive->created_successfully)
+        return (uintptr_t)drive;
+    delete drive;
+    if (outErrorCode) *outErrorCode = BXDOSBoxMountInvalidImageFormat;
+    return 0;
+}
+
+static uintptr_t boxer_filesystemControlCreateCDROMDirectory(const char *path, uint8_t driveIndex,
+                                                             bool useAudio, const uint16_t *geometry,
+                                                             uint8_t mediaByte, int32_t *outErrorCode)
+{
+    (void)useAudio;
+    int errorCode = BXDOSBoxMountUnknownError;
+    cdromDrive *drive = new cdromDrive((char)(driveIndex + 'A'), path,
+                                       geometry[0], (uint8_t)geometry[1], geometry[2], geometry[3],
+                                       mediaByte, errorCode);
+    if (errorCode == BXDOSBoxMountSuccess || errorCode == BXDOSBoxMountSuccessCDROMLimited)
+        return (uintptr_t)drive;
+    delete drive;
+    if (outErrorCode) *outErrorCode = errorCode;
+    return 0;
+}
+
+static uintptr_t boxer_filesystemControlCreateLocalDirectory(const char *path, const char *shadowPath,
+                                                             int64_t freeSpace, const uint16_t *geometry,
+                                                             uint8_t mediaByte, int32_t *outErrorCode)
+{
+    uint16_t freeClusters = geometry[3];
+    if (freeSpace >= 0)
+    {
+        const uint32_t bytesPerCluster = (uint32_t)geometry[0] * geometry[1];
+        freeClusters = (uint16_t)((uint64_t)freeSpace / bytesPerCluster);
+    }
+
+    if (shadowPath && shadowPath[0])
+    {
+        uint8_t errorCode = 0;
+        Overlay_Drive *drive = new Overlay_Drive(path, shadowPath, geometry[0], (uint8_t)geometry[1],
+                                                 geometry[2], freeClusters, mediaByte, errorCode);
+        if (errorCode == 0)
+            return (uintptr_t)drive;
+        delete drive;
+        if (outErrorCode) *outErrorCode = errorCode;
+        return 0;
+    }
+
+    return (uintptr_t)new localDrive(path, geometry[0], (uint8_t)geometry[1], geometry[2],
+                                     freeClusters, mediaByte, false);
+}
+
+static uintptr_t boxer_filesystemControlCreateFloppyDirectory(const char *path, int64_t freeSpace,
+                                                              const uint16_t *geometry, uint8_t mediaByte,
+                                                              int32_t *outErrorCode)
+{
+    (void)outErrorCode;
+    uint16_t freeClusters = geometry[3];
+    if (freeSpace >= 0)
+    {
+        const uint32_t bytesPerCluster = (uint32_t)geometry[0] * geometry[1];
+        freeClusters = (uint16_t)((uint64_t)freeSpace / bytesPerCluster);
+    }
+    return (uintptr_t)new localDrive(path, geometry[0], (uint8_t)geometry[1], geometry[2],
+                                     freeClusters, mediaByte, false);
+}
+
 static BXDOSBoxFilesystemControlBridgeCallbacks BXDOSBoxFilesystemControlCallbacks = {
     boxer_filesystemControlDriveCount,
     boxer_filesystemControlDefaultDriveIndex,
@@ -767,7 +849,12 @@ static BXDOSBoxFilesystemControlBridgeCallbacks BXDOSBoxFilesystemControlCallbac
     boxer_filesystemControlCloseFiles,
     boxer_filesystemControlDestroyDrive,
     boxer_filesystemControlSetDriveLabel,
-    boxer_filesystemControlDriveLabel
+    boxer_filesystemControlDriveLabel,
+    boxer_filesystemControlCreateCDROMImage,
+    boxer_filesystemControlCreateFloppyImage,
+    boxer_filesystemControlCreateCDROMDirectory,
+    boxer_filesystemControlCreateLocalDirectory,
+    boxer_filesystemControlCreateFloppyDirectory
 };
 
 static bool BXDOSBoxFilesystemControlCallbacksRegistered = false;

@@ -98,6 +98,28 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (void)destroyDOSBoxDrive:(uintptr_t)drive;
 + (void)setDOSBoxDrive:(uintptr_t)drive label:(const char *)label isCDROM:(BOOL)isCDROM;
 + (const char *)DOSBoxDriveLabel:(uintptr_t)drive;
++ (uintptr_t)createDOSBoxCDROMImage:(const char *)path
+                          driveIndex:(NSUInteger)driveIndex
+                           mediaByte:(uint8_t)mediaByte
+                           errorCode:(int32_t *)outErrorCode;
++ (uintptr_t)createDOSBoxFloppyImage:(const char *)path errorCode:(int32_t *)outErrorCode;
++ (uintptr_t)createDOSBoxCDROMDirectory:(const char *)path
+                              driveIndex:(NSUInteger)driveIndex
+                               useAudio:(BOOL)useAudio
+                               geometry:(const uint16_t *)geometry
+                               mediaByte:(uint8_t)mediaByte
+                              errorCode:(int32_t *)outErrorCode;
++ (uintptr_t)createDOSBoxLocalDirectory:(const char *)path
+                              shadowPath:(const char *)shadowPath
+                               freeSpace:(int64_t)freeSpace
+                                geometry:(const uint16_t *)geometry
+                                mediaByte:(uint8_t)mediaByte
+                               errorCode:(int32_t *)outErrorCode;
++ (uintptr_t)createDOSBoxFloppyDirectory:(const char *)path
+                               freeSpace:(int64_t)freeSpace
+                                geometry:(const uint16_t *)geometry
+                                mediaByte:(uint8_t)mediaByte
+                               errorCode:(int32_t *)outErrorCode;
 
 - (instancetype)initWithGamebox:(nullable BXGamebox *)gamebox
                          session:(nullable BXSession *)session NS_DESIGNATED_INITIALIZER;

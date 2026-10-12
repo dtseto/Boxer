@@ -62,10 +62,10 @@ NSString * const BXEmulatedJoystickClassKey = @"BXEmulatedJoystickClassKey";
 
 - (void) clearInput
 {
-	JOYSTICK_Move_X(BXGameportStick1, BXGameportAxisCentered);
-	JOYSTICK_Move_Y(BXGameportStick1, BXGameportAxisCentered);
-	JOYSTICK_Move_X(BXGameportStick2, BXGameportAxisCentered);
-	JOYSTICK_Move_Y(BXGameportStick2, BXGameportAxisCentered);
+	[BXEmulatorCore setJoystickAxisX:BXGameportAxisCentered atIndex:BXGameportStick1];
+	[BXEmulatorCore setJoystickAxisY:BXGameportAxisCentered atIndex:BXGameportStick1];
+	[BXEmulatorCore setJoystickAxisX:BXGameportAxisCentered atIndex:BXGameportStick2];
+	[BXEmulatorCore setJoystickAxisY:BXGameportAxisCentered atIndex:BXGameportStick2];
 	
 	[self setPressedButtons: BXNoGameportButtonsMask];
 }
@@ -73,16 +73,16 @@ NSString * const BXEmulatedJoystickClassKey = @"BXEmulatedJoystickClassKey";
 - (void) didConnect
 {
 	BOOL enableSecondJoystick = [[self class] requiresFullJoystickSupport];
-	JOYSTICK_Enable(BXGameportStick1, YES);
-	JOYSTICK_Enable(BXGameportStick2, enableSecondJoystick);
+	[BXEmulatorCore setJoystickEnabled:YES atIndex:BXGameportStick1];
+	[BXEmulatorCore setJoystickEnabled:enableSecondJoystick atIndex:BXGameportStick2];
 	//Reset all inputs to default position
 	[self clearInput];
 }
 
 - (void) willDisconnect
 {
-	JOYSTICK_Enable(BXGameportStick1, NO);
-	JOYSTICK_Enable(BXGameportStick2, NO);
+	[BXEmulatorCore setJoystickEnabled:NO atIndex:BXGameportStick1];
+	[BXEmulatorCore setJoystickEnabled:NO atIndex:BXGameportStick2];
 }
 
 
@@ -101,19 +101,19 @@ NSString * const BXEmulatedJoystickClassKey = @"BXEmulatedJoystickClassKey";
 	switch (button)
 	{
 		case BXEmulatedJoystickButton1:
-			return JOYSTICK_GetButton(BXGameportStick1, BXGameportButton1);
+			return [BXEmulatorCore joystickButton:BXGameportButton1 isDownAtIndex:BXGameportStick1];
 			break;
 			
 		case BXEmulatedJoystickButton2:
-			return JOYSTICK_GetButton(BXGameportStick1, BXGameportButton2);
+			return [BXEmulatorCore joystickButton:BXGameportButton2 isDownAtIndex:BXGameportStick1];
 			break;
 			
 		case BXEmulatedJoystickButton3:
-			return JOYSTICK_GetButton(BXGameportStick2, BXGameportButton1);
+			return [BXEmulatorCore joystickButton:BXGameportButton1 isDownAtIndex:BXGameportStick2];
 			break;
 			
 		case BXEmulatedJoystickButton4:
-			return JOYSTICK_GetButton(BXGameportStick2, BXGameportButton2);
+			return [BXEmulatorCore joystickButton:BXGameportButton2 isDownAtIndex:BXGameportStick2];
 			break;
 			
 		default:
@@ -156,19 +156,19 @@ NSString * const BXEmulatedJoystickClassKey = @"BXEmulatedJoystickClassKey";
 	switch (axis)
 	{
 		case BXGameportXAxis:
-			JOYSTICK_Move_X(BXGameportStick1, position);
+			[BXEmulatorCore setJoystickAxisX:(int16_t)position atIndex:BXGameportStick1];
 			break;
 		
 		case BXGameportYAxis:
-			JOYSTICK_Move_Y(BXGameportStick1, position);
+			[BXEmulatorCore setJoystickAxisY:(int16_t)position atIndex:BXGameportStick1];
 			break;
 			
 		case BXGameportX2Axis:
-			JOYSTICK_Move_X(BXGameportStick2, position);
+			[BXEmulatorCore setJoystickAxisX:(int16_t)position atIndex:BXGameportStick2];
 			break;
 			
 		case BXGameportY2Axis:
-			JOYSTICK_Move_Y(BXGameportStick2, position);
+			[BXEmulatorCore setJoystickAxisY:(int16_t)position atIndex:BXGameportStick2];
 			break;
 	}
 }
@@ -178,19 +178,19 @@ NSString * const BXEmulatedJoystickClassKey = @"BXEmulatedJoystickClassKey";
 	switch (axis)
 	{
 		case BXGameportXAxis:
-			return JOYSTICK_GetMove_X(BXGameportStick1);
+			return [BXEmulatorCore joystickAxisXAtIndex:BXGameportStick1];
 			break;
 		
 		case BXGameportYAxis:
-			return JOYSTICK_GetMove_Y(BXGameportStick1);
+			return [BXEmulatorCore joystickAxisYAtIndex:BXGameportStick1];
 			break;
 			
 		case BXGameportX2Axis:
-			return JOYSTICK_GetMove_X(BXGameportStick2);
+			return [BXEmulatorCore joystickAxisXAtIndex:BXGameportStick2];
 			break;
 			
 		case BXGameportY2Axis:
-			return JOYSTICK_GetMove_Y(BXGameportStick2);
+			return [BXEmulatorCore joystickAxisYAtIndex:BXGameportStick2];
 			break;
 		
 		default:
@@ -213,20 +213,20 @@ NSString * const BXEmulatedJoystickClassKey = @"BXEmulatedJoystickClassKey";
 
 - (void) setPressedButtons: (BXGameportButtonMask)buttonMask
 {
-	JOYSTICK_Button(BXGameportStick1, BXGameportButton1, (buttonMask & BXGameportButton1Mask));
-	JOYSTICK_Button(BXGameportStick1, BXGameportButton2, (buttonMask & BXGameportButton2Mask));
-	JOYSTICK_Button(BXGameportStick2, BXGameportButton1, (buttonMask & BXGameportButton3Mask));
-	JOYSTICK_Button(BXGameportStick2, BXGameportButton2, (buttonMask & BXGameportButton4Mask));	
+	[BXEmulatorCore setJoystickButton:BXGameportButton1 pressed:(buttonMask & BXGameportButton1Mask) atIndex:BXGameportStick1];
+	[BXEmulatorCore setJoystickButton:BXGameportButton2 pressed:(buttonMask & BXGameportButton2Mask) atIndex:BXGameportStick1];
+	[BXEmulatorCore setJoystickButton:BXGameportButton1 pressed:(buttonMask & BXGameportButton3Mask) atIndex:BXGameportStick2];
+	[BXEmulatorCore setJoystickButton:BXGameportButton2 pressed:(buttonMask & BXGameportButton4Mask) atIndex:BXGameportStick2];
 }
 
 - (BXGameportButtonMask) pressedButtons
 {
 	BXGameportButtonMask buttonMask = BXNoGameportButtonsMask;
 	
-	if (JOYSTICK_GetButton(BXGameportStick1, BXGameportButton1)) buttonMask |= BXGameportButton1Mask;
-	if (JOYSTICK_GetButton(BXGameportStick1, BXGameportButton2)) buttonMask |= BXGameportButton2Mask;
-	if (JOYSTICK_GetButton(BXGameportStick2, BXGameportButton1)) buttonMask |= BXGameportButton3Mask;
-	if (JOYSTICK_GetButton(BXGameportStick2, BXGameportButton2)) buttonMask |= BXGameportButton4Mask;
+	if ([BXEmulatorCore joystickButton:BXGameportButton1 isDownAtIndex:BXGameportStick1]) buttonMask |= BXGameportButton1Mask;
+	if ([BXEmulatorCore joystickButton:BXGameportButton2 isDownAtIndex:BXGameportStick1]) buttonMask |= BXGameportButton2Mask;
+	if ([BXEmulatorCore joystickButton:BXGameportButton1 isDownAtIndex:BXGameportStick2]) buttonMask |= BXGameportButton3Mask;
+	if ([BXEmulatorCore joystickButton:BXGameportButton2 isDownAtIndex:BXGameportStick2]) buttonMask |= BXGameportButton4Mask;
 	
 	return buttonMask;
 }
@@ -239,19 +239,19 @@ NSString * const BXEmulatedJoystickClassKey = @"BXEmulatedJoystickClassKey";
 	switch (button)
 	{
 		case BXEmulatedJoystickButton1:
-			JOYSTICK_Button(BXGameportStick1, BXGameportButton1, pressed);
+			[BXEmulatorCore setJoystickButton:BXGameportButton1 pressed:pressed atIndex:BXGameportStick1];
 			break;
 			
 		case BXEmulatedJoystickButton2:
-			JOYSTICK_Button(BXGameportStick1, BXGameportButton2, pressed);
+			[BXEmulatorCore setJoystickButton:BXGameportButton2 pressed:pressed atIndex:BXGameportStick1];
 			break;
 			
 		case BXEmulatedJoystickButton3:
-			JOYSTICK_Button(BXGameportStick2, BXGameportButton1, pressed);
+			[BXEmulatorCore setJoystickButton:BXGameportButton1 pressed:pressed atIndex:BXGameportStick2];
 			break;
 			
 		case BXEmulatedJoystickButton4:
-			JOYSTICK_Button(BXGameportStick2, BXGameportButton2, pressed);
+			[BXEmulatorCore setJoystickButton:BXGameportButton2 pressed:pressed atIndex:BXGameportStick2];
 			break;
 	}
 }

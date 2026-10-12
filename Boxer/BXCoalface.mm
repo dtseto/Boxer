@@ -17,6 +17,7 @@
 #import "Rendering/BXVideoFrame.h"
 #import "setup.h"
 #import "mapper.h"
+#import "joystick.h"
 #import "mouse.h"
 #import "cross.h"
 #import "shell.h"
@@ -717,6 +718,71 @@ const BXDOSBoxInputBridgeCallbacks *boxer_registeredDOSBoxInputBridge(void)
 static BXDOSBoxJoystickBridgeCallbacks BXDOSBoxJoystickCallbacks;
 static bool BXDOSBoxJoystickCallbacksRegistered = false;
 
+static void boxer_joystickBridgeEnable(uint8_t which, bool enabled)
+{
+    JOYSTICK_Enable(which, enabled);
+}
+
+static void boxer_joystickBridgeSetButton(uint8_t which, uint8_t button, bool pressed)
+{
+    JOYSTICK_Button(which, button, pressed);
+}
+
+static void boxer_joystickBridgeMoveX(uint8_t which, int16_t value)
+{
+    JOYSTICK_Move_X(which, value);
+}
+
+static void boxer_joystickBridgeMoveY(uint8_t which, int16_t value)
+{
+    JOYSTICK_Move_Y(which, value);
+}
+
+static bool boxer_joystickBridgeIsAccessible(uint8_t which)
+{
+    return JOYSTICK_IsAccessible(which);
+}
+
+static bool boxer_joystickBridgeGetButton(uint8_t which, uint8_t button)
+{
+    return JOYSTICK_GetButton(which, button);
+}
+
+static double boxer_joystickBridgeGetMoveX(uint8_t which)
+{
+    return JOYSTICK_GetMove_X(which);
+}
+
+static double boxer_joystickBridgeGetMoveY(uint8_t which)
+{
+    return JOYSTICK_GetMove_Y(which);
+}
+
+static uint8_t boxer_joystickBridgeGameportTimingMode(void)
+{
+    return gameport_timed ? 1 : 0;
+}
+
+static void boxer_joystickBridgeSetGameportTimingMode(uint8_t mode)
+{
+    gameport_timed = mode != 0;
+}
+
+static uint8_t boxer_joystickBridgeSupportLevel(void)
+{
+    switch (joytype)
+    {
+        case JOY_DISABLED:
+        case JOY_NONE_FOUND:
+        case JOY_ONLY_FOR_MAPPING:
+            return 0;
+        case JOY_2AXIS:
+            return 1;
+        default:
+            return 2;
+    }
+}
+
 void boxer_registerDOSBoxJoystickBridge(const BXDOSBoxJoystickBridgeCallbacks *callbacks)
 {
     if (callbacks)
@@ -731,7 +797,18 @@ const BXDOSBoxJoystickBridgeCallbacks *boxer_registeredDOSBoxJoystickBridge(void
     if (!BXDOSBoxJoystickCallbacksRegistered)
     {
         const BXDOSBoxJoystickBridgeCallbacks callbacks = {
-            boxer_setJoystickActive
+            boxer_setJoystickActive,
+            boxer_joystickBridgeEnable,
+            boxer_joystickBridgeSetButton,
+            boxer_joystickBridgeMoveX,
+            boxer_joystickBridgeMoveY,
+            boxer_joystickBridgeIsAccessible,
+            boxer_joystickBridgeGetButton,
+            boxer_joystickBridgeGetMoveX,
+            boxer_joystickBridgeGetMoveY,
+            boxer_joystickBridgeGameportTimingMode,
+            boxer_joystickBridgeSetGameportTimingMode,
+            boxer_joystickBridgeSupportLevel
         };
         boxer_registerDOSBoxJoystickBridge(&callbacks);
     }

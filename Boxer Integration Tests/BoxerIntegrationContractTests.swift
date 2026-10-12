@@ -298,6 +298,23 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("src/hardware/joystick.cpp", contains: "stick[1].is_visible_to_dos = is_visible;")
         try expect("src/hardware/joystick.cpp", contains: "ReadHandler.Install(0x201, read_p201_switchable")
         try expect("src/hardware/joystick.cpp", contains: "WriteHandler.Install(0x201, write_p201_switchable")
+
+        let joystick = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatedJoystick.mm"))
+        let flightstick = try source(at: projectRoot.appendingPathComponent("Boxer/BXCHFlightstick.mm"))
+        let thrustmaster = try source(at: projectRoot.appendingPathComponent("Boxer/BXThrustmasterFCS.mm"))
+        let emulator = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator.mm"))
+        for source in [joystick, flightstick, thrustmaster, emulator] {
+            XCTAssertFalse(source.contains("JOYSTICK_"))
+            XCTAssertFalse(source.contains("gameport_timed"))
+            XCTAssertFalse(source.contains("joytype"))
+            XCTAssertTrue(source.contains("BXEmulatorCore"))
+        }
+        try expect("include/BXDOSBoxBridgeRegistration.h", contains: "setGameportTimingMode")
+        try expect("include/BXDOSBoxBridgeRegistration.h", contains: "joystickSupportLevel")
+        let core = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatorCore.m"))
+        let coalface = try source(at: projectRoot.appendingPathComponent("Boxer/BXCoalface.mm"))
+        XCTAssertTrue(core.contains("bridge->setButton"))
+        XCTAssertTrue(coalface.contains("JOYSTICK_Move_X(which, value)"))
     }
 
     func testJoystickGameportHandlersAreInstalledOnce() throws {

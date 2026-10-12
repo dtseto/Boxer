@@ -145,6 +145,79 @@ static BOOL BXConfigurationBoolean(NSString *value)
         bridge->mouseButton((uint8_t)button, pressed);
 }
 
++ (void)setJoystickEnabled:(BOOL)enabled atIndex:(NSUInteger)index
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    if (bridge && bridge->enable)
+        bridge->enable((uint8_t)index, enabled);
+}
+
++ (void)setJoystickButton:(NSUInteger)button
+                   pressed:(BOOL)pressed
+                   atIndex:(NSUInteger)index
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    if (bridge && bridge->setButton)
+        bridge->setButton((uint8_t)index, (uint8_t)button, pressed);
+}
+
++ (void)setJoystickAxisX:(int16_t)value atIndex:(NSUInteger)index
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    if (bridge && bridge->moveX)
+        bridge->moveX((uint8_t)index, value);
+}
+
++ (void)setJoystickAxisY:(int16_t)value atIndex:(NSUInteger)index
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    if (bridge && bridge->moveY)
+        bridge->moveY((uint8_t)index, value);
+}
+
++ (BOOL)isJoystickAccessibleAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    return bridge && bridge->isAccessible && bridge->isAccessible((uint8_t)index);
+}
+
++ (BOOL)joystickButton:(NSUInteger)button isDownAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    return bridge && bridge->getButton && bridge->getButton((uint8_t)index, (uint8_t)button);
+}
+
++ (double)joystickAxisXAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    return bridge && bridge->getMoveX ? bridge->getMoveX((uint8_t)index) : 0.0;
+}
+
++ (double)joystickAxisYAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    return bridge && bridge->getMoveY ? bridge->getMoveY((uint8_t)index) : 0.0;
+}
+
++ (NSUInteger)gameportTimingMode
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    return bridge && bridge->gameportTimingMode ? bridge->gameportTimingMode() : 0;
+}
+
++ (void)setGameportTimingMode:(NSUInteger)mode
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    if (bridge && bridge->setGameportTimingMode)
+        bridge->setGameportTimingMode((uint8_t)mode);
+}
+
++ (NSUInteger)joystickSupportLevel
+{
+    const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();
+    return bridge && bridge->joystickSupportLevel ? bridge->joystickSupportLevel() : 0;
+}
+
 - (instancetype)initWithGamebox:(BXGamebox *)gamebox
                          session:(BXSession *)session
 {

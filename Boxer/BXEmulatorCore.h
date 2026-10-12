@@ -51,6 +51,19 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
                        absoluteX:(int32_t)absoluteX
                        absoluteY:(int32_t)absoluteY;
 + (void)sendMouseButton:(NSUInteger)button pressed:(BOOL)pressed;
++ (void)setJoystickEnabled:(BOOL)enabled atIndex:(NSUInteger)index;
++ (void)setJoystickButton:(NSUInteger)button
+                   pressed:(BOOL)pressed
+                   atIndex:(NSUInteger)index;
++ (void)setJoystickAxisX:(int16_t)value atIndex:(NSUInteger)index;
++ (void)setJoystickAxisY:(int16_t)value atIndex:(NSUInteger)index;
++ (BOOL)isJoystickAccessibleAtIndex:(NSUInteger)index;
++ (BOOL)joystickButton:(NSUInteger)button isDownAtIndex:(NSUInteger)index;
++ (double)joystickAxisXAtIndex:(NSUInteger)index;
++ (double)joystickAxisYAtIndex:(NSUInteger)index;
++ (NSUInteger)gameportTimingMode;
++ (void)setGameportTimingMode:(NSUInteger)mode;
++ (NSUInteger)joystickSupportLevel;
 
 - (instancetype)initWithGamebox:(nullable BXGamebox *)gamebox
                          session:(nullable BXSession *)session NS_DESIGNATED_INITIALIZER;

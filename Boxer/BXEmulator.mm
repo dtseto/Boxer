@@ -14,7 +14,7 @@
 #import "cross.h"
 #import "shell.h"
 #import "mapper.h"
-#import "joystick.h"
+#import "BXEmulatorCore.h"
 
 
 #pragma mark - Constants
@@ -615,16 +615,16 @@ static BOOL _hasStartedEmulator = NO;
 
 - (BXGameportTimingMode) gameportTimingMode
 {
-	return (BXGameportTimingMode)gameport_timed;
+	return (BXGameportTimingMode)[BXEmulatorCore gameportTimingMode];
 }
 
 - (void) setGameportTimingMode: (BXGameportTimingMode)mode
 {
     @synchronized(self)
     {
-        if (gameport_timed != mode)
+        if ([BXEmulatorCore gameportTimingMode] != mode)
         {
-            gameport_timed = mode;
+			[BXEmulatorCore setGameportTimingMode:mode];
             [self.joystick clearInput];
         }
     }
@@ -652,19 +652,7 @@ static BOOL _hasStartedEmulator = NO;
 
 - (BXJoystickSupportLevel) joystickSupport
 {
-	switch (joytype)
-	{
-		case JOY_DISABLED:
-		case JOY_NONE_FOUND:
-		case JOY_ONLY_FOR_MAPPING:
-			return BXNoJoystickSupport;
-			break;
-		case JOY_2AXIS:
-			return BXJoystickSupportSimple;
-			break;
-		default:
-			return BXJoystickSupportFull;
-	}
+	return (BXJoystickSupportLevel)[BXEmulatorCore joystickSupportLevel];
 }
 
 - (id <BXEmulatedJoystick>) joystick

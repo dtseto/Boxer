@@ -63,11 +63,11 @@ static const BXGameportAxis BXThrustmasterFCSHatAxis = BXGameportY2Axis;
 
 - (void) clearInput
 {
-	JOYSTICK_Move_X(BXGameportStick1, BXGameportAxisCentered);
-	JOYSTICK_Move_Y(BXGameportStick1, BXGameportAxisCentered);
-	JOYSTICK_Move_X(BXGameportStick2, BXGameportAxisCentered);
+	[BXEmulatorCore setJoystickAxisX:BXGameportAxisCentered atIndex:BXGameportStick1];
+	[BXEmulatorCore setJoystickAxisY:BXGameportAxisCentered atIndex:BXGameportStick1];
+	[BXEmulatorCore setJoystickAxisX:BXGameportAxisCentered atIndex:BXGameportStick2];
 	//Set the hat axis to its proper center position
-	JOYSTICK_Move_Y(BXGameportStick2, BXThrustmasterFCSPOVCentered);
+	[BXEmulatorCore setJoystickAxisY:BXThrustmasterFCSPOVCentered atIndex:BXGameportStick2];
     
     povDirectionMask = BXEmulatedPOVCentered;
 }

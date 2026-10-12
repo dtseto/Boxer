@@ -9,9 +9,7 @@
 
 #import "BXEmulatedJoystick.h"
 #import "ADBHIDEvent.h"
-#import "config.h"
-#import "types.h"
-#import "joystick.h"
+#import "BXEmulatorCore.h"
 
 
 enum
@@ -83,4 +81,3 @@ typedef NS_OPTIONS(NSUInteger, BXGameportButtonMask)
 - (float) positionForGameportAxis: (BXGameportAxis)axis;
 
 @end
-

@@ -14,14 +14,10 @@
 #import "ADBFilesystem.h"
 #import "NSURL+ADBFilesystemHelpers.h"
 
-#import "dos_inc.h"
-#import "dos_system.h"
-#import "drives.h"
-#import "cdrom.h"
-#import "mem.h"
 
 #include <array>
 #include <vector>
+#include <sys/stat.h>
 
 
 #pragma mark - Private constants
@@ -1138,20 +1134,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
     //If we have no processes running, then any open file handles are leftovers and can be safely ignored, so don't bother checking.
     if (self.currentProcess == nil) return NO;
-
-	int i;
-	for (i=0; i<DOS_FILES; i++)
-	{
-		if (Files[i] && Files[i]->GetDrive() == index)
-		{
-			//DOS_File->GetDrive() returns 0 for the special CON system file,
-			//which also corresponds to the drive index for A, so skip it
-			if (index == 0 && !strcmp(Files[i]->GetName(), "CON")) continue;
-			
-			if (Files[i]->IsOpen()) return YES;
-		}
-	}
-	return NO;
+    return [BXEmulatorCore DOSBoxDriveInUseAtIndex:index];
 }
 
 //If the folder was restricted, print an error to the shell and deny access

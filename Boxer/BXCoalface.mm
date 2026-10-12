@@ -808,6 +808,22 @@ static void boxer_filesystemControlCloseFiles(uint8_t driveIndex)
     }
 }
 
+static bool boxer_filesystemControlDriveInUse(uint8_t driveIndex)
+{
+    if (driveIndex >= DOS_DRIVES)
+        return false;
+    for (int i = 0; i < DOS_FILES; i++)
+    {
+        if (Files[i] && Files[i]->GetDrive() == driveIndex)
+        {
+            DOS_File *file = Files[i].get();
+            if (driveIndex == 0 && file->IsName("CON")) continue;
+            if (file->IsOpen()) return true;
+        }
+    }
+    return false;
+}
+
 static void boxer_filesystemControlDestroyDrive(uintptr_t drive)
 {
     delete (DOS_Drive *)drive;
@@ -925,6 +941,7 @@ static BXDOSBoxFilesystemControlBridgeCallbacks BXDOSBoxFilesystemControlCallbac
     boxer_filesystemControlAddDrive,
     boxer_filesystemControlUnmountDrive,
     boxer_filesystemControlCloseFiles,
+    boxer_filesystemControlDriveInUse,
     boxer_filesystemControlDestroyDrive,
     boxer_filesystemControlSetDriveLabel,
     boxer_filesystemControlDriveLabel,

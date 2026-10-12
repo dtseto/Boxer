@@ -461,6 +461,12 @@ static BOOL BXConfigurationBoolean(NSString *value)
         bridge->closeFilesForDrive((uint8_t)index);
 }
 
++ (BOOL)DOSBoxDriveInUseAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveInUse && bridge->driveInUse((uint8_t)index);
+}
+
 + (void)destroyDOSBoxDrive:(uintptr_t)drive
 {
     const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();

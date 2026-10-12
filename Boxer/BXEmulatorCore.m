@@ -524,6 +524,49 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->createFloppyDirectory ? bridge->createFloppyDirectory(path, freeSpace, geometry, mediaByte, outErrorCode) : 0;
 }
 
++ (void)setDOSBoxMixerState:(BXAudioMixerState)state
+{
+    const BXDOSBoxAudioBridgeCallbacks *bridge = boxer_registeredDOSBoxAudioBridge();
+    if (bridge && bridge->setMixerState)
+        bridge->setMixerState((BXDOSBoxAudioMixerState)state);
+}
+
++ (uintptr_t)addDOSBoxMIDIChannelWithSampleRate:(NSUInteger)sampleRate
+{
+    const BXDOSBoxAudioBridgeCallbacks *bridge = boxer_registeredDOSBoxAudioBridge();
+    return bridge && bridge->addMIDIChannel ? bridge->addMIDIChannel((uint32_t)sampleRate) : 0;
+}
+
++ (void)setDOSBoxMIDIChannel:(uintptr_t)channel sampleRate:(NSUInteger)sampleRate
+{
+    const BXDOSBoxAudioBridgeCallbacks *bridge = boxer_registeredDOSBoxAudioBridge();
+    if (bridge && bridge->setMIDIChannelSampleRate)
+        bridge->setMIDIChannelSampleRate(channel, (uint32_t)sampleRate);
+}
+
++ (void)enableDOSBoxMIDIChannel:(uintptr_t)channel enabled:(BOOL)enabled
+{
+    const BXDOSBoxAudioBridgeCallbacks *bridge = boxer_registeredDOSBoxAudioBridge();
+    if (bridge && bridge->enableMIDIChannel)
+        bridge->enableMIDIChannel(channel, enabled);
+}
+
++ (void)addDOSBoxMIDIChannelSilence:(uintptr_t)channel
+{
+    const BXDOSBoxAudioBridgeCallbacks *bridge = boxer_registeredDOSBoxAudioBridge();
+    if (bridge && bridge->addMIDIChannelSilence)
+        bridge->addMIDIChannelSilence(channel);
+}
+
++ (void)addDOSBoxMIDIChannelSamples:(uintptr_t)channel format:(BXAudioSampleFormat)format
+                              frames:(NSUInteger)frames samples:(const void *)samples
+{
+    const BXDOSBoxAudioBridgeCallbacks *bridge = boxer_registeredDOSBoxAudioBridge();
+    if (bridge && bridge->addMIDIChannelSamples)
+        bridge->addMIDIChannelSamples(channel, (BXDOSBoxAudioSampleFormat)format,
+                                      (uint32_t)frames, samples);
+}
+
 - (instancetype)initWithGamebox:(BXGamebox *)gamebox
                          session:(BXSession *)session
 {

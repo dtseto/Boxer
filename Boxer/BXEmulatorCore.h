@@ -9,6 +9,24 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef NS_ENUM(uint8_t, BXAudioMixerState) {
+    BXAudioMixerStateOn,
+    BXAudioMixerStateMuted,
+};
+
+typedef NS_ENUM(uint8_t, BXAudioSampleFormat) {
+    BXAudioSampleFormatM8,
+    BXAudioSampleFormatS8,
+    BXAudioSampleFormatM8Signed,
+    BXAudioSampleFormatS8Signed,
+    BXAudioSampleFormatM16,
+    BXAudioSampleFormatS16,
+    BXAudioSampleFormatM16Unsigned,
+    BXAudioSampleFormatS16Unsigned,
+    BXAudioSampleFormatMFloat,
+    BXAudioSampleFormatSFloat,
+};
+
 @class BXGamebox;
 @class BXSession;
 @class BXConfigKey;
@@ -110,6 +128,13 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (int32_t)unmountDOSBoxDriveAtIndex:(NSUInteger)index;
 + (void)closeDOSBoxFilesForDriveAtIndex:(NSUInteger)index;
 + (BOOL)DOSBoxDriveInUseAtIndex:(NSUInteger)index;
++ (void)setDOSBoxMixerState:(BXAudioMixerState)state;
++ (uintptr_t)addDOSBoxMIDIChannelWithSampleRate:(NSUInteger)sampleRate;
++ (void)setDOSBoxMIDIChannel:(uintptr_t)channel sampleRate:(NSUInteger)sampleRate;
++ (void)enableDOSBoxMIDIChannel:(uintptr_t)channel enabled:(BOOL)enabled;
++ (void)addDOSBoxMIDIChannelSilence:(uintptr_t)channel;
++ (void)addDOSBoxMIDIChannelSamples:(uintptr_t)channel format:(BXAudioSampleFormat)format
+                              frames:(NSUInteger)frames samples:(const void *)samples;
 + (void)destroyDOSBoxDrive:(uintptr_t)drive;
 + (void)setDOSBoxDrive:(uintptr_t)drive label:(const char *)label isCDROM:(BOOL)isCDROM;
 + (const char *)DOSBoxDriveLabel:(uintptr_t)drive;

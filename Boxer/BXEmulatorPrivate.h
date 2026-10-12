@@ -36,7 +36,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 class DOS_Shell;
 class DOS_Drive;
-class MixerChannel;
 
 /// The drive geometry settings passed to BXEmulatorCore drive-construction methods
 /// for mounting local folders as FAT drives.
@@ -610,27 +609,27 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 - (void) _syncVolume;
 
 /// Returns the DOSBox channel used for MIDI mixing, or @c NULL if none is necessary.
-- (MixerChannel *) _MIDIMixerChannel;
+- (uintptr_t) _MIDIMixerChannel;
 
 /// Creates and returns a new DOSBox mixer channel for handling MIDI.
-- (MixerChannel *) _addMIDIMixerChannelWithSampleRate: (NSUInteger)sampleRate;
+- (uintptr_t) _addMIDIMixerChannelWithSampleRate: (NSUInteger)sampleRate;
 
 /// Disables and removes the current MIDI mixer channel, if one exists.
 - (void) _removeMIDIMixerChannel;
 
 /// Renders the active MIDI device's MIDI output to the specified channel.
 /// Will raise an assertion if the current MIDI source does not support mixing.
-- (void) _renderMIDIOutputToChannel: (MixerChannel *)channel
+- (void) _renderMIDIOutputToChannel: (uintptr_t)channel
                              frames: (NSUInteger)numFrames;
 
 /// Render the specified number of output frames from the specified audio source to the specified output channel.
 - (void) _renderOutputFromSource: (id <BXAudioSource>)source
-                       toChannel: (MixerChannel *)channel
+                       toChannel: (uintptr_t)channel
                           frames: (NSUInteger)numFrames;
 
 /// Render the specified audio data buffer to the specified channel.
 - (void) _renderBuffer: (void *)buffer
-             toChannel: (MixerChannel *)channel
+             toChannel: (uintptr_t)channel
                 frames: (NSUInteger)numFrames
                 format: (BXAudioFormat)format;
 @end

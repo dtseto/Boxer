@@ -10,13 +10,77 @@
 #import "BXEmulatorPrivate.h"
 #import "BXEmulatorCoreAudio.h"
 #undef BXDOSBOX_BRIDGE_IMPLEMENTATION
+#import "mixer.h"
 #import "RegexKitLite.h"
 #import <CoreFoundation/CFByteOrder.h>
 
 static BXDOSBoxAudioBridgeCallbacks BXDOSBoxAudioCallbacks;
 static bool BXDOSBoxAudioCallbacksRegistered = false;
+static MixerChannelPtr BXMIDIChannel;
 
 static void boxer_registerDefaultDOSBoxAudioBridge(void);
+
+static void boxer_audioBridgeRenderMIDIOutput(Bitu numFrames)
+{
+    if (BXMIDIChannel)
+        [[BXEmulator currentEmulator] _renderMIDIOutputToChannel:(uintptr_t)BXMIDIChannel.get()
+                                                           frames:numFrames];
+}
+
+static void boxer_audioBridgeSetMixerState(BXDOSBoxAudioMixerState state)
+{
+    MIXER_SetState(state == BXDOSBoxAudioMixerStateMuted ? MixerState::Muted : MixerState::On);
+}
+
+static uintptr_t boxer_audioBridgeAddMIDIChannel(uint32_t sampleRate)
+{
+    if (BXMIDIChannel)
+        BXMIDIChannel->SetSampleRate((int)sampleRate);
+    else
+        BXMIDIChannel = MIXER_AddChannel(boxer_audioBridgeRenderMIDIOutput, (int)sampleRate,
+                                         "MIDI", {ChannelFeature::Stereo, ChannelFeature::Synthesizer});
+    return BXMIDIChannel ? (uintptr_t)BXMIDIChannel.get() : 0;
+}
+
+static MixerChannel *boxer_audioChannel(uintptr_t channel)
+{
+    return BXMIDIChannel && (uintptr_t)BXMIDIChannel.get() == channel ? BXMIDIChannel.get() : NULL;
+}
+
+static void boxer_audioBridgeSetMIDIChannelSampleRate(uintptr_t channel, uint32_t sampleRate)
+{
+    if (MixerChannel *audioChannel = boxer_audioChannel(channel)) audioChannel->SetSampleRate((int)sampleRate);
+}
+
+static void boxer_audioBridgeEnableMIDIChannel(uintptr_t channel, bool enabled)
+{
+    if (MixerChannel *audioChannel = boxer_audioChannel(channel)) audioChannel->Enable(enabled);
+}
+
+static void boxer_audioBridgeAddMIDIChannelSilence(uintptr_t channel)
+{
+    if (MixerChannel *audioChannel = boxer_audioChannel(channel)) audioChannel->AddSilence();
+}
+
+static void boxer_audioBridgeAddMIDIChannelSamples(uintptr_t channel, BXDOSBoxAudioSampleFormat format,
+                                                   uint32_t frames, const void *samples)
+{
+    MixerChannel *audioChannel = boxer_audioChannel(channel);
+    if (!audioChannel) return;
+    switch (format)
+    {
+        case BXDOSBoxAudioSampleFormatM8: audioChannel->AddSamples_m8((int)frames, (const uint8_t *)samples); break;
+        case BXDOSBoxAudioSampleFormatS8: audioChannel->AddSamples_s8((int)frames, (const uint8_t *)samples); break;
+        case BXDOSBoxAudioSampleFormatM8Signed: audioChannel->AddSamples_m8s((int)frames, (const int8_t *)samples); break;
+        case BXDOSBoxAudioSampleFormatS8Signed: audioChannel->AddSamples_s8s((int)frames, (const int8_t *)samples); break;
+        case BXDOSBoxAudioSampleFormatM16: audioChannel->AddSamples_m16((int)frames, (const int16_t *)samples); break;
+        case BXDOSBoxAudioSampleFormatS16: audioChannel->AddSamples_s16((int)frames, (const int16_t *)samples); break;
+        case BXDOSBoxAudioSampleFormatM16Unsigned: audioChannel->AddSamples_m16u((int)frames, (const uint16_t *)samples); break;
+        case BXDOSBoxAudioSampleFormatS16Unsigned: audioChannel->AddSamples_s16u((int)frames, (const uint16_t *)samples); break;
+        case BXDOSBoxAudioSampleFormatMFloat: audioChannel->AddSamples_mfloat((int)frames, (const float *)samples); break;
+        case BXDOSBoxAudioSampleFormatSFloat: audioChannel->AddSamples_sfloat((int)frames, (const float *)samples); break;
+    }
+}
 
 void boxer_registerDOSBoxAudioBridge(const BXDOSBoxAudioBridgeCallbacks *callbacks)
 {
@@ -135,6 +199,12 @@ static void boxer_registerDefaultDOSBoxAudioBridge(void)
     callbacks.masterVolume = boxer_audioBridgeMasterVolume;
     callbacks.updateVolumes = boxer_updateVolumes;
     callbacks.suggestMIDIHandler = boxer_audioBridgeSuggestMIDIHandler;
+    callbacks.setMixerState = boxer_audioBridgeSetMixerState;
+    callbacks.addMIDIChannel = boxer_audioBridgeAddMIDIChannel;
+    callbacks.setMIDIChannelSampleRate = boxer_audioBridgeSetMIDIChannelSampleRate;
+    callbacks.enableMIDIChannel = boxer_audioBridgeEnableMIDIChannel;
+    callbacks.addMIDIChannelSilence = boxer_audioBridgeAddMIDIChannelSilence;
+    callbacks.addMIDIChannelSamples = boxer_audioBridgeAddMIDIChannelSamples;
     boxer_registerDOSBoxAudioBridge(&callbacks);
 }
 

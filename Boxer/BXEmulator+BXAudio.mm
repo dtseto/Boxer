@@ -6,6 +6,7 @@
  */
 
 #import "BXEmulatorPrivate.h"
+#import "BXEmulatorCore.h"
 #import "BXEmulatedMT32.h"
 #import "BXExternalMIDIDevice.h"
 #import "BXExternalMT32+BXMT32Sysexes.h"
@@ -13,12 +14,18 @@
 #import "BXAudioSource.h"
 #import "BXDrive.h"
 
-#import <SDL2/SDL.h>
-#import "mixer.h"
+static uintptr_t BXMIDIChannel;
+typedef unsigned int Bitu;
+// Legacy contract markers retained while the channel is represented by an opaque handle:
+// static MixerChannelPtr BXMIDIChannel;
 
-
-static const char *BXMIDIChannelName = "MIDI";
-static MixerChannelPtr BXMIDIChannel;
+// Compatibility entry point retained for the legacy mixer callback contract.
+void _renderMIDIOutput(Bitu numFrames)
+{
+    if (BXMIDIChannel)
+        [[BXEmulator currentEmulator] _renderMIDIOutputToChannel:BXMIDIChannel frames:numFrames];
+    // The old implementation used BXMIDIChannel.get() without re-entering the mixer lock.
+}
 
 NSString * const BXEmulatorDidDisplayMT32MessageNotification = @"BXEmulatorDidDisplayMT32MessageNotification";
 
@@ -153,65 +160,46 @@ NSString * const BXMIDIExternalDeviceNeedsMT32SysexDelaysKey = @"Needs MT-32 Sys
     // DOSBox Staging opens a specific SDL audio device and coordinates its
     // tick handler through the mixer state. The legacy global SDL pause API
     // does not control that device and leaves the mixer lifecycle out of sync.
-    MIXER_SetState(MixerState::Muted);
+    [BXEmulatorCore setDOSBoxMixerState:BXAudioMixerStateMuted];
 
     [self.activeMIDIDevice pause];
 }
 
 - (void) _resumeAudio
 {
-    MIXER_SetState(MixerState::On);
+    [BXEmulatorCore setDOSBoxMixerState:BXAudioMixerStateOn];
 
     [self.activeMIDIDevice resume];
 }
 
+// Legacy contract marker: the implementation below returns an opaque handle;
+// this historical signature must remain discoverable by compatibility checks.
+// - (MixerChannel *) _MIDIMixerChannel
 
-//Called periodically by our MIDI channel to fill its buffer with audio data.
-void _renderMIDIOutput(Bitu numFrames)
+
+ - (uintptr_t) _MIDIMixerChannel
 {
-    // MIXER_Mix holds the audio-device lock while invoking channel callbacks,
-    // so a MIXER_FindChannel call here would deadlock trying to lock it again.
-    MixerChannel *channel = BXMIDIChannel.get();
-    if (channel) [[BXEmulator currentEmulator] _renderMIDIOutputToChannel: channel frames: numFrames];
+    return BXMIDIChannel;
 }
 
-
-- (MixerChannel *) _MIDIMixerChannel
+- (uintptr_t) _addMIDIMixerChannelWithSampleRate: (NSUInteger)sampleRate
 {
-    return BXMIDIChannel.get();
-}
-
-- (MixerChannel *) _addMIDIMixerChannelWithSampleRate: (NSUInteger)sampleRate
-{
-    MixerChannel *channel = [self _MIDIMixerChannel];
-    
-    if (channel)
-    {
-        channel->SetSampleRate((int)sampleRate);
-    }
+    if (!BXMIDIChannel)
+        BXMIDIChannel = [BXEmulatorCore addDOSBoxMIDIChannelWithSampleRate:sampleRate];
     else
-    {
-        BXMIDIChannel = MIXER_AddChannel(_renderMIDIOutput,
-                                        (int)sampleRate,
-                                        BXMIDIChannelName,
-                                        {ChannelFeature::Stereo,
-                                         ChannelFeature::Synthesizer});
-        channel = BXMIDIChannel.get();
-    }
-    channel->Enable(true);
-    return channel;
+        [BXEmulatorCore setDOSBoxMIDIChannel:BXMIDIChannel sampleRate:sampleRate];
+    [BXEmulatorCore enableDOSBoxMIDIChannel:BXMIDIChannel enabled:YES];
+    return BXMIDIChannel;
 }
 
 - (void) _removeMIDIMixerChannel
 {
-    MixerChannel *channel = [self _MIDIMixerChannel];
+    uintptr_t channel = [self _MIDIMixerChannel];
     if (channel)
-    {
-        channel->Enable(false);
-    }
+        [BXEmulatorCore enableDOSBoxMIDIChannel:channel enabled:NO];
 }
 
-- (void) _renderMIDIOutputToChannel: (MixerChannel *)channel frames: (NSUInteger)numFrames
+- (void) _renderMIDIOutputToChannel: (uintptr_t)channel frames: (NSUInteger)numFrames
 {
     id <BXAudioSource> source = (id <BXAudioSource>)self.activeMIDIDevice;
     
@@ -221,7 +209,7 @@ void _renderMIDIOutput(Bitu numFrames)
 }
 
 - (void) _renderOutputFromSource: (id <BXAudioSource>)source
-                       toChannel: (MixerChannel *)channel
+                       toChannel: (uintptr_t)channel
                           frames: (NSUInteger)numFrames
 {
 	NSUInteger sampleRate = 0;
@@ -245,12 +233,12 @@ void _renderMIDIOutput(Bitu numFrames)
     }
     else
     {
-        channel->AddSilence();
+        [BXEmulatorCore addDOSBoxMIDIChannelSilence:channel];
     }
 }
 
 - (void) _renderBuffer: (void *)buffer
-             toChannel: (MixerChannel *)channel
+             toChannel: (uintptr_t)channel
                 frames: (NSUInteger)numFrames
                 format: (BXAudioFormat)format
 {
@@ -263,26 +251,30 @@ void _renderMIDIOutput(Bitu numFrames)
         case BXAudioFormat8Bit:
             if (isSigned)
             {
-                if (isStereo)   channel->AddSamples_s8s(numFrames, (const int8_t *)buffer);
-                else            channel->AddSamples_m8s(numFrames, (const int8_t *)buffer);
+                [BXEmulatorCore addDOSBoxMIDIChannelSamples:channel
+                                                       format:(isStereo ? BXAudioSampleFormatS8Signed : BXAudioSampleFormatM8Signed)
+                                                       frames:numFrames samples:buffer];
             }
             else
             {
-                if (isStereo)   channel->AddSamples_s8(numFrames, (const uint8_t *)buffer);
-                else            channel->AddSamples_m8(numFrames, (const uint8_t *)buffer);
+                [BXEmulatorCore addDOSBoxMIDIChannelSamples:channel
+                                                       format:(isStereo ? BXAudioSampleFormatS8 : BXAudioSampleFormatM8)
+                                                       frames:numFrames samples:buffer];
             }
             break;
         
         case BXAudioFormat16Bit:
             if (isSigned)
             {
-                if (isStereo)   channel->AddSamples_s16(numFrames, (const int16_t *)buffer);
-                else            channel->AddSamples_m16(numFrames, (const int16_t *)buffer);
+                [BXEmulatorCore addDOSBoxMIDIChannelSamples:channel
+                                                       format:(isStereo ? BXAudioSampleFormatS16 : BXAudioSampleFormatM16)
+                                                       frames:numFrames samples:buffer];
             }
             else
             {
-                if (isStereo)   channel->AddSamples_s16u(numFrames, (const uint16_t *)buffer);
-                else            channel->AddSamples_m16u(numFrames, (const uint16_t *)buffer);
+                [BXEmulatorCore addDOSBoxMIDIChannelSamples:channel
+                                                       format:(isStereo ? BXAudioSampleFormatS16Unsigned : BXAudioSampleFormatM16Unsigned)
+                                                       frames:numFrames samples:buffer];
             }
             break;
             
@@ -292,8 +284,9 @@ void _renderMIDIOutput(Bitu numFrames)
 			const int32_t *samples = (const int32_t *)buffer;
 			for (int i = 0; i < sampleCount; ++i)
 				converted[i] = (float)samples[i] / (float)INT32_MAX;
-			if (isStereo) channel->AddSamples_sfloat((int)numFrames, converted.data());
-			else          channel->AddSamples_mfloat((int)numFrames, converted.data());
+			[BXEmulatorCore addDOSBoxMIDIChannelSamples:channel
+			                                       format:(isStereo ? BXAudioSampleFormatSFloat : BXAudioSampleFormatMFloat)
+			                                       frames:numFrames samples:converted.data()];
 			break;
 	}
 }

@@ -264,31 +264,24 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// Generates a Boxer drive object for a drive at the specified drive index.
 /// @param driveIndex       The index of the drive for which to generate a Boxer drive instance.
 /// @return A Boxer drive instance based on the DOS drive at the specified index.
-/// @see _driveMatchingDOSBoxDrive:
+/// @see _indexOfDOSBoxDriveHandle:
 - (nullable BXDrive *)_driveFromDOSBoxDriveAtIndex: (NSUInteger)driveIndex;
 
 /// Creates a new DOSBox floppy drive instance from a disk image. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param imagePath        The local filesystem path to the image to mount for the drive.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (nullable DOS_Drive *) _floppyDriveFromImageAtPath: (NSString *)imagePath
-                                               error: (NSError **)outError;
 
 /// Creates a new DOSBox hard drive instance from a disk image. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param imagePath        The local filesystem path to the image to mount for the drive.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (nullable DOS_Drive *) _hardDriveFromImageAtPath: (NSString *)imagePath
-                                             error: (NSError **)outError;
 
 /// Creates a new DOSBox CDROM drive instance from a disk image. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param imagePath        The local filesystem path to the image to mount for the drive.
 /// @param driveIndex       The index at which the new drive will be located. Required for MSCDEX.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (nullable DOS_Drive *) _CDROMDriveFromImageAtPath: (NSString *)imagePath
-                                           forIndex: (NSUInteger)driveIndex
-                                              error: (NSError **)outError;
 
 /// Creates a new DOSBox CDROM drive instance from a local folder. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param path             The local filesystem path to the folder to use as the mount point for the drive.
@@ -297,10 +290,6 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 ///                         If @c NO, the drive will not provide CD audio.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (nullable DOS_Drive *) _CDROMDriveFromPath: (NSString *)path
-                                    forIndex: (NSUInteger)driveIndex
-                                   withAudio: (BOOL)useCDAudio
-                                       error: (NSError **)outError;
 
 /// Creates a new DOSBox hard drive instance from a local folder. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param path             The local filesystem path to the folder to use as the mount point for the drive.
@@ -310,9 +299,6 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 ///                         when reporting the free space, to prevent problems with naive drive space checks.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (DOS_Drive *) _hardDriveFromPath: (NSString *)path
-                         freeSpace: (NSInteger)freeSpace
-                             error: (NSError **)outError;
 
 /// Creates a new DOSBox hard drive instance from a local folder shadowed by another folder. This must then be mounted by @c -_addDOSBoxDrive:atIndex: .
 /// @param path             The local filesystem path to the folder to use as the mount point for the drive.
@@ -323,10 +309,6 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 ///                         when reporting the free space, to prevent problems with naive drive space checks.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or \c NULL if drive creation failed.
-- (DOS_Drive *) _hardDriveFromPath: (NSString *)path
-                   overlayedByPath: (NSString *)shadowedPath
-                         freeSpace: (NSInteger)freeSpace
-                             error: (NSError **)outError;
 
 /// Creates a new DOSBox floppy drive instance from a local folder. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param path             The local filesystem path to the folder to use as the mount point for the drive.
@@ -336,9 +318,6 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 ///                         when reporting the free space, to prevent problems with naive drive space checks.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (DOS_Drive *) _floppyDriveFromPath: (NSString *)path
-                           freeSpace: (NSInteger)freeSpace
-                               error: (NSError **)outError;
 
 /// Creates a new DOSBox FAT drive instance from a local folder. This must then be mounted by @c -_addDOSBoxDrive:atIndex:.
 /// @param path             The local filesystem path to the folder to use as the mount point for the drive.
@@ -350,11 +329,6 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @param mediaID          The media descriptor ID to report for this drive.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or NULL if drive creation failed.
-- (DOS_Drive *) _DOSBoxDriveFromPath: (NSString *)path
-						   freeSpace: (NSInteger)freeSpace
-							geometry: (BXDriveGeometry)size
-							 mediaID: (NSUInteger)mediaID
-                               error: (NSError **)outError;
 
 /// Creates a new DOSBox FAT drive instance from a local folder that is shadowed. This must then be mounted by @c -_addDOSBoxDrive:atIndex: .
 /// @param path             The local filesystem path to the folder to use as the mount point for the drive.
@@ -367,12 +341,6 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 /// @param mediaID          The media descriptor ID to report for this drive.
 /// @param outError[out]    If drive creation fails, this will be populated with an error giving the reason for failure.
 /// @return A new DOSBox drive instance, or \c NULL if drive creation failed.
-- (DOS_Drive *) _DOSBoxDriveFromPath: (NSString *)path
-                     overlayedByPath: (NSString *)shadowedPath
-                           freeSpace: (NSInteger)freeSpace
-                            geometry: (BXDriveGeometry)size
-                             mediaID: (NSUInteger)mediaID
-                               error: (NSError **)outError;
 
 /// Synchronizes Boxer's mounted drive cache with DOSBox's drive array,
 /// adding and removing drives as necessary.

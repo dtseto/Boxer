@@ -37,6 +37,8 @@ void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
 void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
 #endif
 
+extern const char *RunningProgram;
+
 static bool BXTicksLocked = false;
 
 static CommandLine *BXDOSBoxCommandLine;
@@ -1406,6 +1408,11 @@ static uintptr_t boxer_shellControlCurrentShell(void)
     return (uintptr_t)currentShell;
 }
 
+static const char *boxer_shellControlCurrentRunningProgram(void)
+{
+    return RunningProgram;
+}
+
 static void boxer_shellControlWriteOutput(uintptr_t shell, const char *text)
 {
     ((DOS_Shell *)shell)->WriteOut_NoParsing(text);
@@ -1459,6 +1466,7 @@ static void boxer_shellControlClearScreen(void)
 
 static BXDOSBoxShellControlBridgeCallbacks BXDOSBoxShellControlCallbacks = {
     boxer_shellControlCurrentShell,
+    boxer_shellControlCurrentRunningProgram,
     boxer_shellControlWriteOutput,
     boxer_shellControlEchoEnabled,
     boxer_shellControlHasNoBatchFiles,

@@ -57,9 +57,6 @@ NSStringEncoding BXDirectStringEncoding		= NSUTF8StringEncoding;
 
 #pragma mark - External function definitions
 
-//defined in dos_execute.cpp
-extern const char* RunningProgram;
-
 // DOSBox-Staging 0.82 removed the legacy CPU auto-determine bitfield. Boxer
 // still needs to restore the prior fixed cycle value when toggling auto speed.
 static int CPU_OldCycleMax = 0;
@@ -841,7 +838,8 @@ static BOOL _hasStartedEmulator = NO;
         [self didChangeValueForKey: @"frameskip"];
         [self didChangeValueForKey: @"coreMode"];
         
-        NSString *newProcessName = [NSString stringWithCString: RunningProgram
+        const char *runningProgram = [BXEmulatorCore currentDOSBoxRunningProgram];
+        NSString *newProcessName = [NSString stringWithCString: runningProgram
                                                       encoding: BXDirectStringEncoding];
         
         if ([newProcessName isEqualToString: shellProcessName]) newProcessName = nil;

@@ -369,6 +369,12 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->currentShell ? bridge->currentShell() : 0;
 }
 
++ (const char *)currentDOSBoxRunningProgram
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    return bridge && bridge->currentRunningProgram ? bridge->currentRunningProgram() : NULL;
+}
+
 + (void)writeDOSBoxShellOutput:(uintptr_t)shell text:(const char *)text
 {
     const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();

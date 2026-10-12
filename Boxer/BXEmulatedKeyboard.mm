@@ -134,7 +134,7 @@
 - (void) clearInput
 {
     //Clear any pending keyboard events.
-    KEYBOARD_ClrBuffer();
+    [BXEmulatorCore clearKeyboardBuffer];
     
     //Release any previously-pressed keys.
 	NSUInteger key;

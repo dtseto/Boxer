@@ -158,6 +158,12 @@ static BOOL BXConfigurationBoolean(NSString *value)
     if (bridge && bridge->keyboardKey) bridge->keyboardKey(key, pressed);
 }
 
++ (void)clearKeyboardBuffer
+{
+    const BXDOSBoxInputBridgeCallbacks *bridge = boxer_registeredDOSBoxInputBridge();
+    if (bridge && bridge->keyboardClearBuffer) bridge->keyboardClearBuffer();
+}
+
 + (void)setJoystickEnabled:(BOOL)enabled atIndex:(NSUInteger)index
 {
     const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();

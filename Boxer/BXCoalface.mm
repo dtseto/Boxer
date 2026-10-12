@@ -6,6 +6,7 @@
  */
 
 
+#import "keyboard.h"
 #import "BXCoalface.h"
 #import "render.h"
 #import "vga.h"
@@ -1072,6 +1073,11 @@ static void boxer_inputBridgeKeyboardKey(uint16_t key, bool pressed)
     KEYBOARD_AddKey((KBD_KEYS)key, pressed);
 }
 
+static void boxer_inputBridgeKeyboardClearBuffer(void)
+{
+    KEYBOARD_ClrBuffer();
+}
+
 
 static BXDOSBoxInputBridgeCallbacks BXDOSBoxInputCallbacks;
 static bool BXDOSBoxInputCallbacksRegistered = false;
@@ -1100,7 +1106,8 @@ const BXDOSBoxInputBridgeCallbacks *boxer_registeredDOSBoxInputBridge(void)
             boxer_inputBridgeSwitchKeyboardLayout,
             boxer_inputBridgeMouseMoved,
             boxer_inputBridgeMouseButton,
-            boxer_inputBridgeKeyboardKey
+            boxer_inputBridgeKeyboardKey,
+            boxer_inputBridgeKeyboardClearBuffer
         };
         boxer_registerDOSBoxInputBridge(&callbacks);
     }

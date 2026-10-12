@@ -7,7 +7,6 @@
 
 
 #import <Foundation/Foundation.h>
-#import "keyboard.h"
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -25,7 +24,56 @@ NS_ASSUME_NONNULL_BEGIN
 /// When simulating typing, this many slots will be reserved in the emulated keyboard buffer to avoid flooding.
 #define BXTypingKeyboardBufferReserve 3
 
+// This is the Boxer-facing keyboard key contract. The values intentionally
+// match DOSBox's legacy key ordering because the adapter converts them to the
+// DOSBox key type at the Coalface boundary. Keeping the compatibility names
+// avoids changing persisted/input-profile values while removing DOSBox's
+// keyboard header from Boxer's public headers.
+#ifndef DOSBOX_KEYBOARD_H
+typedef enum BXDOSKeyCode {
+    KBD_NONE,
+
+    KBD_1, KBD_2, KBD_3, KBD_4, KBD_5, KBD_6, KBD_7, KBD_8, KBD_9, KBD_0,
+    KBD_q, KBD_w, KBD_e, KBD_r, KBD_t, KBD_y, KBD_u, KBD_i, KBD_o, KBD_p,
+    KBD_a, KBD_s, KBD_d, KBD_f, KBD_g, KBD_h, KBD_j, KBD_k, KBD_l,
+    KBD_z, KBD_x, KBD_c, KBD_v, KBD_b, KBD_n, KBD_m,
+
+    KBD_f1, KBD_f2, KBD_f3, KBD_f4, KBD_f5, KBD_f6,
+    KBD_f7, KBD_f8, KBD_f9, KBD_f10, KBD_f11, KBD_f12,
+
+    KBD_esc, KBD_tab, KBD_backspace, KBD_enter, KBD_space,
+
+    KBD_leftalt, KBD_rightalt,
+    KBD_leftctrl, KBD_rightctrl,
+    KBD_leftgui, KBD_rightgui,
+    KBD_leftshift, KBD_rightshift,
+
+    KBD_capslock, KBD_scrolllock, KBD_numlock,
+
+    KBD_grave, KBD_minus, KBD_equals, KBD_backslash,
+    KBD_leftbracket, KBD_rightbracket,
+    KBD_semicolon, KBD_quote,
+    KBD_oem102,
+    KBD_extra_lt_gt = KBD_oem102,
+    KBD_period, KBD_comma, KBD_slash, KBD_abnt1,
+
+    KBD_printscreen, KBD_pause,
+
+    KBD_insert, KBD_home, KBD_pageup,
+    KBD_delete, KBD_end, KBD_pagedown,
+
+    KBD_left, KBD_up, KBD_down, KBD_right,
+
+    KBD_kp1, KBD_kp2, KBD_kp3, KBD_kp4, KBD_kp5,
+    KBD_kp6, KBD_kp7, KBD_kp8, KBD_kp9, KBD_kp0,
+    KBD_kpdivide, KBD_kpmultiply, KBD_kpminus, KBD_kpplus,
+    KBD_kpenter, KBD_kpperiod,
+
+    KBD_LAST,
+} BXDOSKeyCode;
+#else
 typedef KBD_KEYS BXDOSKeyCode;
+#endif
 
 /// \c BXEmulatedKeyboard represents the DOS PC's keyboard hardware, and offers an API for sending
 /// emulated key events and setting keyboard layout.

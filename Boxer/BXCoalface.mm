@@ -703,6 +703,26 @@ static uintptr_t boxer_filesystemControlDriveAtIndex(uint8_t driveIndex)
     return (uintptr_t)Drives[driveIndex].get();
 }
 
+static uint8_t boxer_filesystemControlDriveType(uintptr_t drive)
+{
+    DOS_Drive *dosDrive = (DOS_Drive *)drive;
+    if (!dosDrive) return 0;
+    if (dynamic_cast<Virtual_Drive *>(dosDrive)) return 1;
+    if (dynamic_cast<isoDrive *>(dosDrive) || dynamic_cast<cdromDrive *>(dosDrive)) return 2;
+    if (dosDrive->GetMediaByte() == 0xF0) return 3;
+    return 4;
+}
+
+static const char *boxer_filesystemControlDriveSystemPath(uintptr_t drive)
+{
+    return drive ? ((DOS_Drive *)drive)->getSystemPath() : NULL;
+}
+
+static const char *boxer_filesystemControlDriveCurrentDirectory(uintptr_t drive)
+{
+    return drive ? ((DOS_Drive *)drive)->curdir : NULL;
+}
+
 static void boxer_filesystemControlEmptyDriveCache(uintptr_t drive)
 {
     if (drive)
@@ -843,6 +863,9 @@ static BXDOSBoxFilesystemControlBridgeCallbacks BXDOSBoxFilesystemControlCallbac
     boxer_filesystemControlMaximumPathLength,
     boxer_filesystemControlMakeName,
     boxer_filesystemControlDriveAtIndex,
+    boxer_filesystemControlDriveType,
+    boxer_filesystemControlDriveSystemPath,
+    boxer_filesystemControlDriveCurrentDirectory,
     boxer_filesystemControlEmptyDriveCache,
     boxer_filesystemControlAddDrive,
     boxer_filesystemControlUnmountDrive,

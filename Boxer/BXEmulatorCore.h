@@ -91,6 +91,9 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
              capacity:(NSUInteger)capacity
           driveIndex:(uint8_t *)outDriveIndex;
 + (uintptr_t)DOSBoxDriveAtIndex:(NSUInteger)index;
++ (NSUInteger)DOSBoxDriveType:(uintptr_t)drive;
++ (const char *)DOSBoxDriveSystemPath:(uintptr_t)drive;
++ (const char *)DOSBoxDriveCurrentDirectory:(uintptr_t)drive;
 + (void)emptyDOSBoxDriveCache:(uintptr_t)drive;
 + (BOOL)addDOSBoxDrive:(uintptr_t)drive atIndex:(NSUInteger)index mediaByte:(uint8_t)mediaByte;
 + (int32_t)unmountDOSBoxDriveAtIndex:(NSUInteger)index;

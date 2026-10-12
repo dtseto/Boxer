@@ -376,6 +376,24 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->driveAtIndex ? bridge->driveAtIndex((uint8_t)index) : 0;
 }
 
++ (NSUInteger)DOSBoxDriveType:(uintptr_t)drive
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveType ? bridge->driveType(drive) : 0;
+}
+
++ (const char *)DOSBoxDriveSystemPath:(uintptr_t)drive
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveSystemPath ? bridge->driveSystemPath(drive) : NULL;
+}
+
++ (const char *)DOSBoxDriveCurrentDirectory:(uintptr_t)drive
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveCurrentDirectory ? bridge->driveCurrentDirectory(drive) : NULL;
+}
+
 + (void)emptyDOSBoxDriveCache:(uintptr_t)drive
 {
     const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();

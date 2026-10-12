@@ -923,7 +923,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	NSUInteger index = [[self.class driveLetters] indexOfObject: driveLetter.uppercaseString];
 	NSAssert1(index != NSNotFound,	@"driveLetter %@ passed to _indexOfDriveLetter: was not a valid DOS drive letter.", driveLetter);
-	NSAssert2(index < DOS_DRIVES,	@"driveIndex %lu derived from %@ in _indexOfDriveLetter: was beyond the range of DOSBox's drive array.", (unsigned long)index, driveLetter);
+	NSAssert2(index < [BXEmulatorCore DOSBoxDriveCount],	@"driveIndex %lu derived from %@ in _indexOfDriveLetter: was beyond the range of DOSBox's drive array.", (unsigned long)index, driveLetter);
 	return index;
 }
 
@@ -1027,13 +1027,15 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 //Generates a BXDrive object from a DOSBox drive entry.
 - (BXDrive *)_driveFromDOSBoxDriveAtIndex: (NSUInteger)index
 {
-	NSAssert1(index < DOS_DRIVES, @"index %lu passed to _driveFromDOSBoxDriveAtIndex was beyond the range of DOSBox's drive array.", (unsigned long)index);
-    
-    DOS_Drive *dosboxDrive = Drives[index].get();
+	NSAssert1(index < [BXEmulatorCore DOSBoxDriveCount], @"index %lu passed to _driveFromDOSBoxDriveAtIndex was beyond the range of DOSBox's drive array.", (unsigned long)index);
+    uintptr_t dosboxDrive = [BXEmulatorCore DOSBoxDriveAtIndex:index];
 	if (dosboxDrive != NULL)
 	{
 		NSString *driveLetter	= [[self.class driveLetters] objectAtIndex: index];
-        BXDriveType type        = [self _typeOfDOSBoxDrive: dosboxDrive];
+        NSUInteger driveType = [BXEmulatorCore DOSBoxDriveType:dosboxDrive];
+        BXDriveType type = driveType == 1 ? BXDriveVirtual :
+                           (driveType == 2 ? BXDriveCDROM :
+                           (driveType == 3 ? BXDriveFloppyDisk : BXDriveHardDisk));
         
         BXDrive *drive;
 		if (type == BXDriveVirtual)
@@ -1042,7 +1044,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		}
 		else
 		{
-            NSString *drivePath = [NSString stringWithCString: dosboxDrive->getSystemPath()
+            NSString *drivePath = [NSString stringWithCString: [BXEmulatorCore DOSBoxDriveSystemPath:dosboxDrive]
                                                      encoding: BXDirectStringEncoding];
             
             NSURL *driveURL, *baseURL = self.baseURL;
@@ -1060,7 +1062,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                                                type: type];
 		}
         
-		drive.DOSVolumeLabel = [NSString stringWithCString: dosboxDrive->GetLabel()
+		drive.DOSVolumeLabel = [NSString stringWithCString: [BXEmulatorCore DOSBoxDriveLabel:dosboxDrive]
                                                   encoding: BXDirectStringEncoding];
 		
 		return drive;
@@ -1338,13 +1340,13 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 //adding new drives and removing old drives as necessary.
 - (void) _syncDriveCache
 {
-	for (NSUInteger i=0; i<DOS_DRIVES; i++)
+	for (NSUInteger i=0; i<[BXEmulatorCore DOSBoxDriveCount]; i++)
 	{
 		NSString *letter	= [self _driveLetterForIndex: i];
 		BXDrive *drive		= [_driveCache objectForKey: letter];
 		
 		//A drive exists in DOSBox that we don't have a record of yet, add it to our cache
-		if (Drives[i] && !drive)
+		if ([BXEmulatorCore DOSBoxDriveAtIndex:i] && !drive)
 		{
 			drive = [self _driveFromDOSBoxDriveAtIndex: i];
 			[self _addDriveToCache: drive];
@@ -1355,7 +1357,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 							   userInfo: @{ @"drive": drive }];
 		}
 		//A drive no longer exists in DOSBox which we have a leftover record for, remove it
-		else if (!Drives[i] && drive)
+		else if (![BXEmulatorCore DOSBoxDriveAtIndex:i] && drive)
 		{
 			[self _removeDriveFromCache: drive];
 			

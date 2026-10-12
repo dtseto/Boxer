@@ -670,6 +670,17 @@ void boxer_setScrollLockActive(bool active)
     emulator.keyboard.scrollLockEnabled = active;
 }
 
+static void boxer_inputBridgeMouseMoved(float deltaX, float deltaY,
+                                        int32_t absoluteX, int32_t absoluteY)
+{
+    MOUSE_EventMoved(deltaX, deltaY, absoluteX, absoluteY);
+}
+
+static void boxer_inputBridgeMouseButton(uint8_t button, bool pressed)
+{
+    MOUSE_EventButton(static_cast<MouseButtonId>(button), pressed);
+}
+
 
 static BXDOSBoxInputBridgeCallbacks BXDOSBoxInputCallbacks;
 static bool BXDOSBoxInputCallbacksRegistered = false;
@@ -694,7 +705,9 @@ const BXDOSBoxInputBridgeCallbacks *boxer_registeredDOSBoxInputBridge(void)
             boxer_preferredKeyboardLayout,
             boxer_setCapsLockActive,
             boxer_setNumLockActive,
-            boxer_setScrollLockActive
+            boxer_setScrollLockActive,
+            boxer_inputBridgeMouseMoved,
+            boxer_inputBridgeMouseButton
         };
         boxer_registerDOSBoxInputBridge(&callbacks);
     }

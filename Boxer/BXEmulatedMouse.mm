@@ -7,10 +7,7 @@
 
 
 #import "BXEmulatedMouse.h"
-
-#import "config.h"
-#import "video.h"
-#import "mouse.h"
+#import "BXEmulatorCore.h"
 
 #include <algorithm>
 
@@ -88,7 +85,10 @@
 		const auto absoluteY = static_cast<uint16_t>(std::clamp(
 			point.y * canvas.size.height, 0.0, static_cast<double>(UINT16_MAX)));
 
-		MOUSE_EventMoved(canvasDelta.x, canvasDelta.y, absoluteX, absoluteY);
+		[BXEmulatorCore sendMouseMovedWithDeltaX:canvasDelta.x
+		                                  deltaY:canvasDelta.y
+		                              absoluteX:absoluteX
+		                              absoluteY:absoluteY];
 	}
 }
 
@@ -114,7 +114,7 @@
 	{
 		if (pressed)
 		{
-			MOUSE_EventButton(static_cast<MouseButtonId>(button), true);
+			[BXEmulatorCore sendMouseButton:button pressed:YES];
             self.pressedButtons |= buttonMask;
             
             _lastButtonDown[button] = [NSDate timeIntervalSinceReferenceDate];
@@ -141,7 +141,7 @@
             }
             else
             {
-				MOUSE_EventButton(static_cast<MouseButtonId>(button), false);
+				[BXEmulatorCore sendMouseButton:button pressed:NO];
                 self.pressedButtons &= ~buttonMask;
                 
                 _lastButtonDown[button] = 0;

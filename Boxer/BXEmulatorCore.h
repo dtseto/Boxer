@@ -46,6 +46,11 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (void)setHerculesTintMode:(uint8_t)mode;
 + (void)setCGACompositeHueOffset:(double)offset;
 + (void)setCGAComponentMode:(uint8_t)mode;
++ (void)sendMouseMovedWithDeltaX:(float)deltaX
+                           deltaY:(float)deltaY
+                       absoluteX:(int32_t)absoluteX
+                       absoluteY:(int32_t)absoluteY;
++ (void)sendMouseButton:(NSUInteger)button pressed:(BOOL)pressed;
 
 - (instancetype)initWithGamebox:(nullable BXGamebox *)gamebox
                          session:(nullable BXSession *)session NS_DESIGNATED_INITIALIZER;

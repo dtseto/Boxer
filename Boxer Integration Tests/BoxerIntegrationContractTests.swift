@@ -218,6 +218,17 @@ final class BoxerIntegrationContractTests: XCTestCase {
         XCTAssertTrue(coalface.contains("bool boxer_hasDesktopEnvironment(void)"))
         XCTAssertTrue(coalface.contains("return false;"))
         XCTAssertFalse(mouse.contains("mouse_is_captured"))
+        XCTAssertTrue(mouse.contains("BXEmulatorCore"))
+        XCTAssertTrue(mouse.contains("sendMouseMovedWithDeltaX"))
+        XCTAssertTrue(mouse.contains("sendMouseButton"))
+        XCTAssertFalse(mouse.contains("MOUSE_EventMoved"))
+        XCTAssertFalse(mouse.contains("MOUSE_EventButton"))
+        let inputBridge = try source(at: projectRoot.appendingPathComponent("DOSBox-Staging/include/BXDOSBoxBridgeRegistration.h"))
+        XCTAssertTrue(inputBridge.contains("mouseMoved"))
+        XCTAssertTrue(inputBridge.contains("mouseButton"))
+        let core = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatorCore.m"))
+        XCTAssertTrue(core.contains("bridge->mouseMoved"))
+        XCTAssertTrue(core.contains("bridge->mouseButton"))
     }
 
     func testMixerVolumeBridgeContracts() throws {

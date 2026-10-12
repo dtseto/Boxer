@@ -128,6 +128,23 @@ static BOOL BXConfigurationBoolean(NSString *value)
         bridge->setCGAComponentMode(mode);
 }
 
++ (void)sendMouseMovedWithDeltaX:(float)deltaX
+                           deltaY:(float)deltaY
+                       absoluteX:(int32_t)absoluteX
+                       absoluteY:(int32_t)absoluteY
+{
+    const BXDOSBoxInputBridgeCallbacks *bridge = boxer_registeredDOSBoxInputBridge();
+    if (bridge && bridge->mouseMoved)
+        bridge->mouseMoved(deltaX, deltaY, absoluteX, absoluteY);
+}
+
++ (void)sendMouseButton:(NSUInteger)button pressed:(BOOL)pressed
+{
+    const BXDOSBoxInputBridgeCallbacks *bridge = boxer_registeredDOSBoxInputBridge();
+    if (bridge && bridge->mouseButton)
+        bridge->mouseButton((uint8_t)button, pressed);
+}
+
 - (instancetype)initWithGamebox:(BXGamebox *)gamebox
                          session:(BXSession *)session
 {

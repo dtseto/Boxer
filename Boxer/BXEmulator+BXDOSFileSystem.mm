@@ -550,9 +550,8 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 
 - (BOOL) DOSPathExists: (NSString *)dosPath
 {
-    DOS_Drive *dosDrive;
-    
 	dosPath = [dosPath stringByReplacingOccurrencesOfString: @"/" withString: @"\\"];
+	NSUInteger driveIndex = [BXEmulatorCore DOSBoxDefaultDriveIndex];
     
     //If the path starts with a drive letter, pop it off
 	if (dosPath.length >= 2 && [dosPath characterAtIndex: 1] == (unichar)':')
@@ -561,12 +560,11 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		//Snip off the drive letter from the front of the path
 		dosPath = [dosPath substringFromIndex: 2];
 		
-        NSUInteger driveIndex = [self _indexOfDriveLetter: driveLetter];
-		dosDrive = Drives[driveIndex].get();
+		driveIndex = [self _indexOfDriveLetter: driveLetter];
 	}
-	else dosDrive = Drives[DOS_GetDefaultDrive()].get();
-    
-    if (!dosDrive) return NO;
+
+	uintptr_t dosDrive = [BXEmulatorCore DOSBoxDriveAtIndex:driveIndex];
+	if (!dosDrive) return NO;
     
     //If the path was empty (e.g. nothing more than a drive letter)
     //then it represents the current or root path, so yes it exists
@@ -575,7 +573,8 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     //Otherwise, ask the drive itself
     const char *cPath = [dosPath cStringUsingEncoding: BXDirectStringEncoding];
     
-    return dosDrive->FileExists(cPath) || dosDrive->TestDir((char*)cPath);
+	return [BXEmulatorCore DOSBoxDrive:dosDrive fileExists:cPath] ||
+	       [BXEmulatorCore DOSBoxDrive:dosDrive testDirectory:cPath];
 }
 
 - (BXDrive *) currentDrive
@@ -803,7 +802,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	if (!self.isExecuting) return nil;
 	
 	NSUInteger driveIndex	= [self _indexOfDriveLetter: drive.letter];
-	DOS_Drive *DOSBoxDrive	= Drives[driveIndex].get();
+	uintptr_t DOSBoxDrive = [BXEmulatorCore DOSBoxDriveAtIndex:driveIndex];
     //The drive is not mounted in DOS: give up
 	if (!DOSBoxDrive) return nil;
     
@@ -812,7 +811,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 	if (!subPath) return nil;
 	
 	//To be sure we get this right, flush the drive cache before we look anything up.
-	DOSBoxDrive->EmptyCache();
+	[BXEmulatorCore emptyDOSBoxDriveCache:DOSBoxDrive];
     
 	NSMutableString *dosPath = [NSMutableString stringWithFormat: @"%@:\\", drive.letter];
 	NSMutableString *frankenDirPath = [NSMutableString stringWithString: drive.mountPointURL.path];
@@ -837,7 +836,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         
 		NSString *dosName = nil;
 		
-		char buffer[CROSS_LEN] = {0};
+		NSUInteger shortNameLength = [BXEmulatorCore maximumDOSBoxShortNameLength];
+		if (!shortNameLength) return nil;
+		std::vector<char> buffer(shortNameLength, 0);
 		const char *cDirPath    = [frankenDirPath cStringUsingEncoding: BXDirectStringEncoding];
 		const char *cFileName   = [fileName cStringUsingEncoding: BXDirectStringEncoding];
 		
@@ -847,12 +848,16 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
             //FIXME: getShortName will always fail for ISO9660 images, which do not (cannot) track long
             //filenames but instead use the ISO filesystem's names. To correctly resolve the paths that
             //OS X sees, we would need to be able to compare ISO vs Joliet names in the image's filesystem.
-            hasShortName = DOSBoxDrive->getShortName(cDirPath, cFileName, buffer);
+			hasShortName = [BXEmulatorCore DOSBoxDrive:DOSBoxDrive
+						getShortNameForDirectory:cDirPath
+						name:cFileName
+						intoBuffer:buffer.data()
+						capacity:buffer.size()];
 		}
         
 		if (hasShortName)
 		{
-			dosName = [NSString stringWithCString: (const char *)buffer encoding: BXDirectStringEncoding];
+			dosName = [NSString stringWithCString: buffer.data() encoding: BXDirectStringEncoding];
 		}
 		else
 		{

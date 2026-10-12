@@ -394,6 +394,33 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->driveCurrentDirectory ? bridge->driveCurrentDirectory(drive) : NULL;
 }
 
++ (BOOL)DOSBoxDrive:(uintptr_t)drive fileExists:(const char *)path
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveFileExists && bridge->driveFileExists(drive, path);
+}
+
++ (BOOL)DOSBoxDrive:(uintptr_t)drive testDirectory:(const char *)path
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveTestDirectory && bridge->driveTestDirectory(drive, path);
+}
+
++ (NSUInteger)maximumDOSBoxShortNameLength
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->maximumShortNameLength ? bridge->maximumShortNameLength() : 0;
+}
+
++ (BOOL)DOSBoxDrive:(uintptr_t)drive getShortNameForDirectory:(const char *)directory
+                                                        name:(const char *)name
+                                                    intoBuffer:(char *)buffer
+                                                      capacity:(NSUInteger)capacity
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveGetShortName && bridge->driveGetShortName(drive, directory, name, buffer, capacity);
+}
+
 + (void)emptyDOSBoxDriveCache:(uintptr_t)drive
 {
     const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();

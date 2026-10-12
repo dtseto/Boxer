@@ -723,6 +723,30 @@ static const char *boxer_filesystemControlDriveCurrentDirectory(uintptr_t drive)
     return drive ? ((DOS_Drive *)drive)->curdir : NULL;
 }
 
+static bool boxer_filesystemControlDriveFileExists(uintptr_t drive, const char *path)
+{
+    return drive && path && ((DOS_Drive *)drive)->FileExists(path);
+}
+
+static bool boxer_filesystemControlDriveTestDirectory(uintptr_t drive, const char *path)
+{
+    return drive && path && ((DOS_Drive *)drive)->TestDir((char *)path);
+}
+
+static uintptr_t boxer_filesystemControlMaximumShortNameLength(void)
+{
+    return CROSS_LEN;
+}
+
+static bool boxer_filesystemControlDriveGetShortName(uintptr_t drive, const char *directory,
+                                                     const char *name, char *outName,
+                                                     uintptr_t outNameLength)
+{
+    if (!drive || !directory || !name || !outName || outNameLength < CROSS_LEN)
+        return false;
+    return ((DOS_Drive *)drive)->getShortName(directory, name, outName);
+}
+
 static void boxer_filesystemControlEmptyDriveCache(uintptr_t drive)
 {
     if (drive)
@@ -866,6 +890,10 @@ static BXDOSBoxFilesystemControlBridgeCallbacks BXDOSBoxFilesystemControlCallbac
     boxer_filesystemControlDriveType,
     boxer_filesystemControlDriveSystemPath,
     boxer_filesystemControlDriveCurrentDirectory,
+    boxer_filesystemControlDriveFileExists,
+    boxer_filesystemControlDriveTestDirectory,
+    boxer_filesystemControlMaximumShortNameLength,
+    boxer_filesystemControlDriveGetShortName,
     boxer_filesystemControlEmptyDriveCache,
     boxer_filesystemControlAddDrive,
     boxer_filesystemControlUnmountDrive,

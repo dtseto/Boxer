@@ -12,7 +12,6 @@
 #import <SDL2/SDL.h>
 #import "cpu.h"
 #import "shell.h"
-#import "BXEmulatorCore.h"
 
 
 #pragma mark - Constants
@@ -190,7 +189,7 @@ static BOOL _hasStartedEmulator = NO;
 	{
         _runningProcesses       = [[NSMutableArray alloc] initWithCapacity: 1];
 		_commandQueue           = [[NSMutableArray alloc] initWithCapacity: 4];
-		_driveCache             = [[NSMutableDictionary alloc] initWithCapacity: DOS_DRIVES];
+	_driveCache             = [[NSMutableDictionary alloc] initWithCapacity: [BXEmulatorCore DOSBoxDriveCount]];
 		_pendingSysexMessages   = [[NSMutableArray alloc] initWithCapacity: 4];
         
         self.masterVolume = 1.0f;

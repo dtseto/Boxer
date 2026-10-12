@@ -60,9 +60,6 @@ NSStringEncoding BXDirectStringEncoding		= NSUTF8StringEncoding;
 //defined in dos_execute.cpp
 extern const char* RunningProgram;
 
-//defined in dosbox.cpp
-extern bool ticksLocked;
-
 // DOSBox-Staging 0.82 removed the legacy CPU auto-determine bitfield. Boxer
 // still needs to restore the prior fixed cycle value when toggling auto speed.
 static int CPU_OldCycleMax = 0;
@@ -455,7 +452,10 @@ static BOOL _hasStartedEmulator = NO;
 	}
 }
 
-@synthesize turboSpeed=ticksLocked;
+- (BOOL) isTurboSpeed
+{
+    return [BXEmulatorCore DOSBoxTicksLocked];
+}
 
 - (void) setTurboSpeed: (BOOL)turboSpeed
 {
@@ -463,7 +463,7 @@ static BOOL _hasStartedEmulator = NO;
     {
         if (turboSpeed)
         {
-            ticksLocked = YES;
+            [BXEmulatorCore setDOSBoxTicksLocked:YES];
             
 		    _wasAutoSpeed = ([BXEmulatorCore DOSBoxCycleAutoAdjust] == BXSpeedAuto);
             //Suppress auto-speed temporarily
@@ -478,7 +478,7 @@ static BOOL _hasStartedEmulator = NO;
         }
         else
         {
-            ticksLocked = NO;
+            [BXEmulatorCore setDOSBoxTicksLocked:NO];
             
             //Restore the previous auto-speed value.
             if (_wasAutoSpeed)

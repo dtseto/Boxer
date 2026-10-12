@@ -37,6 +37,8 @@ void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
 void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
 #endif
 
+static bool BXTicksLocked = false;
+
 static CommandLine *BXDOSBoxCommandLine;
 
 static uintptr_t boxer_configurationCreate(void)
@@ -172,6 +174,16 @@ static bool boxer_cpuControlSetCoreMode(uint8_t mode)
     return true;
 }
 
+static bool boxer_cpuControlTicksLocked(void)
+{
+    return BXTicksLocked;
+}
+
+static void boxer_cpuControlSetTicksLocked(bool locked)
+{
+    BXTicksLocked = locked;
+}
+
 static BXDOSBoxConfigurationBridgeCallbacks BXDOSBoxConfigurationCallbacks = {
     boxer_configurationCreate,
     boxer_configurationInitializeConfigDirectory,
@@ -212,7 +224,9 @@ static BXDOSBoxCPUControlBridgeCallbacks BXDOSBoxCPUControlCallbacks = {
     boxer_cpuControlSetCyclePercentageUsed,
     boxer_cpuControlResetCycleCounters,
     boxer_cpuControlCoreMode,
-    boxer_cpuControlSetCoreMode
+    boxer_cpuControlSetCoreMode,
+    boxer_cpuControlTicksLocked,
+    boxer_cpuControlSetTicksLocked
 };
 
 const BXDOSBoxCPUControlBridgeCallbacks *boxer_registeredDOSBoxCPUControlBridge(void)

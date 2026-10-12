@@ -102,6 +102,8 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (void)resetDOSBoxCycleCounters;
 + (uint8_t)DOSBoxCoreMode;
 + (BOOL)setDOSBoxCoreMode:(uint8_t)mode;
++ (BOOL)DOSBoxTicksLocked;
++ (void)setDOSBoxTicksLocked:(BOOL)locked;
 + (uintptr_t)currentDOSBoxShell;
 + (void)writeDOSBoxShellOutput:(uintptr_t)shell text:(const char *)text;
 + (BOOL)dosBoxShellEchoEnabled:(uintptr_t)shell;

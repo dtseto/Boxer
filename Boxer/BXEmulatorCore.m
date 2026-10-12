@@ -350,6 +350,19 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->setCoreMode && bridge->setCoreMode(mode);
 }
 
++ (BOOL)DOSBoxTicksLocked
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    return bridge && bridge->ticksLocked && bridge->ticksLocked();
+}
+
++ (void)setDOSBoxTicksLocked:(BOOL)locked
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    if (bridge && bridge->setTicksLocked)
+        bridge->setTicksLocked(locked);
+}
+
 + (uintptr_t)currentDOSBoxShell
 {
     const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();

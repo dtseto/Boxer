@@ -298,6 +298,46 @@ static BOOL BXConfigurationBoolean(NSString *value)
         bridge->requestShutdown();
 }
 
++ (NSInteger)DOSBoxCycleMaximum
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    return bridge && bridge->cycleMaximum ? bridge->cycleMaximum() : 0;
+}
+
++ (void)setDOSBoxCycleMaximum:(NSInteger)value
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    if (bridge && bridge->setCycleMaximum)
+        bridge->setCycleMaximum((int)value);
+}
+
++ (BOOL)DOSBoxCycleAutoAdjust
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    return bridge && bridge->cycleAutoAdjust && bridge->cycleAutoAdjust();
+}
+
++ (void)setDOSBoxCycleAutoAdjust:(BOOL)enabled
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    if (bridge && bridge->setCycleAutoAdjust)
+        bridge->setCycleAutoAdjust(enabled);
+}
+
++ (void)setDOSBoxCyclePercentageUsed:(NSInteger)value
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    if (bridge && bridge->setCyclePercentageUsed)
+        bridge->setCyclePercentageUsed((int)value);
+}
+
++ (void)resetDOSBoxCycleCounters
+{
+    const BXDOSBoxCPUControlBridgeCallbacks *bridge = boxer_registeredDOSBoxCPUControlBridge();
+    if (bridge && bridge->resetCycleCounters)
+        bridge->resetCycleCounters();
+}
+
 + (uintptr_t)currentDOSBoxShell
 {
     const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();

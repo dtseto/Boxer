@@ -412,7 +412,7 @@ static BOOL _hasStartedEmulator = NO;
 	NSInteger fixedSpeed = 0;
 	if (self.isExecuting)
 	{
-		fixedSpeed = (NSInteger)CPU_CycleMax;
+		fixedSpeed = [BXEmulatorCore DOSBoxCycleMaximum];
 	}
 	return fixedSpeed;
 }
@@ -424,11 +424,11 @@ static BOOL _hasStartedEmulator = NO;
 		//Turn off automatic speed scaling
         self.autoSpeed = NO;
         
-		CPU_OldCycleMax = CPU_CycleMax = (int)newSpeed;
+		CPU_OldCycleMax = (int)newSpeed;
+		[BXEmulatorCore setDOSBoxCycleMaximum:newSpeed];
 		
 		//Wipe out the cycles queue: we do this because DOSBox's CPU functions do whenever they modify the cycles
-		CPU_CycleLeft	= 0;
-		CPU_Cycles		= 0;
+		[BXEmulatorCore resetDOSBoxCycleCounters];
 	}
 }
 
@@ -439,7 +439,7 @@ static BOOL _hasStartedEmulator = NO;
 	{
         //While in turbo mode, report the value we had before we entered turbo.
         if (self.isTurboSpeed) autoSpeed = _wasAutoSpeed;
-        else autoSpeed = (CPU_CycleAutoAdjust == BXSpeedAuto);
+        else autoSpeed = ([BXEmulatorCore DOSBoxCycleAutoAdjust] == BXSpeedAuto);
 	}
 	return autoSpeed;
 }
@@ -457,13 +457,13 @@ static BOOL _hasStartedEmulator = NO;
         else
         {
             //Be a good boy and record/restore the old cycles setting
-            if (autoSpeed)	CPU_OldCycleMax = CPU_CycleMax;
-            else			CPU_CycleMax = CPU_OldCycleMax;
+			if (autoSpeed) CPU_OldCycleMax = (int)[BXEmulatorCore DOSBoxCycleMaximum];
+			else [BXEmulatorCore setDOSBoxCycleMaximum:CPU_OldCycleMax];
             
             //Always force the usage percentage to 100
-            CPU_CyclePercUsed = 100;
+			[BXEmulatorCore setDOSBoxCyclePercentageUsed:100];
             
-            CPU_CycleAutoAdjust = (autoSpeed) ? BXSpeedAuto : BXSpeedFixed;
+			[BXEmulatorCore setDOSBoxCycleAutoAdjust:(autoSpeed == BXSpeedAuto)];
         }
 	}
 }
@@ -478,14 +478,15 @@ static BOOL _hasStartedEmulator = NO;
         {
             ticksLocked = YES;
             
-            _wasAutoSpeed = (CPU_CycleAutoAdjust == BXSpeedAuto);
+		    _wasAutoSpeed = ([BXEmulatorCore DOSBoxCycleAutoAdjust] == BXSpeedAuto);
             //Suppress auto-speed temporarily
             if (_wasAutoSpeed)
             {
-                CPU_CycleAutoAdjust = NO;
+				[BXEmulatorCore setDOSBoxCycleAutoAdjust:NO];
                 //Hurray, magic numbers!
-                CPU_CycleMax /= 3;
-                if (CPU_CycleMax < 1000) CPU_CycleMax = 1000;
+				NSInteger turboCycleMaximum = [BXEmulatorCore DOSBoxCycleMaximum] / 3;
+				if (turboCycleMaximum < 1000) turboCycleMaximum = 1000;
+				[BXEmulatorCore setDOSBoxCycleMaximum:turboCycleMaximum];
             }
         }
         else
@@ -496,7 +497,7 @@ static BOOL _hasStartedEmulator = NO;
             if (_wasAutoSpeed)
             {
                 _wasAutoSpeed = NO;
-                CPU_CycleAutoAdjust = BXSpeedAuto;
+				[BXEmulatorCore setDOSBoxCycleAutoAdjust:YES];
                 //TODO: should we set this using setAutoSpeed:?
             }
         }
@@ -559,8 +560,7 @@ static BOOL _hasStartedEmulator = NO;
 		}
 		
 		//Reset DOSBox's emulated cycles counters
-		CPU_CycleLeft=0;
-		CPU_Cycles=0;
+		[BXEmulatorCore resetDOSBoxCycleCounters];
 	}
 }
 

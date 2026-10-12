@@ -23,6 +23,7 @@
 #import "mouse.h"
 #import "cross.h"
 #import "shell.h"
+#import "cpu.h"
 #import "regs.h"
 #import "callback.h"
 #import "drives.h"
@@ -82,6 +83,37 @@ static void boxer_configurationRequestShutdown(void)
     shutdown_requested = true;
 }
 
+static int boxer_cpuControlCycleMaximum(void)
+{
+    return CPU_CycleMax;
+}
+
+static void boxer_cpuControlSetCycleMaximum(int value)
+{
+    CPU_CycleMax = value;
+}
+
+static bool boxer_cpuControlCycleAutoAdjust(void)
+{
+    return CPU_CycleAutoAdjust;
+}
+
+static void boxer_cpuControlSetCycleAutoAdjust(bool enabled)
+{
+    CPU_CycleAutoAdjust = enabled;
+}
+
+static void boxer_cpuControlSetCyclePercentageUsed(int value)
+{
+    CPU_CyclePercUsed = value;
+}
+
+static void boxer_cpuControlResetCycleCounters(void)
+{
+    CPU_CycleLeft = 0;
+    CPU_Cycles = 0;
+}
+
 static BXDOSBoxConfigurationBridgeCallbacks BXDOSBoxConfigurationCallbacks = {
     boxer_configurationCreate,
     boxer_configurationInitializeConfigDirectory,
@@ -112,6 +144,20 @@ const BXDOSBoxConfigurationBridgeCallbacks *boxer_registeredDOSBoxConfigurationB
         boxer_registerDOSBoxConfigurationBridge(&BXDOSBoxConfigurationCallbacks);
     }
     return &BXDOSBoxConfigurationCallbacks;
+}
+
+static BXDOSBoxCPUControlBridgeCallbacks BXDOSBoxCPUControlCallbacks = {
+    boxer_cpuControlCycleMaximum,
+    boxer_cpuControlSetCycleMaximum,
+    boxer_cpuControlCycleAutoAdjust,
+    boxer_cpuControlSetCycleAutoAdjust,
+    boxer_cpuControlSetCyclePercentageUsed,
+    boxer_cpuControlResetCycleCounters
+};
+
+const BXDOSBoxCPUControlBridgeCallbacks *boxer_registeredDOSBoxCPUControlBridge(void)
+{
+    return &BXDOSBoxCPUControlCallbacks;
 }
 
 #pragma mark - Runloop state functions

@@ -94,6 +94,12 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (void)destroyDOSBoxConfiguration:(uintptr_t)configuration;
 + (BOOL)dosBoxShutdownRequested;
 + (void)requestDOSBoxShutdown;
++ (NSInteger)DOSBoxCycleMaximum;
++ (void)setDOSBoxCycleMaximum:(NSInteger)value;
++ (BOOL)DOSBoxCycleAutoAdjust;
++ (void)setDOSBoxCycleAutoAdjust:(BOOL)enabled;
++ (void)setDOSBoxCyclePercentageUsed:(NSInteger)value;
++ (void)resetDOSBoxCycleCounters;
 + (uintptr_t)currentDOSBoxShell;
 + (void)writeDOSBoxShellOutput:(uintptr_t)shell text:(const char *)text;
 + (BOOL)dosBoxShellEchoEnabled:(uintptr_t)shell;

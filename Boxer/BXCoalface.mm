@@ -672,6 +672,69 @@ const BXDOSBoxFilesystemBridgeCallbacks *boxer_registeredDOSBoxFilesystemBridge(
     return BXDOSBoxFilesystemCallbacksRegistered ? &BXDOSBoxFilesystemCallbacks : NULL;
 }
 
+static uintptr_t boxer_filesystemControlDriveCount(void)
+{
+    return DOS_DRIVES;
+}
+
+static uint8_t boxer_filesystemControlDefaultDriveIndex(void)
+{
+    return DOS_GetDefaultDrive();
+}
+
+static uintptr_t boxer_filesystemControlMaximumPathLength(void)
+{
+    return DOS_PATHLENGTH;
+}
+
+static bool boxer_filesystemControlMakeName(const char *dosPath, char *outPath,
+                                            uintptr_t outPathLength, uint8_t *outDriveIndex)
+{
+    if (!dosPath || !outPath || !outDriveIndex || outPathLength < DOS_PATHLENGTH)
+        return false;
+    return DOS_MakeName(dosPath, outPath, outDriveIndex);
+}
+
+static uintptr_t boxer_filesystemControlDriveAtIndex(uint8_t driveIndex)
+{
+    if (driveIndex >= DOS_DRIVES || !Drives[driveIndex])
+        return 0;
+    return (uintptr_t)Drives[driveIndex].get();
+}
+
+static void boxer_filesystemControlEmptyDriveCache(uintptr_t drive)
+{
+    if (drive)
+        ((DOS_Drive *)drive)->EmptyCache();
+}
+
+static BXDOSBoxFilesystemControlBridgeCallbacks BXDOSBoxFilesystemControlCallbacks = {
+    boxer_filesystemControlDriveCount,
+    boxer_filesystemControlDefaultDriveIndex,
+    boxer_filesystemControlMaximumPathLength,
+    boxer_filesystemControlMakeName,
+    boxer_filesystemControlDriveAtIndex,
+    boxer_filesystemControlEmptyDriveCache
+};
+
+static bool BXDOSBoxFilesystemControlCallbacksRegistered = false;
+
+void boxer_registerDOSBoxFilesystemControlBridge(const BXDOSBoxFilesystemControlBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxFilesystemControlCallbacks = *callbacks;
+        BXDOSBoxFilesystemControlCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxFilesystemControlBridgeCallbacks *boxer_registeredDOSBoxFilesystemControlBridge(void)
+{
+    if (!BXDOSBoxFilesystemControlCallbacksRegistered)
+        boxer_registerDOSBoxFilesystemControlBridge(&BXDOSBoxFilesystemControlCallbacks);
+    return &BXDOSBoxFilesystemControlCallbacks;
+}
+
 #pragma mark - Input functions
 
 const char * boxer_preferredKeyboardLayout()

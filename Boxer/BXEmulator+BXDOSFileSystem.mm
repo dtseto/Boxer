@@ -6,6 +6,7 @@
  */
 
 #import "BXEmulatorPrivate.h"
+#import "BXEmulatorCore.h"
 
 #import "BXDrive.h"
 #import "NSString+ADBPaths.h"
@@ -20,6 +21,7 @@
 #import "mem.h"
 
 #include <array>
+#include <vector>
 
 
 #pragma mark - Private constants
@@ -449,9 +451,10 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	if (self.isExecuting)
 	{
-		for (NSUInteger i=0; i < DOS_DRIVES; i++)
+		for (NSUInteger i=0; i < [BXEmulatorCore DOSBoxDriveCount]; i++)
 		{
-		if (Drives[i]) Drives[i]->EmptyCache();
+			uintptr_t drive = [BXEmulatorCore DOSBoxDriveAtIndex:i];
+			if (drive) [BXEmulatorCore emptyDOSBoxDriveCache:drive];
 		}
 	}
 }
@@ -555,7 +558,7 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 {
 	if (self.isExecuting)
 	{
-		return [[self.class driveLetters] objectAtIndex: DOS_GetDefaultDrive()];
+		return [[self.class driveLetters] objectAtIndex: [BXEmulatorCore DOSBoxDefaultDriveIndex]];
 	}
 	else return nil;
 }
@@ -580,9 +583,13 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		//If the path couldn't be encoded successfully, don't do further lookups
 		if (!dosPath) return nil;
 		
-		char fullPath[DOS_PATHLENGTH];
+		NSUInteger pathLength = [BXEmulatorCore maximumDOSBoxPathLength];
+		if (!pathLength) return nil;
+		std::vector<char> fullPath(pathLength);
 		uint8_t driveIndex;
-		BOOL resolved = DOS_MakeName(dosPath, fullPath, &driveIndex);
+		BOOL resolved = [BXEmulatorCore makeDOSBoxPath:dosPath into:fullPath.data()
+		                                      capacity:fullPath.size()
+		                                   driveIndex:&driveIndex];
                 
 		if (resolved)
 		{
@@ -602,14 +609,18 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		//If the path couldn't be encoded successfully, don't do further lookups
 		if (!dosPath) return nil;
 		
-		char fullPath[DOS_PATHLENGTH];
+		NSUInteger pathLength = [BXEmulatorCore maximumDOSBoxPathLength];
+		if (!pathLength) return nil;
+		std::vector<char> fullPath(pathLength);
 		uint8_t driveIndex;
-		BOOL resolved = DOS_MakeName(dosPath, fullPath, &driveIndex);
+		BOOL resolved = [BXEmulatorCore makeDOSBoxPath:dosPath into:fullPath.data()
+		                                      capacity:fullPath.size()
+		                                   driveIndex:&driveIndex];
         
 		if (resolved)
 		{
             NSString *driveLetter = [self _driveLetterForIndex: driveIndex];
-            NSString *resolvedPath = [NSString stringWithCString: fullPath encoding: BXDirectStringEncoding];
+			NSString *resolvedPath = [NSString stringWithCString: fullPath.data() encoding: BXDirectStringEncoding];
             
             return [NSString stringWithFormat: @"%@:\\%@", driveLetter, resolvedPath];
 		}
@@ -655,14 +666,18 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 		if (!dosCPath)
             return nil;
 		
-		char fullPath[DOS_PATHLENGTH];
+		NSUInteger pathLength = [BXEmulatorCore maximumDOSBoxPathLength];
+		if (!pathLength) return nil;
+		std::vector<char> fullPath(pathLength);
 		uint8_t driveIndex;
-		BOOL resolved = DOS_MakeName(dosCPath, fullPath, &driveIndex);
+		BOOL resolved = [BXEmulatorCore makeDOSBoxPath:dosCPath into:fullPath.data()
+		                                      capacity:fullPath.size()
+		                                   driveIndex:&driveIndex];
         
 		if (resolved)
 		{
 			DOS_Drive *dosboxDrive = Drives[driveIndex].get();
-			NSURL *localURL	= [self _filesystemURLForDOSPath: fullPath onDOSBoxDrive: dosboxDrive];
+			NSURL *localURL	= [self _filesystemURLForDOSPath: fullPath.data() onDOSBoxDrive: dosboxDrive];
 			
 			if (localURL)
             {
@@ -689,15 +704,19 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
             return nil;
 		
         //First resolve what could be a relative path to an absolute one and determine which drive it's located on.
-		char fullCPath[DOS_PATHLENGTH];
+		NSUInteger pathLength = [BXEmulatorCore maximumDOSBoxPathLength];
+		if (!pathLength) return nil;
+		std::vector<char> fullCPath(pathLength);
 		uint8_t driveIndex;
-		BOOL resolved = DOS_MakeName(dosCPath, fullCPath, &driveIndex);
+		BOOL resolved = [BXEmulatorCore makeDOSBoxPath:dosCPath into:fullCPath.data()
+		                                      capacity:fullCPath.size()
+		                                   driveIndex:&driveIndex];
         
         //Then, ask the Boxer drive itself to hand over a logical URL that will correspond to that resource.
 		if (resolved)
 		{
             BXDrive *drive = [self _driveFromDOSBoxDriveAtIndex: driveIndex];
-            NSString *fullPath = [NSString stringWithCString: fullCPath encoding: BXDirectStringEncoding];
+			NSString *fullPath = [NSString stringWithCString: fullCPath.data() encoding: BXDirectStringEncoding];
             return [drive logicalURLForDOSPath: fullPath];
 		}
 		else return nil;

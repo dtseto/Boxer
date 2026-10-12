@@ -343,6 +343,46 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->maximumCommandLineLength ? bridge->maximumCommandLineLength() : 0;
 }
 
++ (NSUInteger)DOSBoxDriveCount
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveCount ? bridge->driveCount() : 0;
+}
+
++ (NSUInteger)DOSBoxDefaultDriveIndex
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->defaultDriveIndex ? bridge->defaultDriveIndex() : 0;
+}
+
++ (NSUInteger)maximumDOSBoxPathLength
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->maximumPathLength ? bridge->maximumPathLength() : 0;
+}
+
++ (BOOL)makeDOSBoxPath:(const char *)path
+                 into:(char *)outPath
+             capacity:(NSUInteger)capacity
+          driveIndex:(uint8_t *)outDriveIndex
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->makeName && bridge->makeName(path, outPath, capacity, outDriveIndex);
+}
+
++ (uintptr_t)DOSBoxDriveAtIndex:(NSUInteger)index
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    return bridge && bridge->driveAtIndex ? bridge->driveAtIndex((uint8_t)index) : 0;
+}
+
++ (void)emptyDOSBoxDriveCache:(uintptr_t)drive
+{
+    const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();
+    if (bridge && bridge->emptyDriveCache)
+        bridge->emptyDriveCache(drive);
+}
+
 - (instancetype)initWithGamebox:(BXGamebox *)gamebox
                          session:(BXSession *)session
 {

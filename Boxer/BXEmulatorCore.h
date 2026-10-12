@@ -83,6 +83,15 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (BOOL)changeDOSBoxDirectory:(const char *)path;
 + (BOOL)setDOSBoxDrive:(NSUInteger)driveIndex;
 + (NSUInteger)maximumDOSBoxShellCommandLineLength;
++ (NSUInteger)DOSBoxDriveCount;
++ (NSUInteger)DOSBoxDefaultDriveIndex;
++ (NSUInteger)maximumDOSBoxPathLength;
++ (BOOL)makeDOSBoxPath:(const char *)path
+                 into:(char *)outPath
+             capacity:(NSUInteger)capacity
+          driveIndex:(uint8_t *)outDriveIndex;
++ (uintptr_t)DOSBoxDriveAtIndex:(NSUInteger)index;
++ (void)emptyDOSBoxDriveCache:(uintptr_t)drive;
 
 - (instancetype)initWithGamebox:(nullable BXGamebox *)gamebox
                          session:(nullable BXSession *)session NS_DESIGNATED_INITIALIZER;

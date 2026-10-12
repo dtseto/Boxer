@@ -103,6 +103,7 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (BOOL)changeDOSBoxDirectory:(const char *)path;
 + (BOOL)setDOSBoxDrive:(NSUInteger)driveIndex;
 + (NSUInteger)maximumDOSBoxShellCommandLineLength;
++ (void)clearDOSBoxShellScreen;
 + (NSUInteger)DOSBoxDriveCount;
 + (NSUInteger)DOSBoxDefaultDriveIndex;
 + (NSUInteger)maximumDOSBoxPathLength;

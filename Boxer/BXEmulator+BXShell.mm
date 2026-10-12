@@ -13,10 +13,6 @@
 #import "BXBaseAppController.h"
 #import "BXEmulatedMT32.h"
 
-#import "dos_inc.h"
-#import "regs.h"
-#import "callback.h"
-
 #include <vector>
 
 
@@ -391,9 +387,7 @@ nil];
 {
     if (!self.isRunningActiveProcess)
     {
-        //Copypasta from CMD_CLS.
-        reg_ax=0x0003;
-        CALLBACK_RunRealInt(0x10);
+        [BXEmulatorCore clearDOSBoxShellScreen];
     }
 }
 @end

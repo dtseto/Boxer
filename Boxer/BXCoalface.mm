@@ -23,6 +23,8 @@
 #import "mouse.h"
 #import "cross.h"
 #import "shell.h"
+#import "regs.h"
+#import "callback.h"
 #import "drives.h"
 #import "src/dos/dos_keyboard_layout.h"
 #import "ADBFilesystem.h"
@@ -1323,6 +1325,12 @@ static uintptr_t boxer_shellControlMaximumCommandLineLength(void)
     return CMD_MAXLINE;
 }
 
+static void boxer_shellControlClearScreen(void)
+{
+    reg_ax = 0x0003;
+    CALLBACK_RunRealInt(0x10);
+}
+
 static BXDOSBoxShellControlBridgeCallbacks BXDOSBoxShellControlCallbacks = {
     boxer_shellControlCurrentShell,
     boxer_shellControlWriteOutput,
@@ -1333,7 +1341,8 @@ static BXDOSBoxShellControlBridgeCallbacks BXDOSBoxShellControlCallbacks = {
     boxer_shellControlDoCommand,
     boxer_shellControlChangeDirectory,
     boxer_shellControlSetDrive,
-    boxer_shellControlMaximumCommandLineLength
+    boxer_shellControlMaximumCommandLineLength,
+    boxer_shellControlClearScreen
 };
 
 static bool BXDOSBoxShellControlCallbacksRegistered = false;

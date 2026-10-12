@@ -355,6 +355,13 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->maximumCommandLineLength ? bridge->maximumCommandLineLength() : 0;
 }
 
++ (void)clearDOSBoxShellScreen
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    if (bridge && bridge->clearScreen)
+        bridge->clearScreen();
+}
+
 + (NSUInteger)DOSBoxDriveCount
 {
     const BXDOSBoxFilesystemControlBridgeCallbacks *bridge = boxer_registeredDOSBoxFilesystemControlBridge();

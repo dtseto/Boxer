@@ -6,9 +6,6 @@
  */
 
 #import "BXKeyBuffer.h"
-#import "dosbox.h"
-#import "bios.h"
-#import "pic.h"
 
 //For unicode constants
 #import <Cocoa/Cocoa.h>

@@ -218,6 +218,60 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->joystickSupportLevel ? bridge->joystickSupportLevel() : 0;
 }
 
++ (uintptr_t)createDOSBoxConfiguration
+{
+    const BXDOSBoxConfigurationBridgeCallbacks *bridge = boxer_registeredDOSBoxConfigurationBridge();
+    return bridge && bridge->create ? bridge->create() : 0;
+}
+
++ (void)initializeDOSBoxConfigurationDirectory
+{
+    const BXDOSBoxConfigurationBridgeCallbacks *bridge = boxer_registeredDOSBoxConfigurationBridge();
+    if (bridge && bridge->initializeConfigDirectory)
+        bridge->initializeConfigDirectory();
+}
+
++ (void)initializeDOSBox
+{
+    const BXDOSBoxConfigurationBridgeCallbacks *bridge = boxer_registeredDOSBoxConfigurationBridge();
+    if (bridge && bridge->initializeDOSBox)
+        bridge->initializeDOSBox();
+}
+
++ (void)parseDOSBoxConfiguration:(uintptr_t)configuration path:(const char *)path
+{
+    const BXDOSBoxConfigurationBridgeCallbacks *bridge = boxer_registeredDOSBoxConfigurationBridge();
+    if (bridge && bridge->parseConfigFile)
+        bridge->parseConfigFile(configuration, path);
+}
+
++ (void)initializeDOSBoxConfiguration:(uintptr_t)configuration
+{
+    const BXDOSBoxConfigurationBridgeCallbacks *bridge = boxer_registeredDOSBoxConfigurationBridge();
+    if (bridge && bridge->initialize)
+        bridge->initialize(configuration);
+}
+
++ (void)startDOSBoxConfiguration:(uintptr_t)configuration
+{
+    const BXDOSBoxConfigurationBridgeCallbacks *bridge = boxer_registeredDOSBoxConfigurationBridge();
+    if (bridge && bridge->startUp)
+        bridge->startUp(configuration);
+}
+
++ (void)destroyDOSBoxConfiguration:(uintptr_t)configuration
+{
+    const BXDOSBoxConfigurationBridgeCallbacks *bridge = boxer_registeredDOSBoxConfigurationBridge();
+    if (bridge && bridge->destroy)
+        bridge->destroy(configuration);
+}
+
++ (BOOL)dosBoxShutdownRequested
+{
+    const BXDOSBoxConfigurationBridgeCallbacks *bridge = boxer_registeredDOSBoxConfigurationBridge();
+    return bridge && bridge->shutdownRequested && bridge->shutdownRequested();
+}
+
 - (instancetype)initWithGamebox:(BXGamebox *)gamebox
                          session:(BXSession *)session
 {

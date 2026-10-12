@@ -64,6 +64,14 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (NSUInteger)gameportTimingMode;
 + (void)setGameportTimingMode:(NSUInteger)mode;
 + (NSUInteger)joystickSupportLevel;
++ (uintptr_t)createDOSBoxConfiguration;
++ (void)initializeDOSBoxConfigurationDirectory;
++ (void)initializeDOSBox;
++ (void)parseDOSBoxConfiguration:(uintptr_t)configuration path:(const char *)path;
++ (void)initializeDOSBoxConfiguration:(uintptr_t)configuration;
++ (void)startDOSBoxConfiguration:(uintptr_t)configuration;
++ (void)destroyDOSBoxConfiguration:(uintptr_t)configuration;
++ (BOOL)dosBoxShutdownRequested;
 
 - (instancetype)initWithGamebox:(nullable BXGamebox *)gamebox
                          session:(nullable BXSession *)session NS_DESIGNATED_INITIALIZER;

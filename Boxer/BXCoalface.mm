@@ -16,12 +16,92 @@
 #import "BXVideoHandler.h"
 #import "Rendering/BXVideoFrame.h"
 #import "setup.h"
+#import "control.h"
 #import "mapper.h"
 #import "joystick.h"
 #import "mouse.h"
 #import "cross.h"
 #import "shell.h"
 #import "ADBFilesystem.h"
+
+static CommandLine *BXDOSBoxCommandLine;
+
+static uintptr_t boxer_configurationCreate(void)
+{
+    char const *argv[0];
+    BXDOSBoxCommandLine = new CommandLine(0, argv);
+    control.reset(new Config(BXDOSBoxCommandLine));
+    return (uintptr_t)control.get();
+}
+
+static void boxer_configurationInitializeConfigDirectory(void)
+{
+    InitConfigDir();
+}
+
+static void boxer_configurationInitializeDOSBox(void)
+{
+    DOSBOX_Init();
+}
+
+static void boxer_configurationParseConfigFile(uintptr_t configuration, const char *path)
+{
+    ((Config *)configuration)->ParseConfigFile("custom", path);
+}
+
+static void boxer_configurationInitialize(uintptr_t configuration)
+{
+    ((Config *)configuration)->Init();
+}
+
+static void boxer_configurationStartUp(uintptr_t configuration)
+{
+    ((Config *)configuration)->StartUp();
+}
+
+static void boxer_configurationDestroy(uintptr_t configuration)
+{
+    (void)configuration;
+    control.reset();
+    delete BXDOSBoxCommandLine;
+    BXDOSBoxCommandLine = NULL;
+}
+
+static bool boxer_configurationShutdownRequested(void)
+{
+    return shutdown_requested;
+}
+
+static BXDOSBoxConfigurationBridgeCallbacks BXDOSBoxConfigurationCallbacks = {
+    boxer_configurationCreate,
+    boxer_configurationInitializeConfigDirectory,
+    boxer_configurationInitializeDOSBox,
+    boxer_configurationParseConfigFile,
+    boxer_configurationInitialize,
+    boxer_configurationStartUp,
+    boxer_configurationDestroy,
+    boxer_configurationShutdownRequested
+};
+
+static bool BXDOSBoxConfigurationCallbacksRegistered = false;
+
+void boxer_registerDOSBoxConfigurationBridge(const BXDOSBoxConfigurationBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxConfigurationCallbacks = *callbacks;
+        BXDOSBoxConfigurationCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxConfigurationBridgeCallbacks *boxer_registeredDOSBoxConfigurationBridge(void)
+{
+    if (!BXDOSBoxConfigurationCallbacksRegistered)
+    {
+        boxer_registerDOSBoxConfigurationBridge(&BXDOSBoxConfigurationCallbacks);
+    }
+    return &BXDOSBoxConfigurationCallbacks;
+}
 
 #pragma mark - Runloop state functions
 

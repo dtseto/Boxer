@@ -7,13 +7,11 @@
 
 #import "BXEmulatorPrivate.h"
 #import "NSObject+ADBPerformExtensions.h"
+#import "BXEmulatorCore.h"
 
 #import <SDL2/SDL.h>
 #import "cpu.h"
-#import "control.h"
-#import "cross.h"
 #import "shell.h"
-#import "mapper.h"
 #import "BXEmulatorCore.h"
 
 
@@ -87,8 +85,8 @@ void CPU_Core_Dynrec_Cache_Init(bool enable_cache);
 
 @implementation BXEmulator
 {
-    CommandLine *commandLine;
-    Config *configuration;
+    uintptr_t configuration;
+    uintptr_t commandLine;
     BXEmulatorStartupPhaseCallback _startupPhaseCallback;
 }
 @synthesize processName = _processName;
@@ -1011,20 +1009,18 @@ static BOOL _hasStartedEmulator = NO;
         @autoreleasepool {
         
             //Create a new configuration instance and feed it an empty set of parameters.
-            char const *argv[0];
-            commandLine = new CommandLine(0, argv);
-            control.reset(new Config(commandLine));
-            configuration = control.get();
+            configuration = [BXEmulatorCore createDOSBoxConfiguration];
+            commandLine = configuration;
             if (self.startupPhaseCallback)
                 self.startupPhaseCallback(BXEmulatorStartupPhaseConfigurationCreated);
             
             //DOSBox Staging 0.79 caches its platform configuration directory
             //before DOS and the virtual Z: drive are initialized.
-            InitConfigDir();
+            [BXEmulatorCore initializeDOSBoxConfigurationDirectory];
 
             //Sets up the vast swathes of DOSBox configuration file parameters,
             //and registers the shell to start up when we finish initializing.
-            DOSBOX_Init();
+            [BXEmulatorCore initializeDOSBox];
             if (self.startupPhaseCallback)
                 self.startupPhaseCallback(BXEmulatorStartupPhaseDOSBoxConfigured);
 
@@ -1033,11 +1029,11 @@ static BOOL _hasStartedEmulator = NO;
             for (NSURL *configURL in configURLs)
             {
                 const char *encodedConfigPath = configURL.fileSystemRepresentation;
-                control->ParseConfigFile("custom", encodedConfigPath);
+                [BXEmulatorCore parseDOSBoxConfiguration:configuration path:encodedConfigPath];
             }
 
             //Initialise each DOSBox module based on the loaded configuration.
-            control->Init();
+            [BXEmulatorCore initializeDOSBoxConfiguration:configuration];
 
             // Keep this nil-by-default checkpoint after real subsystem initialization:
             // lifecycle regression tests use it to prove exceptional rollback and reuse.
@@ -1048,7 +1044,7 @@ static BOOL _hasStartedEmulator = NO;
         }
         
 		//Start up the main machine.
-		control->StartUp();
+		[BXEmulatorCore startDOSBoxConfiguration:configuration];
 	}
 	catch (char *errMessage)
 	{
@@ -1058,10 +1054,9 @@ static BOOL _hasStartedEmulator = NO;
         // clean up DOSBox state explicitly before raising.
         SDL_Quit();
         [self.videoHandler shutdown];
-        control.reset();
-        configuration = NULL;
-        delete commandLine;
-        commandLine = NULL;
+        [BXEmulatorCore destroyDOSBoxConfiguration:configuration];
+        configuration = 0;
+        commandLine = 0;
 
         NSString *reason = [NSString stringWithCString: errMessage encoding: BXDirectStringEncoding];
         [NSException raise: BXEmulatorUnrecoverableException
@@ -1075,10 +1070,9 @@ static BOOL _hasStartedEmulator = NO;
         // clean up DOSBox state explicitly before raising.
         SDL_Quit();
         [self.videoHandler shutdown];
-        control.reset();
-        configuration = NULL;
-        delete commandLine;
-        commandLine = NULL;
+        [BXEmulatorCore destroyDOSBoxConfiguration:configuration];
+        configuration = 0;
+        commandLine = 0;
 
         NSException *exception = [BXEmulatorException exceptionWithName: BXEmulatorUnrecoverableException
                                                       originalException: &e];
@@ -1093,10 +1087,9 @@ static BOOL _hasStartedEmulator = NO;
 	//Clean up after DOSBox finishes.
     SDL_Quit();
 	[self.videoHandler shutdown];
-    control.reset();
-    configuration = NULL;
-    delete commandLine;
-    commandLine = NULL;
+    [BXEmulatorCore destroyDOSBoxConfiguration:configuration];
+    configuration = 0;
+    commandLine = 0;
 }
 
 @end

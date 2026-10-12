@@ -87,6 +87,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
                               "BXDOSBoxInputBridgeCallbacks", "BXDOSBoxJoystickBridgeCallbacks",
                               "BXDOSBoxShellBridgeCallbacks",
                               "BXDOSBoxFilesystemBridgeCallbacks", "BXDOSBoxRunLoopBridgeCallbacks",
+                              "BXDOSBoxConfigurationBridgeCallbacks",
                               "BXDOSBoxEventBridgeCallbacks", "BXDOSBoxRenderingBridgeCallbacks",
                               "BXDOSBoxDiagnosticsBridgeCallbacks"] {
             XCTAssertTrue(header.contains(callbackTable), "Missing public callback table: \(callbackTable)")
@@ -155,7 +156,7 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/dosbox.cpp", marker: "runloop-context", contains: "boxer_runLoopDidFinishWithContextInfo(contextInfo);")
         try expect("src/dos/dos_files.cpp", contains: "Drives.fill(nullptr);")
         let emulator = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator.mm"))
-        XCTAssertTrue(emulator.contains("InitConfigDir();"))
+        XCTAssertTrue(emulator.contains("initializeDOSBoxConfigurationDirectory"))
     }
 
     func testBuildCompatibilityContracts() throws {
@@ -179,6 +180,29 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("src/dosbox.cpp", contains: "parallel1")
         try expect("src/dosbox.cpp", contains: "parallel2")
         try expect("src/dosbox.cpp", contains: "parallel3")
+    }
+
+    func testEmulatorConfigurationLifecycleUsesAdapterBoundary() throws {
+        let emulator = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator.mm"))
+        let core = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatorCore.m"))
+        let coalface = try source(at: projectRoot.appendingPathComponent("Boxer/BXCoalface.mm"))
+        let registrationHeader = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxBridgeRegistration.h"))
+
+        for directDOSBoxImport in ["#import \"control.h\"", "#import \"cross.h\"", "#import \"mapper.h\""] {
+            XCTAssertFalse(emulator.contains(directDOSBoxImport))
+        }
+        for directConfigurationCall in ["new Config", "new CommandLine", "ParseConfigFile", "control->Init", "control->StartUp"] {
+            XCTAssertFalse(emulator.contains(directConfigurationCall))
+        }
+        for adapterCall in ["createDOSBoxConfiguration", "initializeDOSBoxConfigurationDirectory",
+                            "initializeDOSBox", "parseDOSBoxConfiguration", "initializeDOSBoxConfiguration",
+                            "startDOSBoxConfiguration", "destroyDOSBoxConfiguration"] {
+            XCTAssertTrue(emulator.contains(adapterCall))
+            XCTAssertTrue(core.contains(adapterCall))
+        }
+        XCTAssertTrue(registrationHeader.contains("BXDOSBoxConfigurationBridgeCallbacks"))
+        XCTAssertTrue(coalface.contains("new Config(BXDOSBoxCommandLine)"))
+        XCTAssertTrue(coalface.contains("boxer_configurationDestroy"))
     }
 
     func testMIDIRoutingContracts() throws {
@@ -343,10 +367,9 @@ final class BoxerIntegrationContractTests: XCTestCase {
             XCTAssertTrue(handler.contains("self.executing = NO;"))
             XCTAssertTrue(handler.contains("SDL_Quit();"))
             XCTAssertTrue(handler.contains("[self.videoHandler shutdown];"))
-            XCTAssertTrue(handler.contains("control.reset();"))
-            XCTAssertTrue(handler.contains("configuration = NULL;"))
-            XCTAssertTrue(handler.contains("delete commandLine;"))
-            XCTAssertTrue(handler.contains("commandLine = NULL;"))
+            XCTAssertTrue(handler.contains("destroyDOSBoxConfiguration"))
+            XCTAssertTrue(handler.contains("configuration = 0;"))
+            XCTAssertTrue(handler.contains("commandLine = 0;"))
         }
     }
 

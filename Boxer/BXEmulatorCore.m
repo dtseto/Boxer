@@ -272,6 +272,70 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->shutdownRequested && bridge->shutdownRequested();
 }
 
++ (uintptr_t)currentDOSBoxShell
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    return bridge && bridge->currentShell ? bridge->currentShell() : 0;
+}
+
++ (void)writeDOSBoxShellOutput:(uintptr_t)shell text:(const char *)text
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    if (bridge && bridge->writeOutput)
+        bridge->writeOutput(shell, text);
+}
+
++ (BOOL)dosBoxShellEchoEnabled:(uintptr_t)shell
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    return bridge && bridge->echoEnabled && bridge->echoEnabled(shell);
+}
+
++ (BOOL)dosBoxShellHasNoBatchFiles:(uintptr_t)shell
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    return bridge && bridge->hasNoBatchFiles && bridge->hasNoBatchFiles(shell);
+}
+
++ (void)showDOSBoxShellPrompt:(uintptr_t)shell
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    if (bridge && bridge->showPrompt)
+        bridge->showPrompt(shell);
+}
+
++ (void)parseDOSBoxShellLine:(uintptr_t)shell line:(char *)line
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    if (bridge && bridge->parseLine)
+        bridge->parseLine(shell, line);
+}
+
++ (void)executeDOSBoxShellCommand:(uintptr_t)shell command:(char *)command
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    if (bridge && bridge->doCommand)
+        bridge->doCommand(shell, command);
+}
+
++ (BOOL)changeDOSBoxDirectory:(const char *)path
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    return bridge && bridge->changeDirectory && bridge->changeDirectory(path);
+}
+
++ (BOOL)setDOSBoxDrive:(NSUInteger)driveIndex
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    return bridge && bridge->setDrive && bridge->setDrive((uint8_t)driveIndex);
+}
+
++ (NSUInteger)maximumDOSBoxShellCommandLineLength
+{
+    const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();
+    return bridge && bridge->maximumCommandLineLength ? bridge->maximumCommandLineLength() : 0;
+}
+
 - (instancetype)initWithGamebox:(BXGamebox *)gamebox
                          session:(BXSession *)session
 {

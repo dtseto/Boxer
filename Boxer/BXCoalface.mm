@@ -458,12 +458,12 @@ const BXDOSBoxRenderingBridgeCallbacks *boxer_registeredDOSBoxRenderingBridge(vo
 
 void boxer_shellWillStart(DOS_Shell *shell)
 {
-	[[BXEmulator currentEmulator] _shellWillStart: shell];
+	[[BXEmulator currentEmulator] _shellWillStart: (uintptr_t)shell];
 }
 
 void boxer_shellDidFinish(DOS_Shell *shell)
 {
-	[[BXEmulator currentEmulator] _shellDidFinish: shell];
+	[[BXEmulator currentEmulator] _shellDidFinish: (uintptr_t)shell];
 }
 
 bool boxer_shellShouldContinue(DOS_Shell *shell)
@@ -573,7 +573,7 @@ void boxer_shellDidEndBatchFile(DOS_Shell *shell, const char *canonicalPath)
 bool boxer_shellShouldDisplayStartupMessages(DOS_Shell *shell)
 {
     BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _shouldDisplayStartupMessagesForShell: shell];
+    return [emulator _shouldDisplayStartupMessagesForShell: (uintptr_t)shell];
 }
 
 
@@ -952,6 +952,87 @@ const BXDOSBoxShellBridgeCallbacks *boxer_registeredDOSBoxShellBridge(void)
         boxer_registerDOSBoxShellBridge(&callbacks);
     }
     return BXDOSBoxShellCallbacksRegistered ? &BXDOSBoxShellCallbacks : NULL;
+}
+
+static uintptr_t boxer_shellControlCurrentShell(void)
+{
+    return (uintptr_t)currentShell;
+}
+
+static void boxer_shellControlWriteOutput(uintptr_t shell, const char *text)
+{
+    ((DOS_Shell *)shell)->WriteOut_NoParsing(text);
+}
+
+static bool boxer_shellControlEchoEnabled(uintptr_t shell)
+{
+    return ((DOS_Shell *)shell)->echo;
+}
+
+static bool boxer_shellControlHasNoBatchFiles(uintptr_t shell)
+{
+    return ((DOS_Shell *)shell)->hasNoBatchFiles();
+}
+
+static void boxer_shellControlShowPrompt(uintptr_t shell)
+{
+    ((DOS_Shell *)shell)->ShowPrompt();
+}
+
+static void boxer_shellControlParseLine(uintptr_t shell, char *line)
+{
+    ((DOS_Shell *)shell)->ParseLine(line);
+}
+
+static void boxer_shellControlDoCommand(uintptr_t shell, char *command)
+{
+    ((DOS_Shell *)shell)->DoCommand(command);
+}
+
+static bool boxer_shellControlChangeDirectory(const char *path)
+{
+    return DOS_ChangeDir(path);
+}
+
+static bool boxer_shellControlSetDrive(uint8_t driveIndex)
+{
+    return DOS_SetDrive(driveIndex);
+}
+
+static uintptr_t boxer_shellControlMaximumCommandLineLength(void)
+{
+    return CMD_MAXLINE;
+}
+
+static BXDOSBoxShellControlBridgeCallbacks BXDOSBoxShellControlCallbacks = {
+    boxer_shellControlCurrentShell,
+    boxer_shellControlWriteOutput,
+    boxer_shellControlEchoEnabled,
+    boxer_shellControlHasNoBatchFiles,
+    boxer_shellControlShowPrompt,
+    boxer_shellControlParseLine,
+    boxer_shellControlDoCommand,
+    boxer_shellControlChangeDirectory,
+    boxer_shellControlSetDrive,
+    boxer_shellControlMaximumCommandLineLength
+};
+
+static bool BXDOSBoxShellControlCallbacksRegistered = false;
+
+void boxer_registerDOSBoxShellControlBridge(const BXDOSBoxShellControlBridgeCallbacks *callbacks)
+{
+    if (callbacks)
+    {
+        BXDOSBoxShellControlCallbacks = *callbacks;
+        BXDOSBoxShellControlCallbacksRegistered = true;
+    }
+}
+
+const BXDOSBoxShellControlBridgeCallbacks *boxer_registeredDOSBoxShellControlBridge(void)
+{
+    if (!BXDOSBoxShellControlCallbacksRegistered)
+        boxer_registerDOSBoxShellControlBridge(&BXDOSBoxShellControlCallbacks);
+    return &BXDOSBoxShellControlCallbacks;
 }
 
 

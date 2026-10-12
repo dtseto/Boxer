@@ -72,6 +72,16 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (void)startDOSBoxConfiguration:(uintptr_t)configuration;
 + (void)destroyDOSBoxConfiguration:(uintptr_t)configuration;
 + (BOOL)dosBoxShutdownRequested;
++ (uintptr_t)currentDOSBoxShell;
++ (void)writeDOSBoxShellOutput:(uintptr_t)shell text:(const char *)text;
++ (BOOL)dosBoxShellEchoEnabled:(uintptr_t)shell;
++ (BOOL)dosBoxShellHasNoBatchFiles:(uintptr_t)shell;
++ (void)showDOSBoxShellPrompt:(uintptr_t)shell;
++ (void)parseDOSBoxShellLine:(uintptr_t)shell line:(char *)line;
++ (void)executeDOSBoxShellCommand:(uintptr_t)shell command:(char *)command;
++ (BOOL)changeDOSBoxDirectory:(const char *)path;
++ (BOOL)setDOSBoxDrive:(NSUInteger)driveIndex;
++ (NSUInteger)maximumDOSBoxShellCommandLineLength;
 
 - (instancetype)initWithGamebox:(nullable BXGamebox *)gamebox
                          session:(nullable BXSession *)session NS_DESIGNATED_INITIALIZER;

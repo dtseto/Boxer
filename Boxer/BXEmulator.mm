@@ -286,7 +286,7 @@ static BOOL _hasStartedEmulator = NO;
             [self pause];
         
             //Tells DOSBox to close the current shell at the end of the commandline input loop
-            DOS_Shell *shell = self._currentShell;
+            uintptr_t shell = self._currentShell;
             if (shell) shutdown_requested = YES;
         }
 
@@ -829,9 +829,9 @@ static BOOL _hasStartedEmulator = NO;
     }
 }
 
-- (DOS_Shell *) _currentShell
+- (uintptr_t) _currentShell
 {
-	return currentShell;
+	return [BXEmulatorCore currentDOSBoxShell];
 }
 
 - (void) _postNotificationName: (NSString *)name

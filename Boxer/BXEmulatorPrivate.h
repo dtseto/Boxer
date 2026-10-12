@@ -186,7 +186,7 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 
 /// The current innermost shell instance.
 /// This is either the current process or the shell that spawned the current process.
-- (DOS_Shell *) _currentShell;
+- (uintptr_t) _currentShell;
 
 /// Called when DOSBox is ready to process events during the run loop.
 /// Calls the emulator delegate's methods for pumping the event loop.
@@ -580,17 +580,17 @@ typedef void (^BXEmulatorStartupPhaseCallback)(BXEmulatorStartupPhase phase);
 
 /// Whether to display the startup preamble for the specified shell.
 /// Passes the decision on to the delegate by calling @c -emulatorShouldDisplayStartupMessages:
-- (BOOL) _shouldDisplayStartupMessagesForShell: (DOS_Shell *)shell;
+- (BOOL) _shouldDisplayStartupMessagesForShell: (uintptr_t)shell;
 
 /// Called by DOSBox whenever control returns to the DOS prompt: this includes when a program exits but also when a new shell
 /// process is opened. Sends the @c BXEmulatorDidReturnToShellNotification delegate notification.
 - (void) _didReturnToShell;
 
 /// Called by DOSBox whenever a new shell process is opened. Currently does nothing.
-- (void) _shellWillStart: (DOS_Shell *)shell;
+- (void) _shellWillStart: (uintptr_t)shell;
 
 /// Called by DOSBox whenever a shell process exits. Currently does nothing.
-- (void) _shellDidFinish: (DOS_Shell *)shell;
+- (void) _shellDidFinish: (uintptr_t)shell;
 
 /// Called by DOSBox just before AUTOEXEC.BAT is started. Sends the BXEmulatorWillRunStartupCommandsNotification delegate notification.
 - (void) _willRunStartupCommands;

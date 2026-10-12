@@ -615,6 +615,19 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expect("src/shell/shell.cpp", contains: "boxer_shellDidEndBatchFile")
         try expectBlock("src/shell/shell_misc.cpp", marker: "program-launch-lifecycle", contains: "boxer_shellWillExecuteFileAtDOSPath")
         try expectBlock("src/shell/shell_misc.cpp", marker: "program-launch-lifecycle", contains: "boxer_shellDidExecuteFileAtDOSPath")
+
+        let shell = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator+BXShell.mm"))
+        let core = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatorCore.m"))
+        let registrationHeader = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxBridgeRegistration.h"))
+        XCTAssertFalse(shell.contains("#import \"shell.h\""))
+        for adapterCall in ["writeDOSBoxShellOutput", "dosBoxShellEchoEnabled", "dosBoxShellHasNoBatchFiles",
+                            "parseDOSBoxShellLine", "executeDOSBoxShellCommand", "changeDOSBoxDirectory",
+                            "setDOSBoxDrive"] {
+            XCTAssertTrue(shell.contains(adapterCall))
+            XCTAssertTrue(core.contains(adapterCall))
+        }
+        XCTAssertTrue(registrationHeader.contains("BXDOSBoxShellControlBridgeCallbacks"))
+        XCTAssertTrue(registrationHeader.contains("maximumCommandLineLength"))
     }
 
     func testShellCommandUXContracts() throws {

@@ -6,15 +6,18 @@
  */
 
 #import "BXEmulatorPrivate.h"
+#import "BXEmulatorCore.h"
 
 #import "BXDrive.h"
 #import "BXValueTransformers.h"
 #import "BXBaseAppController.h"
 #import "BXEmulatedMT32.h"
 
-#import "shell.h"
+#import "dos_inc.h"
 #import "regs.h"
 #import "callback.h"
+
+#include <vector>
 
 
 //Lookup table of BXEmulator+BXShell selectors and the shell commands that call them
@@ -149,8 +152,7 @@ nil];
 		
 		if (encodedString != NULL)
 		{
-			DOS_Shell *shell = self._currentShell;
-			shell->WriteOut_NoParsing(encodedString);
+			[BXEmulatorCore writeDOSBoxShellOutput:self._currentShell text:encodedString];
 		}
 	}
 }
@@ -193,7 +195,7 @@ nil];
 			dosPath = [dosPath substringToIndex:dosPath.length - 1];
 		}
 		const char *dir = [dosPath cStringUsingEncoding: BXDirectStringEncoding];
-		if (dir) changedPath = DOS_ChangeDir(dir) || changedPath;
+		if (dir) changedPath = [BXEmulatorCore changeDOSBoxDirectory:dir] || changedPath;
         
         [self didChangeValueForKey: @"currentDirectoryURL"];
 	}
@@ -211,7 +213,7 @@ nil];
 {
     [self willChangeValueForKey: @"currentDirectoryURL"];
     
-	BOOL changedPath = DOS_SetDrive([self _indexOfDriveLetter: driveLetter]);
+	BOOL changedPath = [BXEmulatorCore setDOSBoxDrive:[self _indexOfDriveLetter: driveLetter]];
 	if (changedPath)
     {
         [self discardShellInput];
@@ -419,15 +421,15 @@ nil];
         
         if (command.length)
         {
-            DOS_Shell *shell = self._currentShell;
+            uintptr_t shell = self._currentShell;
             
-            BOOL printCommand = shell->echo;
+            BOOL printCommand = [BXEmulatorCore dosBoxShellEchoEnabled:shell];
             
             //The printing behaviour below matches DOSBox's handling of batch file lines:
             //q.v. shell.cpp.
-            if (printCommand && (shell->hasNoBatchFiles() || [command characterAtIndex: 0] != '@'))
+            if (printCommand && ([BXEmulatorCore dosBoxShellHasNoBatchFiles:shell] || [command characterAtIndex: 0] != '@'))
             {
-                shell->ShowPrompt();
+                [BXEmulatorCore showDOSBoxShellPrompt:shell];
                 
                 [self displayString: command];
                 [self displayString: @"\n"];
@@ -449,21 +451,21 @@ nil];
 - (void) _parseCommand: (NSString *)command
               encoding: (NSStringEncoding)encoding
 {
-    NSAssert2([command lengthOfBytesUsingEncoding: encoding] < CMD_MAXLINE,
-              @"Command exceeded maximum commandline length of %u: %@", CMD_MAXLINE, command);
+    NSUInteger commandLineLength = [BXEmulatorCore maximumDOSBoxShellCommandLineLength];
+    NSAssert2([command lengthOfBytesUsingEncoding: encoding] < commandLineLength,
+              @"Command exceeded maximum commandline length of %lu: %@", (unsigned long)commandLineLength, command);
     
-    char encodedCommand[CMD_MAXLINE];
+    std::vector<char> encodedCommand(commandLineLength);
     
-    BOOL encoded = [command getCString: encodedCommand
-                             maxLength: CMD_MAXLINE
+    BOOL encoded = [command getCString: encodedCommand.data()
+                             maxLength: commandLineLength
                               encoding: encoding];
     if (encoded)
     {
         if (self.clearsScreenBeforeCommandExecution)
             [self clearScreen];
         
-        DOS_Shell *shell = [self _currentShell];
-        shell->ParseLine(encodedCommand);
+		[BXEmulatorCore parseDOSBoxShellLine:self._currentShell line:encodedCommand.data()];
     }
     else
     {
@@ -539,16 +541,16 @@ nil];
 {
 	if (self.isExecuting)
 	{
-        NSAssert2([command lengthOfBytesUsingEncoding: encoding] < CMD_MAXLINE,
-                  @"Command exceeded maximum commandline length of %u: %@", CMD_MAXLINE, command);
+        NSUInteger commandLineLength = [BXEmulatorCore maximumDOSBoxShellCommandLineLength];
+        NSAssert2([command lengthOfBytesUsingEncoding: encoding] < commandLineLength,
+                  @"Command exceeded maximum commandline length of %lu: %@", (unsigned long)commandLineLength, command);
         
-        char cmd[CMD_MAXLINE];
-        BOOL encoded = [command getCString: cmd maxLength: CMD_MAXLINE encoding: encoding];
+        std::vector<char> cmd(commandLineLength);
+        BOOL encoded = [command getCString: cmd.data() maxLength: commandLineLength encoding: encoding];
         
 		if (encoded)
 		{
-			DOS_Shell *shell = self._currentShell;
-			shell->DoCommand(cmd);
+			[BXEmulatorCore executeDOSBoxShellCommand:self._currentShell command:cmd.data()];
 		}
 	}
 }
@@ -630,7 +632,7 @@ nil];
 }
  */
 
-- (BOOL) _shouldDisplayStartupMessagesForShell: (DOS_Shell *)shell
+- (BOOL) _shouldDisplayStartupMessagesForShell: (uintptr_t)shell
 {
     if ([self.delegate respondsToSelector: @selector(emulatorShouldDisplayStartupMessages:)])
         return [self.delegate emulatorShouldDisplayStartupMessages: self];
@@ -749,12 +751,12 @@ nil];
 					   userInfo: notificationInfo];
 }
 
-- (void) _shellWillStart: (DOS_Shell *)shell
+- (void) _shellWillStart: (uintptr_t)shell
 {
 
 }
 
-- (void) _shellDidFinish: (DOS_Shell *)shell
+- (void) _shellDidFinish: (uintptr_t)shell
 {
     
 }

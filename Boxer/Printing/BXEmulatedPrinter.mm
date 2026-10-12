@@ -7,6 +7,7 @@
 
 #import "BXEmulatorPrivate.h"
 #import "BXEmulatedPrinter.h"
+#import "../DOSBox-Staging/include/types.h"
 #import "printer_charmaps.h"
 #import "BXPrintSession.h"
 

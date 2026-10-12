@@ -7,6 +7,8 @@
 
 
 #import "BXCoalface.h"
+#import "render.h"
+#import "vga.h"
 #define BXDOSBOX_BRIDGE_IMPLEMENTATION 1
 #import "../DOSBox-Staging/include/BXDOSBoxBridgeRegistration.h"
 #undef BXDOSBOX_BRIDGE_IMPLEMENTATION
@@ -251,7 +253,7 @@ Bitu boxer_prepareForFrameSize(Bitu width, Bitu height, Bitu gfx_flags, double s
 
 	NSSize outputSize	= NSMakeSize((CGFloat)width, (CGFloat)height);
 	NSSize scale		= NSMakeSize((CGFloat)scalex, (CGFloat)scaley);
-	[[emulator videoHandler] prepareForOutputSize: outputSize atScale: scale withCallback: callback];
+	[[emulator videoHandler] prepareForOutputSize: outputSize atScale: scale withCallback: (void *)(uintptr_t)callback];
 	
 	return GFX_CAN_32;
 }
@@ -317,6 +319,15 @@ static void boxer_renderingBridgeSetCGACompositeHueOffset(double offset) { boxer
 static uint8_t boxer_renderingBridgeCGAComponentMode(void) { return boxer_CGAComponentMode(); }
 static void boxer_renderingBridgeSetCGAComponentMode(uint8_t mode) { boxer_setCGAComponentMode(mode); }
 static int boxer_renderingBridgeGetDisplayRefreshRate(void) { return boxer_GetDisplayRefreshRate(); }
+static uintptr_t boxer_renderingBridgeCurrentVideoWidth(void) { return (uintptr_t)render.src.width; }
+static uintptr_t boxer_renderingBridgeCurrentVideoHeight(void) { return (uintptr_t)render.src.height; }
+static bool boxer_renderingBridgeCurrentVideoModeIsText(void)
+{
+    return vga.mode == M_TEXT || vga.mode == M_TANDY_TEXT || vga.mode == M_HERC_TEXT;
+}
+static bool boxer_renderingBridgeCurrentMachineIsHercules(void) { return machine == MCH_HERC; }
+static bool boxer_renderingBridgeCurrentMachineIsCGA(void) { return machine == MCH_CGA; }
+static void boxer_renderingBridgeSetRenderScale(uintptr_t scale) { render.scale.size = (Bitu)scale; }
 
 static BXDOSBoxRenderingBridgeCallbacks BXDOSBoxRenderingCallbacks;
 static bool BXDOSBoxRenderingCallbacksRegistered = false;
@@ -348,7 +359,13 @@ const BXDOSBoxRenderingBridgeCallbacks *boxer_registeredDOSBoxRenderingBridge(vo
             boxer_renderingBridgeSetCGACompositeHueOffset,
             boxer_renderingBridgeCGAComponentMode,
             boxer_renderingBridgeSetCGAComponentMode,
-            boxer_renderingBridgeGetDisplayRefreshRate
+            boxer_renderingBridgeGetDisplayRefreshRate,
+            boxer_renderingBridgeCurrentVideoWidth,
+            boxer_renderingBridgeCurrentVideoHeight,
+            boxer_renderingBridgeCurrentVideoModeIsText,
+            boxer_renderingBridgeCurrentMachineIsHercules,
+            boxer_renderingBridgeCurrentMachineIsCGA,
+            boxer_renderingBridgeSetRenderScale
         };
         boxer_registerDOSBoxRenderingBridge(&callbacks);
     }

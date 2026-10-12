@@ -9,6 +9,9 @@
 #import "BXConfigKey.h"
 #import "BXGamebox.h"
 #import "BXEmulatorConfiguration.h"
+#define BXDOSBOX_BRIDGE_IMPLEMENTATION 1
+#import "BXDOSBoxBridgeRegistration.h"
+#undef BXDOSBOX_BRIDGE_IMPLEMENTATION
 
 static NSString * const BXCPUSection = @"cpu";
 static NSString * const BXCPUTypeKey = @"cputype";
@@ -70,6 +73,60 @@ static BOOL BXConfigurationBoolean(NSString *value)
 @end
 
 @implementation BXEmulatorCore
+
++ (NSSize)currentVideoResolution
+{
+    const BXDOSBoxRenderingBridgeCallbacks *bridge = boxer_registeredDOSBoxRenderingBridge();
+    if (!bridge || !bridge->currentVideoWidth || !bridge->currentVideoHeight)
+        return NSZeroSize;
+    return NSMakeSize((CGFloat)bridge->currentVideoWidth(), (CGFloat)bridge->currentVideoHeight());
+}
+
++ (BOOL)currentVideoModeIsText
+{
+    const BXDOSBoxRenderingBridgeCallbacks *bridge = boxer_registeredDOSBoxRenderingBridge();
+    return bridge && bridge->currentVideoModeIsText && bridge->currentVideoModeIsText();
+}
+
++ (BOOL)currentMachineIsHercules
+{
+    const BXDOSBoxRenderingBridgeCallbacks *bridge = boxer_registeredDOSBoxRenderingBridge();
+    return bridge && bridge->currentMachineIsHercules && bridge->currentMachineIsHercules();
+}
+
++ (BOOL)currentMachineIsCGA
+{
+    const BXDOSBoxRenderingBridgeCallbacks *bridge = boxer_registeredDOSBoxRenderingBridge();
+    return bridge && bridge->currentMachineIsCGA && bridge->currentMachineIsCGA();
+}
+
++ (void)setVideoScale:(NSUInteger)scale
+{
+    const BXDOSBoxRenderingBridgeCallbacks *bridge = boxer_registeredDOSBoxRenderingBridge();
+    if (bridge && bridge->setRenderScale)
+        bridge->setRenderScale((uintptr_t)scale);
+}
+
++ (void)setHerculesTintMode:(uint8_t)mode
+{
+    const BXDOSBoxRenderingBridgeCallbacks *bridge = boxer_registeredDOSBoxRenderingBridge();
+    if (bridge && bridge->setHerculesTintMode)
+        bridge->setHerculesTintMode(mode);
+}
+
++ (void)setCGACompositeHueOffset:(double)offset
+{
+    const BXDOSBoxRenderingBridgeCallbacks *bridge = boxer_registeredDOSBoxRenderingBridge();
+    if (bridge && bridge->setCGACompositeHueOffset)
+        bridge->setCGACompositeHueOffset(offset);
+}
+
++ (void)setCGAComponentMode:(uint8_t)mode
+{
+    const BXDOSBoxRenderingBridgeCallbacks *bridge = boxer_registeredDOSBoxRenderingBridge();
+    if (bridge && bridge->setCGAComponentMode)
+        bridge->setCGAComponentMode(mode);
+}
 
 - (instancetype)initWithGamebox:(BXGamebox *)gamebox
                          session:(BXSession *)session

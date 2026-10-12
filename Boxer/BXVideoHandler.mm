@@ -7,16 +7,15 @@
 
 
 #import "BXVideoHandler.h"
-#define BXDOSBOX_BRIDGE_IMPLEMENTATION 1
-#import "../DOSBox-Staging/include/BXDOSBoxBridgeRegistration.h"
-#undef BXDOSBOX_BRIDGE_IMPLEMENTATION
+#import "BXEmulatorCore.h"
 #import "BXEmulatorPrivate.h"
 #import "BXVideoFrame.h"
 #import "ADBGeometry.h"
 #import "BXFilterDefinitions.h"
 
-#import "render.h"
-#import "vga.h"
+typedef void (*BXVideoCallback)(NSInteger function);
+static NSInteger const BXVideoCallbackReset = 0;
+static NSInteger const BXVideoCallbackStop = 1;
 
 
 #pragma mark -
@@ -57,7 +56,7 @@
     self = [super init];
 	if (self)
 	{
-		_currentVideoMode = M_TEXT;
+		_currentVideoMode = NO;
         _herculesTint = BXHerculesWhiteTint;
         _CGAComposite = BXCGACompositeAuto;
         _CGAHueAdjustment = 0.0;
@@ -70,8 +69,7 @@
 	NSSize size = NSZeroSize;
 	if (self.emulator.isExecuting)
 	{
-		size.width	= (CGFloat)render.src.width;
-		size.height	= (CGFloat)render.src.height;
+		size = [BXEmulatorCore currentVideoResolution];
 	}
 	return size;
 }
@@ -82,13 +80,7 @@
 	BOOL textMode = NO;
 	if (self.emulator.isExecuting)
 	{
-		switch (_currentVideoMode)
-		{
-			case M_TEXT:
-            case M_TANDY_TEXT:
-            case M_HERC_TEXT:
-                textMode = YES;
-		}
+		textMode = _currentVideoMode;
 	}
 	return textMode;
 }
@@ -102,7 +94,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        return (machine == MCH_HERC);
+        return [BXEmulatorCore currentMachineIsHercules];
     }
     else
     {
@@ -118,7 +110,7 @@
 - (BOOL) isInCGAMode
 {
     if (self.emulator.isInitialized)
-        return (machine == MCH_CGA);
+        return [BXEmulatorCore currentMachineIsCGA];
     else return NO;
 }
 
@@ -168,7 +160,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_registeredDOSBoxRenderingBridge()->setHerculesTintMode((uint8_t)self.herculesTint);
+        [BXEmulatorCore setHerculesTintMode:(uint8_t)self.herculesTint];
     }
 }
 
@@ -184,7 +176,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_registeredDOSBoxRenderingBridge()->setCGAComponentMode((uint8_t)self.CGAComposite);
+        [BXEmulatorCore setCGAComponentMode:(uint8_t)self.CGAComposite];
     }
 }
 
@@ -198,7 +190,7 @@
 {
     if (self.emulator.isInitialized)
     {
-        boxer_registeredDOSBoxRenderingBridge()->setCGACompositeHueOffset(self.CGAHueAdjustment);
+        [BXEmulatorCore setCGACompositeHueOffset:self.CGAHueAdjustment];
     }
 }
 
@@ -220,7 +212,7 @@
         {
             if (_frameInProgress) [self finishFrameWithChanges: NULL];
             
-            if (_callback) _callback(GFX_CallBackReset);
+            if (_callback) ((BXVideoCallback)_callback)(BXVideoCallbackReset);
             //CPU_Reset_AutoAdjust();
         }
 	}
@@ -229,7 +221,7 @@
 - (void) shutdown
 {
 	[self finishFrameWithChanges: 0];
-	if (_callback) _callback(GFX_CallBackStop);
+	if (_callback) ((BXVideoCallback)_callback)(BXVideoCallbackStop);
 }
 
 
@@ -238,14 +230,15 @@
 
 - (void) prepareForOutputSize: (NSSize)outputSize
                       atScale: (NSSize)scale
-                 withCallback: (GFX_CallBack_t)newCallback
+                 withCallback: (void *)newCallback
 {
 	//Synchronise our record of the current video mode with the new video mode
 	BOOL wasTextMode = self.isInTextMode;
-	if (_currentVideoMode != vga.mode)
+	BOOL currentVideoModeIsText = [BXEmulatorCore currentVideoModeIsText];
+	if (_currentVideoMode != currentVideoModeIsText)
 	{
 		[self willChangeValueForKey: @"inTextMode"];
-		_currentVideoMode = vga.mode;
+		_currentVideoMode = currentVideoModeIsText;
 		[self didChangeValueForKey: @"inTextMode"];
 	}
 	BOOL nowTextMode = self.isInTextMode;
@@ -381,7 +374,7 @@
 	
 	//Finally, apply the values to DOSBox
 	// Aspect correction is handled by the Boxer rendering adapter.
-    render.scale.size = (Bitu)filterScale;
+    [BXEmulatorCore setVideoScale:filterScale];
     
     
     //While we're here, sync up the CGA and hercules color modes if appropriate

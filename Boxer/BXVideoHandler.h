@@ -11,11 +11,6 @@
 
 #import <Foundation/Foundation.h>
 
-#if __cplusplus
-#import "config.h"
-#import "video.h"
-#endif
-
 /// These constants are for reference and correspond directly to constants defined in DOSBox's render_scalers.h
 typedef NS_ENUM(NSUInteger, BXFilterType) {
 	BXFilterNormal		= 0,
@@ -96,10 +91,8 @@ typedef NS_ENUM(uint8_t, BXCGACompositeMode) {
     BXCGACompositeMode _CGAComposite;
     double _CGAHueAdjustment;
 	
-#if __cplusplus
-	/// This is a C++ function pointer and should never be seen by Obj-C classes
-	GFX_CallBack_t _callback;
-#endif
+	/// Opaque DOSBox callback pointer, interpreted only by BXVideoHandler.mm.
+	void *_callback;
 }
 
 #pragma mark -
@@ -145,8 +138,6 @@ typedef NS_ENUM(uint8_t, BXCGACompositeMode) {
 @end
 
 
-#if __cplusplus
-
 #pragma mark -
 #pragma mark Almost-private functions
 
@@ -165,12 +156,10 @@ typedef NS_ENUM(uint8_t, BXCGACompositeMode) {
 							  blue: (NSUInteger)blue;
 
 - (void) prepareForOutputSize: (NSSize)outputSize
-					  atScale: (NSSize)scale
-				 withCallback: (GFX_CallBack_t)newCallback;
+						  atScale: (NSSize)scale
+					 withCallback: (void *)newCallback;
 
 - (BOOL) startFrameWithBuffer: (void **)frameBuffer pitch: (int *)pitch;
 - (void) finishFrameWithChanges: (const uint16_t *)dirtyBlocks;
 
 @end
-
-#endif

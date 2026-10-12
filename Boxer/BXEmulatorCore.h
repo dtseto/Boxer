@@ -38,6 +38,15 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 /// The public boundary for Boxer emulator configuration and control.
 @interface BXEmulatorCore : NSObject
 
++ (NSSize)currentVideoResolution;
++ (BOOL)currentVideoModeIsText;
++ (BOOL)currentMachineIsHercules;
++ (BOOL)currentMachineIsCGA;
++ (void)setVideoScale:(NSUInteger)scale;
++ (void)setHerculesTintMode:(uint8_t)mode;
++ (void)setCGACompositeHueOffset:(double)offset;
++ (void)setCGAComponentMode:(uint8_t)mode;
+
 - (instancetype)initWithGamebox:(nullable BXGamebox *)gamebox
                          session:(nullable BXSession *)session NS_DESIGNATED_INITIALIZER;
 

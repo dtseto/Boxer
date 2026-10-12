@@ -56,7 +56,7 @@
         NSURL *backup = [self backupWithError:error];
         if ([[NSFileManager defaultManager] fileExistsAtPath:self.gamebox.configurationFileURL.path] && !backup) return NO;
         for (NSString *section in configuration.settings)
-            for (NSString *key in [configuration settingsForSection:section])
+            for (NSString *key in [configuration settingsForSection:section].allKeys)
                 [configuration removeValueForKey:key inSection:section];
         [configuration removeStartupCommands];
         if (![configuration writeToURL:self.gamebox.configurationFileURL error:error]) return NO;

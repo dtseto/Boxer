@@ -73,7 +73,7 @@
         //If this key is not already pressed, tell the emulator the key has been pressed.
         if (!_pressedKeys[key])
         {
-            KEYBOARD_AddKey(key, YES);
+            [BXEmulatorCore sendKeyboardKey:(uint16_t)key pressed:YES];
         }
         _pressedKeys[key]++;
     }
@@ -100,7 +100,7 @@
         //If this was the last press of this key,
         //tell the emulator to finally release the key.
         if (!_pressedKeys[key])
-            KEYBOARD_AddKey(key, NO);
+            [BXEmulatorCore sendKeyboardKey:(uint16_t)key pressed:NO];
 	}
 }
 
@@ -261,7 +261,7 @@
         BOOL pressed = (code >= 0);
         
         code = ABS(code);
-        KEYBOARD_AddKey((BXDOSKeyCode)code, pressed);
+        [BXEmulatorCore sendKeyboardKey:(uint16_t)code pressed:pressed];
         _pressedKeys[code] = (NSUInteger)pressed;
         
         numProcessed++;

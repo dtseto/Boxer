@@ -152,6 +152,12 @@ static BOOL BXConfigurationBoolean(NSString *value)
         bridge->mouseButton((uint8_t)button, pressed);
 }
 
++ (void)sendKeyboardKey:(uint16_t)key pressed:(BOOL)pressed
+{
+    const BXDOSBoxInputBridgeCallbacks *bridge = boxer_registeredDOSBoxInputBridge();
+    if (bridge && bridge->keyboardKey) bridge->keyboardKey(key, pressed);
+}
+
 + (void)setJoystickEnabled:(BOOL)enabled atIndex:(NSUInteger)index
 {
     const BXDOSBoxJoystickBridgeCallbacks *bridge = boxer_registeredDOSBoxJoystickBridge();

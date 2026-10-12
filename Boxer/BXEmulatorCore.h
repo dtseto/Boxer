@@ -70,6 +70,7 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
                        absoluteX:(int32_t)absoluteX
                        absoluteY:(int32_t)absoluteY;
 + (void)sendMouseButton:(NSUInteger)button pressed:(BOOL)pressed;
++ (void)sendKeyboardKey:(uint16_t)key pressed:(BOOL)pressed;
 + (void)setJoystickEnabled:(BOOL)enabled atIndex:(NSUInteger)index;
 + (void)setJoystickButton:(NSUInteger)button
                    pressed:(BOOL)pressed

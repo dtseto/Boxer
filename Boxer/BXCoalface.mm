@@ -1067,6 +1067,11 @@ static void boxer_inputBridgeSwitchKeyboardLayout(const char *layout, int32_t co
     DOS_SwitchKeyboardLayout(layout, triedCodepage);
 }
 
+static void boxer_inputBridgeKeyboardKey(uint16_t key, bool pressed)
+{
+    KEYBOARD_AddKey((KBD_KEYS)key, pressed);
+}
+
 
 static BXDOSBoxInputBridgeCallbacks BXDOSBoxInputCallbacks;
 static bool BXDOSBoxInputCallbacksRegistered = false;
@@ -1094,7 +1099,8 @@ const BXDOSBoxInputBridgeCallbacks *boxer_registeredDOSBoxInputBridge(void)
             boxer_setScrollLockActive,
             boxer_inputBridgeSwitchKeyboardLayout,
             boxer_inputBridgeMouseMoved,
-            boxer_inputBridgeMouseButton
+            boxer_inputBridgeMouseButton,
+            boxer_inputBridgeKeyboardKey
         };
         boxer_registerDOSBoxInputBridge(&callbacks);
     }

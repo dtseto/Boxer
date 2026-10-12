@@ -9,9 +9,8 @@
 #import "BXEmulatedKeyboard.h"
 #import "BXEmulator.h"
 #import "BXHostBridge.h"
+#import "BXEmulatorCore.h"
 #import "NSObject+ADBPerformExtensions.h"
-
-#include "src/dos/dos_keyboard_layout.h"
 
 //For unicode constants
 #import <Cocoa/Cocoa.h>
@@ -333,7 +332,7 @@
         if (boxer_keyboardLayoutSupported(layoutName))
         {   
             int32_t codepage = -1;
-            DOS_SwitchKeyboardLayout(layoutName, codepage);
+            [BXEmulatorCore switchDOSBoxKeyboardLayout:layoutName codepage:codepage];
         }
         
         //Whether we can apply it or not, mark this as our preferred layout so that

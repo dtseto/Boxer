@@ -46,6 +46,7 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (void)setHerculesTintMode:(uint8_t)mode;
 + (void)setCGACompositeHueOffset:(double)offset;
 + (void)setCGAComponentMode:(uint8_t)mode;
++ (void)switchDOSBoxKeyboardLayout:(const char *)layout codepage:(int32_t)codepage;
 + (void)sendMouseMovedWithDeltaX:(float)deltaX
                            deltaY:(float)deltaY
                        absoluteX:(int32_t)absoluteX

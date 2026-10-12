@@ -22,6 +22,7 @@
 #import "mouse.h"
 #import "cross.h"
 #import "shell.h"
+#import "src/dos/dos_keyboard_layout.h"
 #import "ADBFilesystem.h"
 
 static CommandLine *BXDOSBoxCommandLine;
@@ -762,6 +763,12 @@ static void boxer_inputBridgeMouseButton(uint8_t button, bool pressed)
     MOUSE_EventButton(static_cast<MouseButtonId>(button), pressed);
 }
 
+static void boxer_inputBridgeSwitchKeyboardLayout(const char *layout, int32_t codepage)
+{
+    int32_t triedCodepage = codepage;
+    DOS_SwitchKeyboardLayout(layout, triedCodepage);
+}
+
 
 static BXDOSBoxInputBridgeCallbacks BXDOSBoxInputCallbacks;
 static bool BXDOSBoxInputCallbacksRegistered = false;
@@ -787,6 +794,7 @@ const BXDOSBoxInputBridgeCallbacks *boxer_registeredDOSBoxInputBridge(void)
             boxer_setCapsLockActive,
             boxer_setNumLockActive,
             boxer_setScrollLockActive,
+            boxer_inputBridgeSwitchKeyboardLayout,
             boxer_inputBridgeMouseMoved,
             boxer_inputBridgeMouseButton
         };

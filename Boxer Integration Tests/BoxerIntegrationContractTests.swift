@@ -306,6 +306,13 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/dos/dos_keyboard_layout.cpp", marker: "keyboard-layout-bridge", contains: "boxer_setKeyboardLayoutActive")
         try expect("src/dos/dos_keyboard_layout.cpp", contains: "boxer_preferredKeyboardLayout()")
         try expect("include/BXDOSBoxBridgeRegistration.h", contains: "preferredKeyboardLayout")
+        let keyboard = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatedKeyboard.mm"))
+        let core = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulatorCore.m"))
+        let registrationHeader = try source(at: dosboxRoot.appendingPathComponent("include/BXDOSBoxBridgeRegistration.h"))
+        XCTAssertFalse(keyboard.contains("DOS_SwitchKeyboardLayout"))
+        XCTAssertTrue(keyboard.contains("switchDOSBoxKeyboardLayout"))
+        XCTAssertTrue(core.contains("bridge->switchKeyboardLayout"))
+        XCTAssertTrue(registrationHeader.contains("switchKeyboardLayout"))
         try expect("include/BXDOSBoxLegacyCompatibility.h", contains: "boxer_preferredKeyboardLayout() boxer_registeredDOSBoxInputBridge()")
     }
 

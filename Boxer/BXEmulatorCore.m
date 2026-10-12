@@ -128,6 +128,13 @@ static BOOL BXConfigurationBoolean(NSString *value)
         bridge->setCGAComponentMode(mode);
 }
 
++ (void)switchDOSBoxKeyboardLayout:(const char *)layout codepage:(int32_t)codepage
+{
+    const BXDOSBoxInputBridgeCallbacks *bridge = boxer_registeredDOSBoxInputBridge();
+    if (bridge && bridge->switchKeyboardLayout)
+        bridge->switchKeyboardLayout(layout, codepage);
+}
+
 + (void)sendMouseMovedWithDeltaX:(float)deltaX
                            deltaY:(float)deltaY
                        absoluteX:(int32_t)absoluteX

@@ -291,6 +291,13 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return bridge && bridge->shutdownRequested && bridge->shutdownRequested();
 }
 
++ (void)requestDOSBoxShutdown
+{
+    const BXDOSBoxConfigurationBridgeCallbacks *bridge = boxer_registeredDOSBoxConfigurationBridge();
+    if (bridge && bridge->requestShutdown)
+        bridge->requestShutdown();
+}
+
 + (uintptr_t)currentDOSBoxShell
 {
     const BXDOSBoxShellControlBridgeCallbacks *bridge = boxer_registeredDOSBoxShellControlBridge();

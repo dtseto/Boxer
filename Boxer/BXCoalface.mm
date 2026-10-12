@@ -77,6 +77,11 @@ static bool boxer_configurationShutdownRequested(void)
     return shutdown_requested;
 }
 
+static void boxer_configurationRequestShutdown(void)
+{
+    shutdown_requested = true;
+}
+
 static BXDOSBoxConfigurationBridgeCallbacks BXDOSBoxConfigurationCallbacks = {
     boxer_configurationCreate,
     boxer_configurationInitializeConfigDirectory,
@@ -85,7 +90,8 @@ static BXDOSBoxConfigurationBridgeCallbacks BXDOSBoxConfigurationCallbacks = {
     boxer_configurationInitialize,
     boxer_configurationStartUp,
     boxer_configurationDestroy,
-    boxer_configurationShutdownRequested
+    boxer_configurationShutdownRequested,
+    boxer_configurationRequestShutdown
 };
 
 static bool BXDOSBoxConfigurationCallbacksRegistered = false;

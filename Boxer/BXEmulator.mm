@@ -286,7 +286,7 @@ static BOOL _hasStartedEmulator = NO;
         
             //Tells DOSBox to close the current shell at the end of the commandline input loop
             uintptr_t shell = self._currentShell;
-            if (shell) shutdown_requested = YES;
+            if (shell) [BXEmulatorCore requestDOSBoxShutdown];
         }
 
         self.cancelled = YES;
@@ -960,7 +960,7 @@ static BOOL _hasStartedEmulator = NO;
 	//TWEAK: it's only safe to break out once initialization is done, since some
 	//of DOSBox's initialization routines rely on running tasks on the run loop
 	//and may crash if they fail to complete.
-	if ((self.isCancelled || shutdown_requested) && self.isInitialized)
+	if ((self.isCancelled || [BXEmulatorCore dosBoxShutdownRequested]) && self.isInitialized)
     {
         return NO;
 	}

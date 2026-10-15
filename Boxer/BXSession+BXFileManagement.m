@@ -82,8 +82,13 @@ NSString * const BXGameStateEmulatorVersionKey = @"BXEmulatorVersion";
 	NSURL *volumeURL = [URL resourceValueForKey: NSURLVolumeURLKey];
 	NSString *volumeType = [workspace typeOfVolumeAtURL: URL];
     
-	//If it's on a data CD volume or floppy volume, use the base folder of the volume as the mount point
-	if ([volumeType isEqualToString: ADBDataCDVolumeType] || [workspace isFloppyVolumeAtURL: URL])
+	//A data CD is always mounted as its volume root. For floppy volumes,
+	//only the volume root itself should be treated as a floppy drive: a
+	//separately selected folder on that volume is a regular folder source and
+	//must remain available for hard-disk-style folder installation.
+	BOOL isFloppyVolume = [workspace isFloppyVolumeAtURL: URL];
+	if ([volumeType isEqualToString: ADBDataCDVolumeType] ||
+	    (isFloppyVolume && (!URL.isDirectory || [URL isEqual: volumeURL])))
 	{
 		return volumeURL;
 	}

@@ -1797,12 +1797,27 @@
 	if (gamebox)
 	{
 		//Prep the gamebox by creating an empty C drive in it
-		NSURL *rootDriveURL = [gamebox.resourceURL URLByAppendingPathComponent: @"C.harddisk"];
-		
+        NSURL *rootDriveURL = [gamebox.resourceURL URLByAppendingPathComponent: @"C.harddisk"];
+
+        NSLog(@"BOXER:CUE c-drive-create-start gamebox=%@ root=%@",
+              gamebox.bundleURL.path ?: @"(nil)",
+              rootDriveURL.path ?: @"(nil)");
+
+		NSError *rootDriveError = nil;
 		BOOL createdRootDrive = [manager createDirectoryAtURL: rootDriveURL
                                   withIntermediateDirectories: NO
                                                    attributes: nil
-                                                        error: outError];
+                                                        error: &rootDriveError];
+
+        NSLog(@"BOXER:CUE c-drive-create-result created=%d root=%@ errorDomain=%@ errorCode=%ld error=%@",
+              createdRootDrive,
+              rootDriveURL.path ?: @"(nil)",
+              rootDriveError.domain ?: @"(nil)",
+              (long)rootDriveError.code,
+              rootDriveError ?: @"(nil)");
+
+        if (!createdRootDrive && outError)
+            *outError = rootDriveError;
 		
 		if (createdRootDrive)
 		{

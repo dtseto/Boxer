@@ -105,10 +105,16 @@
 
     //Failing that, check the volume type of the underlying filesystem at that location.
     NSString *volumeType = [workspace typeOfVolumeAtURL: URL];
+    NSURL *volumeURL = [URL resourceValueForKey: NSURLVolumeURLKey];
 
 	//Mount locations on data or audio CD volumes as CD-ROM drives.
 	if ([volumeType isEqualToString: ADBDataCDVolumeType] || [volumeType isEqualToString: ADBAudioCDVolumeType])
 		return BXDriveCDROM;
+
+    //A plain directory selected inside a floppy-sized volume is still a
+    //hard-disk-style folder source. The volume root itself remains a floppy.
+    if (URL.isDirectory && volumeURL && ![URL isEqual: volumeURL])
+        return BXDriveHardDisk;
 
 	//If the location is on a FAT/FAT32 volume, check if it's floppy-sized.
 	if ([workspace isFloppyVolumeAtURL: URL])

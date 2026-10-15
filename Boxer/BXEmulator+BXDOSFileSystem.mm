@@ -1177,10 +1177,26 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 
 - (BOOL) _shouldAllowWriteAccessToLocalPath: (const char *)localPath onDOSBoxDrive: (uintptr_t)dosboxDrive
 {
-	BXDrive *drive = [self _driveFromDOSBoxDriveAtIndex:[self _indexOfDOSBoxDriveHandle:dosboxDrive]];
-    
+    NSUInteger driveIndex = [self _indexOfDOSBoxDriveHandle: dosboxDrive];
+    BXDrive *drive = [self _driveFromDOSBoxDriveAtIndex: driveIndex];
+
     NSURL *fileURL = [NSURL URLFromFileSystemRepresentation: localPath];
-    return [self.delegate emulator: self shouldAllowWriteAccessToURL: fileURL onDrive: drive];
+
+    NSLog(@"BOXER:HD write-check drive=%@ type=%ld readOnly=%d shadow=%@ hostPath=%s hostURL=%@",
+          drive.letter ?: @"(nil)",
+          (long)drive.type,
+          drive.isReadOnly,
+          drive.shadowURL.path ?: @"(nil)",
+          localPath ?: "(null)",
+          fileURL.path ?: @"(nil)");
+
+    BOOL allowed = [self.delegate emulator: self shouldAllowWriteAccessToURL: fileURL onDrive: drive];
+
+    NSLog(@"BOXER:HD write-check-decision drive=%@ allowed=%d hostURL=%@",
+          drive.letter ?: @"(nil)",
+          allowed,
+          fileURL.path ?: @"(nil)");
+    return allowed;
 }
 
 
@@ -1329,28 +1345,38 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
 - (BOOL) _createDirectoryAtLocalPath: (const char *)path
                        onDOSBoxDrive: (uintptr_t)dosboxDrive
 {
-	BXDrive *drive = [self _driveFromDOSBoxDriveAtIndex:[self _indexOfDOSBoxDriveHandle:dosboxDrive]];
+    NSUInteger driveIndex = [self _indexOfDOSBoxDriveHandle: dosboxDrive];
+    BXDrive *drive = [self _driveFromDOSBoxDriveAtIndex: driveIndex];
     id <ADBFilesystemPathAccess, ADBFilesystemFileURLAccess> filesystem = (id)drive.filesystem;
     NSAssert2([filesystem conformsToProtocol: @protocol(ADBFilesystemFileURLAccess)],
               @"Filesystem %@ for drive %@ does not support local URL file access.", filesystem, drive);
-    
-    NSURL *localURL         = [NSURL URLFromFileSystemRepresentation: path];
-    NSString *logicalPath   = [filesystem pathForFileURL: localURL];
+
+    NSURL *localURL = [NSURL URLFromFileSystemRepresentation: path];
+    NSString *logicalPath = [filesystem pathForFileURL: localURL];
+
+    NSLog(@"BOXER:HD mkdir-enter drive=%@ type=%ld dosboxDrive=%p hostPath=%s hostURL=%@ logicalPath=%@ filesystem=%@",
+          drive.letter ?: @"(nil)",
+          (long)drive.type,
+          (void *)dosboxDrive,
+          path ?: "(null)",
+          localURL.path ?: @"(nil)",
+          logicalPath ?: @"(nil)",
+          filesystem);
 
     NSError *createError = nil;
     BOOL created = [filesystem createDirectoryAtPath: logicalPath
                          withIntermediateDirectories: NO
                                                error: &createError];
-    /*
-    if (!created)
-    {
-        NSLog(@"Creation of directory at %@ (%@) failed, error: %@", logicalPath, localURL, createError);
-    }
-    else
-    {
-        NSLog(@"Creation of directory at %@ (%@) succeeded.", logicalPath, localURL);
-    }
-     */
+
+    NSLog(@"BOXER:HD mkdir-result drive=%@ created=%d hostURL=%@ logicalPath=%@ errorDomain=%@ errorCode=%ld error=%@",
+          drive.letter ?: @"(nil)",
+          created,
+          localURL.path ?: @"(nil)",
+          logicalPath ?: @"(nil)",
+          createError.domain ?: @"(nil)",
+          (long)createError.code,
+          createError ?: @"(nil)");
+
     return created;
 }
 

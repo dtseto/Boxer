@@ -763,13 +763,33 @@ void boxer_didRemoveLocalFile(const char *path, DOS_Drive *dosboxDrive)
 
 bool boxer_createLocalDir(const char *path, DOS_Drive *drive)
 {
+    NSLog(@"BOXER:HD mkdir-callback-enter api=legacy path=%s dosboxDrive=%p",
+          path ?: "(null)",
+          (void *)drive);
+
     BXEmulator *emulator = [BXEmulator currentEmulator];
-    return [emulator _createDirectoryAtLocalPath: path onDOSBoxDrive: (uintptr_t)drive];
+    bool created = [emulator _createDirectoryAtLocalPath: path onDOSBoxDrive: (uintptr_t)drive];
+
+    NSLog(@"BOXER:HD mkdir-callback-result api=legacy created=%d path=%s dosboxDrive=%p",
+          created,
+          path ?: "(null)",
+          (void *)drive);
+    return created;
 }
 
 static bool boxer_filesystemBridgeShouldShowFileWithName(const char *name) { return boxer_shouldShowFileWithName(name); }
 static bool boxer_filesystemBridgeShouldAllowWriteAccessToPath(const char *path, uintptr_t drive) {
-    return [[BXEmulator currentEmulator] _shouldAllowWriteAccessToLocalPath:path onDOSBoxDrive:drive];
+    NSLog(@"BOXER:HD write-check-enter path=%s dosboxDrive=%p",
+          path ?: "(null)",
+          (void *)drive);
+
+    bool allowed = [[BXEmulator currentEmulator] _shouldAllowWriteAccessToLocalPath:path onDOSBoxDrive:drive];
+
+    NSLog(@"BOXER:HD write-check-result allowed=%d path=%s dosboxDrive=%p",
+          allowed,
+          path ?: "(null)",
+          (void *)drive);
+    return allowed;
 }
 static void boxer_filesystemBridgeDidCreateLocalFile(const char *path, uintptr_t drive) {
     [[BXEmulator currentEmulator] _didCreateFileAtLocalPath:path onDOSBoxDrive:drive];
@@ -778,7 +798,17 @@ static void boxer_filesystemBridgeDidRemoveLocalFile(const char *path, uintptr_t
     [[BXEmulator currentEmulator] _didRemoveFileAtLocalPath:path onDOSBoxDrive:drive];
 }
 static bool boxer_filesystemBridgeCreateLocalDir(const char *path, uintptr_t drive) {
-    return [[BXEmulator currentEmulator] _createDirectoryAtLocalPath:path onDOSBoxDrive:drive];
+    NSLog(@"BOXER:HD mkdir-callback-enter api=filesystem path=%s dosboxDrive=%p",
+          path ?: "(null)",
+          (void *)drive);
+
+    bool created = [[BXEmulator currentEmulator] _createDirectoryAtLocalPath:path onDOSBoxDrive:drive];
+
+    NSLog(@"BOXER:HD mkdir-callback-result api=filesystem created=%d path=%s dosboxDrive=%p",
+          created,
+          path ?: "(null)",
+          (void *)drive);
+    return created;
 }
 static void boxer_filesystemBridgeDriveDidMount(uint8_t driveIndex) { boxer_driveDidMount(driveIndex); }
 static void boxer_filesystemBridgeDriveDidUnmount(uint8_t driveIndex) { boxer_driveDidUnmount(driveIndex); }
@@ -978,7 +1008,10 @@ static uintptr_t boxer_filesystemControlCreateCDROMImage(const char *path, uint8
     int errorCode = BXDOSBoxMountUnknownError;
     isoDrive *drive = new isoDrive((char)(driveIndex + 'A'), path, mediaByte, errorCode);
     if (errorCode == BXDOSBoxMountSuccess || errorCode == BXDOSBoxMountSuccessCDROMLimited)
+    {
+        if (outErrorCode) *outErrorCode = errorCode;
         return (uintptr_t)drive;
+    }
     delete drive;
     if (errorCode == BXDOSBoxMountCouldNotReadSource)
         errorCode = BXDOSBoxMountInvalidImageFormat;
@@ -990,7 +1023,10 @@ static uintptr_t boxer_filesystemControlCreateFloppyImage(const char *path, int3
 {
     fatDrive *drive = new fatDrive(path, 0, 0, 0, 0, false);
     if (drive && drive->created_successfully)
+    {
+        if (outErrorCode) *outErrorCode = BXDOSBoxMountSuccess;
         return (uintptr_t)drive;
+    }
     delete drive;
     if (outErrorCode) *outErrorCode = BXDOSBoxMountInvalidImageFormat;
     return 0;
@@ -1006,7 +1042,10 @@ static uintptr_t boxer_filesystemControlCreateCDROMDirectory(const char *path, u
                                        geometry[0], (uint8_t)geometry[1], geometry[2], geometry[3],
                                        mediaByte, errorCode);
     if (errorCode == BXDOSBoxMountSuccess || errorCode == BXDOSBoxMountSuccessCDROMLimited)
+    {
+        if (outErrorCode) *outErrorCode = errorCode;
         return (uintptr_t)drive;
+    }
     delete drive;
     if (outErrorCode) *outErrorCode = errorCode;
     return 0;
@@ -1029,12 +1068,16 @@ static uintptr_t boxer_filesystemControlCreateLocalDirectory(const char *path, c
         Overlay_Drive *drive = new Overlay_Drive(path, shadowPath, geometry[0], (uint8_t)geometry[1],
                                                  geometry[2], freeClusters, mediaByte, errorCode);
         if (errorCode == 0)
+        {
+            if (outErrorCode) *outErrorCode = BXDOSBoxMountSuccess;
             return (uintptr_t)drive;
+        }
         delete drive;
         if (outErrorCode) *outErrorCode = errorCode;
         return 0;
     }
 
+    if (outErrorCode) *outErrorCode = BXDOSBoxMountSuccess;
     return (uintptr_t)new localDrive(path, geometry[0], (uint8_t)geometry[1], geometry[2],
                                      freeClusters, mediaByte, false);
 }
@@ -1043,13 +1086,13 @@ static uintptr_t boxer_filesystemControlCreateFloppyDirectory(const char *path, 
                                                               const uint16_t *geometry, uint8_t mediaByte,
                                                               int32_t *outErrorCode)
 {
-    (void)outErrorCode;
     uint16_t freeClusters = geometry[3];
     if (freeSpace >= 0)
     {
         const uint32_t bytesPerCluster = (uint32_t)geometry[0] * geometry[1];
         freeClusters = (uint16_t)((uint64_t)freeSpace / bytesPerCluster);
     }
+    if (outErrorCode) *outErrorCode = BXDOSBoxMountSuccess;
     return (uintptr_t)new localDrive(path, geometry[0], (uint8_t)geometry[1], geometry[2],
                                      freeClusters, mediaByte, false);
 }

@@ -1,0 +1,14 @@
+shaders = 2
+
+shader0 = "../Line Double/shaders/vga-fake-double-scan.slang"
+filter_linear0 = false
+scale_type0 = viewport
+scale0 = 1.0
+
+shader1 = "../CRT Easymode/shaders/crt-easymode.slang"
+filter_linear1 = false
+scale_type1 = viewport
+scale1 = 1.0
+
+parameters = "SCANLINE_STRENGTH"
+SCANLINE_STRENGTH = 0.0

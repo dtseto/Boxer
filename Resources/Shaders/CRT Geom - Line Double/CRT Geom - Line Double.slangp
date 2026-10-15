@@ -1,0 +1,16 @@
+shaders = 2
+
+shader0 = "../Line Double/shaders/vga-fake-double-scan.slang"
+filter_linear0 = false
+scale_type0 = viewport
+scale0 = 1.0
+
+shader1 = "../CRT Geom/crt-geom/shaders/crt-geom.slang"
+filter_linear1 = false
+scale_type1 = viewport
+scale1 = 1.0
+
+parameters = "scanline_weight"
+# CRT Geom's parameter range starts at 0.1; its minimum is the least
+# intrusive setting while retaining the shader's beam/geometry effects.
+scanline_weight = 0.1

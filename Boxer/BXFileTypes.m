@@ -103,6 +103,7 @@ NSString * const BXDOCFileType      = @"com.microsoft.word.doc";
     dispatch_once(&onceToken, ^{
         types = [[self OSXMountableImageTypes] setByAddingObjectsFromArray:
                  @[BXDiskBundleType,
+                   BXCDROMImageBundleType,
                    BXCuesheetImageType]];
     });
     return types;

@@ -134,6 +134,11 @@
     if (!self.drive || !self.destinationFolderURL) return nil;
     
 	NSString *driveName			= [self.class nameForDrive: self.drive];
+    if (!driveName.length)
+    {
+        NSLog(@"BOXER: Cannot determine a safe destination name for drive %@", self.drive.sourceURL.path);
+        return nil;
+    }
     NSURL *destinationURL       = [self.destinationFolderURL URLByAppendingPathComponent: driveName];
     
     //Check that there isn't already a file with the same name at the location.

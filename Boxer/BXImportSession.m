@@ -51,6 +51,7 @@
 
 #import "BXInstallerScan.h"
 #import "BXEmulatorConfiguration.h"
+#import "BXGameboxSettingsWindowController.h"
 
 #import "ADBPathEnumerator.h"
 
@@ -75,6 +76,9 @@
 
 //Only defined for internal use
 @property (copy, nonatomic) NSURL *rootDriveURL;
+@property (copy, nonatomic) NSURL *pendingInstallerURL;
+@property (copy, nonatomic) NSURL *installerPerformanceConfigurationURL;
+@property (retain, nonatomic) BXGameboxSettingsWindowController *installerSettingsController;
 
 
 //Create a new empty game package for our source path.
@@ -83,6 +87,7 @@
 //Return the path to which the current gamebox will be moved if renamed with the specified name.
 - (NSURL *) _destinationURLForGameboxName: (NSString *)newName;
 - (void) _startInstallerSessionWithTargetURL: (nullable NSURL *)URL;
+- (NSArray *) configurationURLsForEmulator: (BXEmulator *)emulator;
 - (void) cueSourceImportDidFinish: (NSNotification *)notification;
 
 @end
@@ -114,6 +119,8 @@
     self.importWindowController = nil;
     self.sourceURL = nil;
     self.rootDriveURL = nil;
+    self.pendingInstallerURL = nil;
+    self.installerSettingsController = nil;
     self.installerURLs = nil;
     self.sourceFileImportOperation = nil;
     self.bundledConfigurationURL = nil;
@@ -148,25 +155,31 @@
                                           inTypes: [NSSet setWithObject: BXCuesheetImageType]] != nil);
     if (isCue)
     {
+        NSLog(@"BOXER:CUE stage=validate-start path=%@", absoluteURL.path);
         NSError *cueError = nil;
         if (![ADBBinCueImage validatedResourceURLsInCueAtURL: absoluteURL error: &cueError])
         {
+            NSLog(@"BOXER:CUE stage=validate-failed path=%@ error=%@", absoluteURL.path, cueError);
             if (outError) *outError = cueError;
             return NO;
         }
+        NSLog(@"BOXER:CUE stage=validate-complete path=%@", absoluteURL.path);
 
         self.sourceURL = absoluteURL;
         NSError *generationError = nil;
         if (![self _generateGameboxWithError: &generationError])
         {
+            NSLog(@"BOXER:CUE stage=gamebox-create-failed error=%@", generationError);
             if (outError) *outError = generationError;
             return NO;
         }
+        NSLog(@"BOXER:CUE stage=gamebox-created path=%@", self.gamebox.bundleURL.path);
 
         BXDrive *cueDrive = [BXDrive driveWithContentsOfURL: absoluteURL letter: @"D" type: BXDriveCDROM];
         ADBOperation <BXDriveImport> *cueImport = [self importOperationForDrive: cueDrive startImmediately: NO];
         if (!cueImport)
         {
+            NSLog(@"BOXER:CUE stage=import-operation-failed path=%@", absoluteURL.path);
             [[NSFileManager defaultManager] removeItemAtURL: self.gamebox.bundleURL error: NULL];
             self.gamebox = nil;
             if (outError) *outError = [NSError errorWithDomain: ADBCueErrorDomain
@@ -176,6 +189,7 @@
         }
         cueImport.delegate = self;
         cueImport.didFinishSelector = @selector(cueSourceImportDidFinish:);
+        NSLog(@"BOXER:CUE stage=copy-queued source=%@ destination-folder=%@", absoluteURL.path, self.gamebox.resourceURL.path);
         [self.scanQueue addOperation: cueImport];
         self.importStage = BXImportSessionLoadingSource;
         return YES;
@@ -210,19 +224,33 @@
 - (void) cueSourceImportDidFinish: (NSNotification *)notification
 {
     ADBOperation <BXDriveImport> *operation = notification.object;
+    NSLog(@"BOXER:CUE stage=copy-finished success=%@ cancelled=%@ error=%@ destination=%@",
+          operation.succeeded ? @"YES" : @"NO",
+          operation.isCancelled ? @"YES" : @"NO",
+          operation.error,
+          operation.destinationURL.path);
     if (operation.succeeded && !operation.isCancelled)
     {
-        // BXDrive's .cdmedia compatibility path is tracks.cue. Point the live import
-        // session at that copied CUE so DOSBox Staging mounts the complete media unit.
-        NSURL *copiedCueURL = [operation.destinationURL URLByAppendingPathComponent: @"tracks.cue"];
-        self.sourceURL = copiedCueURL;
+        // Keep the .cdmedia bundle as the logical source. BXDrive resolves its
+        // internal tracks.cue as the mount point, while retaining the bundle URL
+        // lets the filesystem map the CUE and BIN contents as one media unit.
+        // Pointing the session at tracks.cue alone loses that bundle relationship
+        // and can make installers fail to see related files or directories.
+        self.sourceURL = operation.destinationURL;
         self.fileURL = self.gamebox.bundleURL;
-        self.installerURLs = nil;
+        // A CUE/BIN image is not a host directory, so SETUP.EXE and INSTALL.EXE
+        // cannot be discovered safely before DOSBox mounts the image. An empty
+        // installer list is an intentional fallback: continue to the DOS prompt
+        // instead of blocking the import waiting for a conventional installer.
+        self.installerURLs = @[];
+        NSLog(@"BOXER:CUE stage=no-installer-detected action=continue-to-dos-prompt");
+
         // Manual CUE imports intentionally have no target executable yet. Seed the
         // generic profile so BXSession does not try to detect a profile from nil targetURL
         // while preparing the emulator configuration.
         if (!self.gameProfile)
             self.gameProfile = [BXGameProfile genericProfile];
+        NSLog(@"BOXER:CUE stage=emulator-start source=%@", self.sourceURL.path);
         [self _startInstallerSessionWithTargetURL: nil];
         return;
     }
@@ -753,7 +781,95 @@
 	NSAssert(URL != nil, @"No URL specified.");
 	NSAssert(self.sourceURL != nil, @"No source URL for the import has been chosen.");
 	
-	[self _startInstallerSessionWithTargetURL: URL];
+	if (!self.gamebox)
+	{
+	    NSError *generationError = nil;
+	    BOOL createdGamebox = [self _generateGameboxWithError: &generationError];
+	    NSAssert(createdGamebox, @"Gamebox creation failed with error: %@", generationError);
+	    if (!createdGamebox) return;
+	}
+
+    self.pendingInstallerURL = URL;
+    self.installerSettingsController = [[BXGameboxSettingsWindowController alloc]
+                                        initWithGamebox:self.gamebox session:self];
+    __block BXImportSession *weakSelf = self;
+    [self.installerSettingsController beginInstallerPreflightSheetForWindow:self.windowForSheet
+                                                            completionHandler:^(BOOL continueInstalling) {
+        BXImportSession *strongSelf = weakSelf;
+        if (!strongSelf) return;
+        if (continueInstalling) {
+            NSURL *installerURL = strongSelf.pendingInstallerURL;
+            strongSelf.pendingInstallerURL = nil;
+            strongSelf.installerSettingsController = nil;
+            [strongSelf _startInstallerSessionWithTargetURL:installerURL];
+        } else {
+            [strongSelf _cancelInstallerPreflight];
+        }
+    }];
+}
+
+- (NSArray *) configurationURLsForEmulator: (BXEmulator *)emulator
+{
+    NSMutableArray *configurationURLs = [[super configurationURLsForEmulator:emulator] mutableCopy];
+
+    // Installer sessions are the one place where Voodoo can be enabled before
+    // the user has had a chance to tune the gamebox's normal speed.  Avoid
+    // max-cycle mode here: Voodoo rendering can otherwise starve the audio and
+    // Metal presentation paths while setup.exe is starting.
+    NSString *extension = self.targetURL.pathExtension.lowercaseString;
+    if (self.importStage == BXImportSessionRunningInstaller &&
+        [extension isEqualToString:@"exe"] &&
+        self.gamebox.configurationFileURL)
+    {
+        BXEmulatorConfiguration *gameboxConfiguration =
+            [BXEmulatorConfiguration configurationWithContentsOfURL:self.gamebox.configurationFileURL
+                                                               error:NULL];
+        NSString *voodooValue = [gameboxConfiguration valueForKey:@"voodoo"
+                                                          inSection:@"voodoo"];
+        BOOL voodooEnabled = voodooValue.boolValue ||
+            [voodooValue.lowercaseString isEqualToString:@"on"];
+
+        if (voodooEnabled)
+        {
+            BXEmulatorConfiguration *performanceConfiguration =
+                [BXEmulatorConfiguration configuration];
+            NSString *fixedCycles = [BXEmulator configStringForFixedSpeed:25000
+                                                                      isAuto:NO];
+            [performanceConfiguration setValue:fixedCycles
+                                        forKey:@"cycles"
+                                     inSection:@"cpu"];
+
+            NSString *filename = [NSString stringWithFormat:@"Boxer-Installer-%@.conf",
+                                   [NSUUID UUID].UUIDString];
+            NSURL *configurationURL = [NSURL fileURLWithPath:
+                [NSTemporaryDirectory() stringByAppendingPathComponent:filename]];
+            if ([performanceConfiguration writeToURL:configurationURL error:NULL])
+            {
+                self.installerPerformanceConfigurationURL = configurationURL;
+                // Launch.conf must remain last because it contains the final
+                // startup commands; insert this override immediately before it.
+                NSUInteger launchIndex = configurationURLs.count;
+                if (launchIndex > 0)
+                    launchIndex--;
+                [configurationURLs insertObject:configurationURL atIndex:launchIndex];
+                NSLog(@"BOXER: Installer Voodoo preflight using fixed CPU cycles (25000)");
+            }
+        }
+    }
+
+    return configurationURLs;
+}
+
+- (void) _cancelInstallerPreflight
+{
+    self.pendingInstallerURL = nil;
+    self.installerSettingsController = nil;
+    NSURL *gameboxURL = self.gamebox.bundleURL;
+    if (gameboxURL)
+        [[NSFileManager defaultManager] removeItemAtURL:gameboxURL error:NULL];
+    self.gamebox = nil;
+    self.fileURL = nil;
+    self.importStage = BXImportSessionWaitingForInstaller;
 }
 
 - (void) _startInstallerSessionWithTargetURL: (NSURL *)URL
@@ -780,6 +896,16 @@
 
 - (void) skipInstaller
 {
+	// CUE/BIN media has already been copied into the gamebox as a bundled
+	// CD-ROM drive before the emulator starts. Do not send it through the
+	// ordinary source-file import phase a second time.
+	if ([self.sourceURL.pathExtension.lowercaseString isEqualToString: @"cdmedia"] && self.gamebox)
+	{
+		NSLog(@"BOXER:CUE stage=skip-installer action=finalize-bundled-media");
+		[self finishInstaller];
+		return;
+	}
+
 	self.targetURL = nil;
 	self.importStage = BXImportSessionReadyToFinalize;
     
@@ -794,6 +920,9 @@
 
 - (void) finishInstaller
 {	
+	BOOL hasBundledCueMedia = [self.sourceURL.pathExtension.lowercaseString isEqualToString: @"cdmedia"] && self.gamebox;
+	NSLog(@"BOXER:CUE stage=finish-installer cue-media=%@ source=%@", hasBundledCueMedia ? @"YES" : @"NO", self.sourceURL.path);
+
 	//Stop the emulation process
 	[self cancel];
 	
@@ -812,8 +941,17 @@
 	//Finally, hand off to the import window
 	[self.importWindowController pickUpFromController: self.DOSWindowController];
 	
-	//Aaaaand start in on the next stage immediately
-	[self importSourceFiles];
+	//CUE/BIN has already been transferred into the gamebox. Finalize it
+	//directly instead of trying to import the same mounted media again.
+	if (hasBundledCueMedia)
+	{
+		[self finalizeGamebox];
+	}
+	else
+	{
+		//Aaaaand start in on the next stage immediately
+		[self importSourceFiles];
+	}
 }
 
 
@@ -1190,6 +1328,10 @@
 - (void) sourceFileImportDidFinish: (NSNotification *)notification
 {
 	ADBOperation *operation = notification.object;
+	NSLog(@"BOXER:CUE stage=source-import-finished success=%@ cancelled=%@ error=%@",
+	      operation.succeeded ? @"YES" : @"NO",
+	      operation.isCancelled ? @"YES" : @"NO",
+	      operation.error);
 	
 	//Some source-file copies can be simple file transfers
 	BOOL isImport = [operation conformsToProtocol: @protocol(BXDriveImport)];
@@ -1246,6 +1388,7 @@
 
 - (void) finalizeGamebox
 {
+	NSLog(@"BOXER:CUE stage=finalize-start gamebox=%@ source=%@", self.gamebox.bundleURL.path, self.sourceURL.path);
 	self.importStage = BXImportSessionCleaningGamebox;
 	
     //Import any bundled DOSBox configuration: converting any launch commands into a launcher batch file.
@@ -1347,6 +1490,7 @@
 	
 	//That's all folks!
 	self.importStage = BXImportSessionFinished;
+	NSLog(@"BOXER:CUE stage=finalize-complete gamebox=%@", self.gamebox.bundleURL.path);
 	
 	//Add to the recent documents list
 	[[NSDocumentController sharedDocumentController] noteNewRecentDocument: self];
@@ -1432,6 +1576,13 @@
 - (void) emulatorDidFinish: (NSNotification *)notification
 {
 	[super emulatorDidFinish: notification];
+
+    if (self.installerPerformanceConfigurationURL)
+    {
+        [[NSFileManager defaultManager] removeItemAtURL:self.installerPerformanceConfigurationURL
+                                                   error:NULL];
+        self.installerPerformanceConfigurationURL = nil;
+    }
 	
 	//Once the emulation session finishes, finalize the import.
     //IMPLEMENTATION NOTE: isCancelled will be NO if the user quit by typing "exit" at
@@ -1546,7 +1697,7 @@
 	//Mount our newly-minted empty gamebox as drive C.
     NSError *mountError = nil;
 	BXDrive *destinationDrive = [BXDrive driveWithContentsOfURL: self.rootDriveURL letter: @"C" type: BXDriveHardDisk];
-    destinationDrive.title = NSLocalizedString(@"Destination Drive",
+	destinationDrive.title = NSLocalizedString(@"Destination Drive",
                                                @"The display title for the gamebox’s C drive when importing a game.");
 	destinationDrive.freeSpace = freeSpace;
 	NSLog(@"BOXER:HD import-before-mount letter=%@ source=%@ mount=%@ type=%ld readOnly=%d shadow=%@ bundled=%d options=0x%lx",
@@ -1563,6 +1714,7 @@
             ifExists: BXDriveReplace
              options: BXBundledDriveMountOptions
                error: &mountError];
+	NSLog(@"BOXER:CUE stage=mount-destination-complete source=%@ error=%@", destinationDrive.sourceURL.path, mountError);
 	
 	//Then, create a drive of the appropriate type from the source files and mount away
 	BXDrive *sourceDrive = [BXDrive driveWithContentsOfURL: self.sourceURL letter: nil type: sourceDriveType];
@@ -1581,18 +1733,36 @@
             ifExists: BXDriveReplace
              options: BXImportSourceMountOptions
                error: &mountError];
+    NSLog(@"BOXER:CUE stage=mount-source-complete source=%@ type=%ld error=%@",
+          sourceDrive.sourceURL.path, (long)sourceDrive.type, mountError);
 	
 	//Automount all currently mounted floppy and CD-ROM volumes
 	[self mountFloppyVolumesWithError: &mountError];
+	NSLog(@"BOXER:CUE stage=mount-floppy-volumes-complete error=%@", mountError);
 	[self mountCDVolumesWithError: &mountError];
+	NSLog(@"BOXER:CUE stage=mount-cd-volumes-complete error=%@", mountError);
 	
 	//Mount our internal DOS toolkit and temporary drives unless the profile says otherwise
 	if (!self.gameProfile || self.gameProfile.shouldMountHelperDrivesDuringImport)
 	{
 		[self mountToolkitDriveWithError: &mountError];
+		NSLog(@"BOXER:CUE stage=mount-toolkit-complete error=%@", mountError);
         
         if (!self.gameProfile || self.gameProfile.shouldMountTempDrive)
+        {
             [self mountTempDriveWithError: &mountError];
+			NSLog(@"BOXER:CUE stage=mount-temp-complete error=%@", mountError);
+		}
+	}
+	NSLog(@"BOXER:CUE stage=mount-complete error=%@", mountError);
+	for (BXDrive *mountedDrive in self.mountedDrives)
+	{
+		NSLog(@"BOXER:HD import-mounted-drive letter=%@ source=%@ mount=%@ shadow=%@ type=%ld",
+		      mountedDrive.letter ?: @"(nil)",
+		      mountedDrive.sourceURL.path ?: @"(nil)",
+		      mountedDrive.mountPointURL.path ?: @"(nil)",
+		      mountedDrive.shadowURL.path ?: @"(nil)",
+		      (long)mountedDrive.type);
 	}
 }
 

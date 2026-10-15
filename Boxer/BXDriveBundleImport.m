@@ -96,6 +96,9 @@ NSString * const BXDriveBundleErrorDomain = @"BXDriveBundleErrorDomain";
     
     if (!self.destinationURL)
         self.destinationURL = self.preferredDestinationURL;
+
+    NSLog(@"BOXER:CUE stage=bundle-import-start source=%@ destination=%@",
+          self.drive.sourceURL.path, self.destinationURL.path);
     
 	NSURL *sourceURL		= self.drive.mountPointURL;
 	NSURL *destinationURL	= self.destinationURL;
@@ -107,9 +110,11 @@ NSString * const BXDriveBundleErrorDomain = @"BXDriveBundleErrorDomain";
     
 	if (!cueContents)
 	{
+		NSLog(@"BOXER:CUE stage=cue-read-failed source=%@ error=%@", sourceURL.path, readError);
 		self.error = readError;
 		return;
 	}
+	NSLog(@"BOXER:CUE stage=cue-read-complete source=%@ bytes=%lu", sourceURL.path, (unsigned long)cueContents.length);
 	
 	NSArray *relatedPaths		= [ADBBinCueImage rawPathsInCueContents: cueContents];
 	NSUInteger numRelatedPaths	= relatedPaths.count;
@@ -122,6 +127,7 @@ NSString * const BXDriveBundleErrorDomain = @"BXDriveBundleErrorDomain";
         [self setError: cueParseError];
         return;
     }
+	NSLog(@"BOXER:CUE stage=cue-parse-complete tracks=%lu", (unsigned long)numRelatedPaths);
     
 	if (self.isCancelled) return;
     
@@ -131,6 +137,7 @@ NSString * const BXDriveBundleErrorDomain = @"BXDriveBundleErrorDomain";
         self.error = readError;
         return;
     }
+	NSLog(@"BOXER:CUE stage=resources-validated count=%lu", (unsigned long)resourceURLs.count);
 
     //Work out what to do with the related file paths we've parsed from the cue file.
     //Safe relative layouts remain intact; external/absolute paths are relocated under
@@ -178,12 +185,15 @@ NSString * const BXDriveBundleErrorDomain = @"BXDriveBundleErrorDomain";
         NSURL *toURL = [destinationURL URLByAppendingPathComponent: candidate];
         [self addTransferFromPath: fromURL.path toPath: toURL.path];
     }
+	NSLog(@"BOXER:CUE stage=transfers-queued count=%lu", (unsigned long)revisedPaths.count);
     
     if (self.isCancelled) return;
     
     //Perform the standard file import from here on in.
     self.hasWrittenFiles = NO;
+    NSLog(@"BOXER:CUE stage=transfer-start destination=%@", destinationURL.path);
     [super main];
+    NSLog(@"BOXER:CUE stage=transfer-finished success=%@ error=%@", self.succeeded ? @"YES" : @"NO", self.error);
     self.hasWrittenFiles = YES;
     
     if (!self.error)

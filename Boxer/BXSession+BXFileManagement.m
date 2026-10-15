@@ -245,6 +245,9 @@ NSString * const BXGameStateEmulatorVersionKey = @"BXEmulatorVersion";
 
 - (NSURL *) shadowURLForDrive: (BXDrive *)drive
 {
+	BOOL bundled = drive ? [self driveIsBundled: drive] : NO;
+	NSURL *shadowURL = nil;
+
     if ([self _shouldShadowDrive: drive])
     {
         NSURL *stateURL = self.currentGameStateURL;
@@ -259,12 +262,18 @@ NSString * const BXGameStateEmulatorVersionKey = @"BXEmulatorVersion";
             else
                 driveName = drive.sourceURL.lastPathComponent;
             
-            NSURL *driveShadowURL = [stateURL URLByAppendingPathComponent: driveName];
-            
-            return driveShadowURL;
+            shadowURL = [stateURL URLByAppendingPathComponent: driveName];
         }
     }
-    return nil;
+
+	NSLog(@"BOXER:HD shadow-resolve letter=%@ readOnly=%d bundled=%d hasGamebox=%d returned=%@",
+	      drive.letter ?: @"(nil)",
+	      drive.isReadOnly,
+	      bundled,
+	      self.hasGamebox,
+	      shadowURL.path ?: @"(nil)");
+
+	return shadowURL;
 }
 
 - (BOOL) hasShadowedChanges
@@ -871,11 +880,26 @@ static NSArray<NSURL*>* removeUserDirs(NSArray<NSURL*>* oldArrs)
     
 	//Get the path to the file in the DOS filesystem
 	NSString *dosPath = [self.emulator DOSPathForLogicalURL: URL];
+	NSError *mountError = nil;
+	// Installer selections can be made from an image after the session has
+	// started, so the URL may not have a DOS mapping yet. Give the normal
+	// target-drive mounting path one last chance before reporting it as
+	// unreachable. Do not replace an existing mapping here.
+	if (!dosPath && URL && ![self.emulator logicalURLIsMountedInDOS: URL])
+	{
+		BXDrive *drive = [self mountDriveForURL: URL
+		                              ifExists: BXDriveKeepWithSameType
+		                               options: BXTargetMountOptions
+		                                 error: &mountError];
+		if (drive)
+			dosPath = [self.emulator DOSPathForLogicalURL: URL];
+
+	}
 	if (!dosPath)
     {
         if (outError)
         {
-            *outError = [BXSessionURLNotReachableError errorWithURL: URL userInfo: nil];
+			*outError = mountError ?: [BXSessionURLNotReachableError errorWithURL: URL userInfo: nil];
         }
         return NO;
 	}
@@ -959,19 +983,27 @@ static NSArray<NSURL*>* removeUserDirs(NSArray<NSURL*>* oldArrs)
 {
 	BXEmulator *theEmulator = self.emulator;
 	NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
+	NSLog(@"BOXER:CUE stage=mount-cd-enumeration-start");
 	NSArray *volumeURLs = [workspace  mountedVolumeURLsOfType: ADBDataCDVolumeType includingHidden: NO];
+	NSLog(@"BOXER:CUE stage=mount-cd-data-enumeration-complete count=%lu", (unsigned long) volumeURLs.count);
 	
 	//If there were no data CD volumes, then check for audio CD volumes and mount them instead
 	//(We avoid doing this if there were data CD volumes, since the audio CDs will then be used
 	//as 'shadow' audio volumes for those data CDs.)
 	if (!volumeURLs.count)
+	{
+		NSLog(@"BOXER:CUE stage=mount-cd-audio-enumeration-start");
 		volumeURLs = [workspace mountedVolumeURLsOfType: ADBAudioCDVolumeType includingHidden: NO];
+		NSLog(@"BOXER:CUE stage=mount-cd-audio-enumeration-complete count=%lu", (unsigned long) volumeURLs.count);
+	}
     
     NSMutableArray *mountedDrives = [NSMutableArray arrayWithCapacity: 10];
 	for (NSURL *volumeURL in volumeURLs)
 	{
+		NSLog(@"BOXER:CUE stage=mount-cd-volume-check-start volume=%@", volumeURL.path);
 		if (![theEmulator logicalURLIsMountedInDOS: volumeURL])
 		{
+			NSLog(@"BOXER:CUE stage=mount-cd-volume-mount-start volume=%@", volumeURL.path);
 			BXDrive *drive = [BXDrive driveWithContentsOfURL: volumeURL letter: nil type: BXDriveCDROM];
             
             drive = [self mountDrive: drive 
@@ -979,15 +1011,18 @@ static NSArray<NSURL*>* removeUserDirs(NSArray<NSURL*>* oldArrs)
                              options: BXSystemVolumeMountOptions
                                error: outError];
             
-            if (drive)
-                [mountedDrives addObject: drive];
+			if (drive)
+				[mountedDrives addObject: drive];
+			NSLog(@"BOXER:CUE stage=mount-cd-volume-mount-complete volume=%@ success=%@ error=%@", volumeURL.path, drive ? @"YES" : @"NO", outError ? *outError : nil);
             
             //If there was any error in mounting a drive,
             //then bail out and don't attempt to mount further drives
             //TODO: check the actual error to determine whether we can
             //continue after failure.
-            else return nil;
+			if (!drive)
+				return nil;
 		}
+		NSLog(@"BOXER:CUE stage=mount-cd-volume-check-complete volume=%@", volumeURL.path);
 	}
 	return mountedDrives;
 }
@@ -997,14 +1032,22 @@ static NSArray<NSURL*>* removeUserDirs(NSArray<NSURL*>* oldArrs)
 - (NSArray *) mountFloppyVolumesWithError: (NSError **)outError
 {
 	NSWorkspace *workspace = [NSWorkspace sharedWorkspace];
+	NSLog(@"BOXER:CUE stage=mount-floppy-enumeration-start");
 	NSArray *volumeURLs = [workspace mountedVolumeURLsOfType: ADBFATVolumeType includingHidden: NO];
+	NSLog(@"BOXER:CUE stage=mount-floppy-enumeration-complete count=%lu", (unsigned long) volumeURLs.count);
 	BXEmulator *theEmulator = self.emulator;
     
     NSMutableArray *mountedDrives = [NSMutableArray arrayWithCapacity: 10];
 	for (NSURL *volumeURL in volumeURLs)
 	{
-		if (![theEmulator logicalURLIsMountedInDOS: volumeURL] && [workspace isFloppyVolumeAtURL: volumeURL])
+		NSLog(@"BOXER:CUE stage=mount-floppy-volume-check-start volume=%@", volumeURL.path);
+		BOOL alreadyMounted = [theEmulator logicalURLIsMountedInDOS: volumeURL];
+		NSLog(@"BOXER:CUE stage=mount-floppy-logical-check-complete volume=%@ mounted=%@", volumeURL.path, alreadyMounted ? @"YES" : @"NO");
+		BOOL isFloppy = !alreadyMounted && [workspace isFloppyVolumeAtURL: volumeURL];
+		NSLog(@"BOXER:CUE stage=mount-floppy-type-check-complete volume=%@ floppy=%@", volumeURL.path, isFloppy ? @"YES" : @"NO");
+		if (isFloppy)
 		{
+			NSLog(@"BOXER:CUE stage=mount-floppy-volume-mount-start volume=%@", volumeURL.path);
 			BXDrive *drive = [BXDrive driveWithContentsOfURL: volumeURL letter: nil type: BXDriveFloppyDisk];
             
             drive = [self mountDrive: drive
@@ -1012,15 +1055,18 @@ static NSArray<NSURL*>* removeUserDirs(NSArray<NSURL*>* oldArrs)
                              options: BXSystemVolumeMountOptions
                                error: outError];
             
-            if (drive)
-                [mountedDrives addObject: drive];
+			if (drive)
+				[mountedDrives addObject: drive];
+			NSLog(@"BOXER:CUE stage=mount-floppy-volume-mount-complete volume=%@ success=%@ error=%@", volumeURL.path, drive ? @"YES" : @"NO", outError ? *outError : nil);
             
             //If there was any error in mounting a drive,
             //then bail out and don't attempt to mount further drives
             //TODO: check the actual error to determine whether we can
             //continue after failure.
-            else return nil;
+			if (!drive)
+				return nil;
 		}
+		NSLog(@"BOXER:CUE stage=mount-floppy-volume-check-complete volume=%@", volumeURL.path);
 	}
 	return mountedDrives;
 }
@@ -1173,6 +1219,16 @@ static NSArray<NSURL*>* removeUserDirs(NSArray<NSURL*>* oldArrs)
                    error: (NSError **)outError
 {
     if (outError) *outError = nil;
+
+    NSLog(@"BOXER:HD mount-enter letter=%@ source=%@ mount=%@ type=%ld readOnly=%d shadow=%@ bundled=%d options=0x%lx",
+          drive.letter ?: @"(nil)",
+          drive.sourceURL.path ?: @"(nil)",
+          drive.mountPointURL.path ?: @"(nil)",
+          (long)drive.type,
+          drive.isReadOnly,
+          drive.shadowURL.path ?: @"(nil)",
+          [self driveIsBundled: drive],
+          (unsigned long)options);
     
     //If this drive is already mounted, don't bother retrying.
     if ([self driveIsMounted: drive]) return drive;
@@ -1258,6 +1314,16 @@ static NSArray<NSURL*>* removeUserDirs(NSArray<NSURL*>* oldArrs)
     {
         drive.shadowURL = [self shadowURLForDrive: drive];
     }
+
+    NSLog(@"BOXER:HD mount-after-shadow letter=%@ source=%@ mount=%@ type=%ld readOnly=%d shadow=%@ bundled=%d options=0x%lx",
+          drive.letter ?: @"(nil)",
+          drive.sourceURL.path ?: @"(nil)",
+          drive.mountPointURL.path ?: @"(nil)",
+          (long)drive.type,
+          drive.isReadOnly,
+          drive.shadowURL.path ?: @"(nil)",
+          [self driveIsBundled: drive],
+          (unsigned long)options);
     
     //Check if this is a CD-ROM drive and enabled for CD audio.
     //If it is, check that any CD audio volume is actually available.

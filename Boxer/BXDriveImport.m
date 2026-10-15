@@ -99,6 +99,16 @@ NSString * const BXUniqueDriveNameFormat = @"%1$@ (%3$lu).%2$@";
         else
             baseName = volumeName;
     }
+
+    // A drive without a letter or volume label is still importable (for
+    // example, a mounted folder whose volume label could not be read). Never
+    // return nil here: callers use this value as a path component.
+    if (!baseName.length)
+    {
+        baseName = drive.sourceURL.lastPathComponent.stringByDeletingPathExtension;
+        if (!baseName.length)
+            baseName = @"Drive";
+    }
     
     return baseName;
 }

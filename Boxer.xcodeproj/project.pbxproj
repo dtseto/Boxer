@@ -29,6 +29,7 @@
 		0BBB0F7EBDFF492ABCDC8A9D /* capture_audio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 572428A605E574D1B624ED61 /* capture_audio.cpp */; };
 		0D19479A217F52E5123EDE1E /* esfm_registers.c in Sources */ = {isa = PBXBuildFile; fileRef = B92BF37E61EEC2158459D182 /* esfm_registers.c */; };
 		0F0C768DD2B5C3233405ED86 /* image_scaler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A88AA0E145B66112D78F3D39 /* image_scaler.cpp */; };
+		0F30942C307F47B400F9D6DF /* BXSoundFontManagerWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0F30942B307F47B400F9D6DF /* BXSoundFontManagerWindowController.m */; };
 		0F6685A8303BCC790010580F /* loguru.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F6685A3303BCC790010580F /* loguru.cpp */; };
 		0F6685A9303BCC790010580F /* loguru.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F6685A3303BCC790010580F /* loguru.cpp */; };
 		0F6685DD303C91690010580F /* fs_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F6685DA303C91690010580F /* fs_utils.cpp */; };
@@ -355,7 +356,7 @@
 		703B08FB9FB562647FA0C657 /* program_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7665A6AE3EBEBEE49A83AF2 /* program_tree.cpp */; };
 		70D16941BA7AE8609BE54560 /* program_mixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7647EBB75852C4A9D160AEC /* program_mixer.cpp */; };
 		7A1B2C3D4E5F60718293A4BB /* libDOSBoxStaging.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */; };
-		7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */; };
+		7A1B2C3D4E5F60718293A4C2 /* DOSBox-Staging/contrib/resources/freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */; };
 		849EFA1BAF3FE6EB71880EC1 /* sdlmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77211A12B38C4400072AE8 /* sdlmain.cpp */; };
 		85C9BEA44575A8AFB121D674 /* intel8042.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C3D895313FB4F1053AE0F08 /* intel8042.cpp */; };
 		89245D2C2CF33048D86F1367 /* file_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9163306C61021CB2F841DF15 /* file_reader.cpp */; };
@@ -1250,6 +1251,8 @@
 		063AE2B935B53D4418311E17 /* BXEmulatorCore.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BXEmulatorCore.m; sourceTree = "<group>"; };
 		0A71ECAFAD8D2BFF856CFFB1 /* program_subst.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = program_subst.cpp; sourceTree = "<group>"; };
 		0C3D895313FB4F1053AE0F08 /* intel8042.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = intel8042.cpp; sourceTree = "<group>"; };
+		0F30942A307F47B400F9D6DF /* BXSoundFontManagerWindowController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BXSoundFontManagerWindowController.h; sourceTree = "<group>"; };
+		0F30942B307F47B400F9D6DF /* BXSoundFontManagerWindowController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BXSoundFontManagerWindowController.m; sourceTree = "<group>"; };
 		0F6685A2303BCC790010580F /* loguru.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = loguru.hpp; sourceTree = "<group>"; };
 		0F6685A3303BCC790010580F /* loguru.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = loguru.cpp; sourceTree = "<group>"; };
 		0F6685D9303C91690010580F /* ansi_code_markup.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ansi_code_markup.cpp; sourceTree = "<group>"; };
@@ -1607,7 +1610,7 @@
 		788E78BA3B478826AB629D75 /* mmx.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mmx.cpp; sourceTree = "<group>"; };
 		78BAECC1B03F2566403A5B5A /* BXConfigKey.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BXConfigKey.h; sourceTree = "<group>"; };
 		7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libDOSBoxStaging.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "DOSBox-Staging/contrib/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
+		7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */ = {isa = PBXFileReference; lastKnownFileType = folder; path = "DOSBox-Staging/contrib/resources/freedos-keyboard"; sourceTree = SOURCE_ROOT; };
 		7CCFF8C8A92657DAA35F24A0 /* mouse_config.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse_config.cpp; sourceTree = "<group>"; };
 		7D7A737128226BDA716E4A30 /* virtualbox.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = virtualbox.cpp; sourceTree = "<group>"; };
 		8C26465EB00C4836561E82B1 /* capture.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = capture.cpp; sourceTree = "<group>"; };
@@ -2363,17 +2366,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = "Boxer Integration Tests";
-			sourceTree = "<group>";
-		};
+		0FFCA18130329C6C0076F2F5 /* Boxer Integration Tests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = "Boxer Integration Tests"; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -2831,7 +2824,7 @@
 			path = capture;
 			sourceTree = "<group>";
 		};
-		29B97314FDCFA39411CA2CEA = {
+		29B97314FDCFA39411CA2CEA /* Boxer */ = {
 			isa = PBXGroup;
 			children = (
 				080E96DDFE201D6D7F000001 /* Boxer */,
@@ -4180,6 +4173,8 @@
 				9F9A4CA810F6824B00E61965 /* BXFilterGallery.m */,
 				9F586CE9143E41C200E840C8 /* BXMT32ROMDropzone.h */,
 				9F586CEA143E41C200E840C8 /* BXMT32ROMDropzone.m */,
+				0F30942A307F47B400F9D6DF /* BXSoundFontManagerWindowController.h */,
+				0F30942B307F47B400F9D6DF /* BXSoundFontManagerWindowController.m */,
 			);
 			name = "Preferences panel";
 			sourceTree = "<group>";
@@ -4259,7 +4254,7 @@
 				55F0B73B26ABFEB80077E58C /* libs */,
 				9F77207312B38C4400072AE8 /* include */,
 				9F77209D12B38C4400072AE8 /* src */,
-				7A1B2C3D4E5F60718293A4C1 /* freedos-keyboard */,
+				7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */,
 				9FBC3A7F0F56CEA2001811F2 /* config.h */,
 				0FB959793054521500B88A1D /* README.md */,
 			);
@@ -4628,7 +4623,7 @@
 				es,
 				"pt-BR",
 			);
-			mainGroup = 29B97314FDCFA39411CA2CEA;
+			mainGroup = 29B97314FDCFA39411CA2CEA /* Boxer */;
 			packageReferences = (
 				55D432012504BB65008515E1 /* XCRemoteSwiftPackageReference "CwlDemangle" */,
 				55EB73DE27ED729F00D5F7E0 /* XCRemoteSwiftPackageReference "Sparkle" */,
@@ -4795,7 +4790,7 @@
 				55635A372D35D8E000C70C0E /* InfoPlist.xcstrings in Resources */,
 				9F4199F61BD416E400A2D165 /* Bezel.xib in Resources */,
 				9F4BCCD817E6190A00140390 /* Boxer.help in Resources */,
-				7A1B2C3D4E5F60718293A4C2 /* freedos-keyboard in Resources */,
+				7A1B2C3D4E5F60718293A4C2 /* DOSBox-Staging/contrib/resources/freedos-keyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5273,6 +5268,7 @@
 				9F740BDE142A24A400BA66B4 /* RegexKitLite.m in Sources */,
 				9F34BE40142B700100A69FAF /* BXCoalfaceAudio.mm in Sources */,
 				9F34BE5F142B851800A69FAF /* BXEmulator+BXAudio.mm in Sources */,
+				0F30942C307F47B400F9D6DF /* BXSoundFontManagerWindowController.m in Sources */,
 				9F34BE62142B917100A69FAF /* BXBaseAppController+BXSupportFiles.m in Sources */,
 				9F902C24142E183500843B01 /* BXMIDISynth.m in Sources */,
 				9F902C27142E198100843B01 /* BXEmulatedMT32.mm in Sources */,
@@ -6279,7 +6275,7 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/manymouse",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 12;
 				OTHER_CPLUSPLUSFLAGS = "-mstackrealign";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -6328,7 +6324,7 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/manymouse",
 				);
 				MACH_O_TYPE = staticlib;
-				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				MACOSX_DEPLOYMENT_TARGET = 12;
 				OTHER_CPLUSPLUSFLAGS = "-mstackrealign";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

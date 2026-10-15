@@ -23,6 +23,8 @@
 #import "NSView+ADBDrawingHelpers.h"
 
 #import "BXEmulator.h"
+#import "BXEmulatorDelegate.h"
+#import "BXEmulatorCore.h"
 
 #import "BXSession+BXUIControls.h"
 #import "BXSession+BXDragDrop.h"
@@ -86,8 +88,29 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
 #pragma mark Initialisation and cleanup
 
 - (void) dealloc
-{	
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                      name:BXEmulatorCoreShaderConfigurationDidChangeNotification
+                                                    object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                      name:BXEmulatorDidInitializeNotification
+                                                    object:nil];
     [self _removeObservers];
+}
+
+- (void)applyGameboxShaderMode:(NSNotification *)notification
+{
+    (void)notification;
+    BXSession *session = (BXSession *)self.document;
+    if (!session.gamebox)
+        return;
+
+    // DOSBox-Staging shader execution is disabled until its native shader
+    // source can be executed by the Metal renderer. Always use Boxer/OpenEmu
+    // presentation presets for now.
+    NSString *savedShaderPresetPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"shaderPresetPath"];
+    if (savedShaderPresetPath.length > 0)
+        [self.renderingView loadShaderPresetAtPath:savedShaderPresetPath];
 }
 
 - (void) _addObservers
@@ -151,7 +174,15 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
     self.launchPanel = self.launchPanelController.view;
     [self.panelWrapper addSubview: self.launchPanel];
     
-	[self _addObservers];
+    [self _addObservers];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applyGameboxShaderMode:)
+                                                 name:BXEmulatorCoreShaderConfigurationDidChangeNotification
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applyGameboxShaderMode:)
+                                                 name:BXEmulatorDidInitializeNotification
+                                               object:nil];
 	
 	//Set up the window UI components appropriately
 	//---------------------------------------------
@@ -167,14 +198,7 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
     //Display the loading panel by default.
     [self switchToPanel: BXDOSWindowLoadingPanel animate: NO];
 
-    NSString *savedShaderPresetPath = [[NSUserDefaults standardUserDefaults] stringForKey:@"shaderPresetPath"];
-    if (savedShaderPresetPath.length > 0)
-    {
-        if (![self.renderingView loadShaderPresetAtPath:savedShaderPresetPath])
-        {
-            [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"shaderPresetPath"];
-        }
-    }
+    [self applyGameboxShaderMode:nil];
     
 	self.window.preservesContentDuringLiveResize = NO;
 	self.window.acceptsMouseMovedEvents = YES;

@@ -144,12 +144,24 @@ enum {
 - (IBAction)showEmulatorSettings:(id)sender
 {
     BXSession *session = self.session;
-    if (!session.gamebox)
+    BXGamebox *gamebox = session.gamebox;
+    if (!gamebox)
+    {
+        NSAlert *alert = [NSAlert new];
+        alert.messageText = NSLocalizedString(@"Gamebox settings unavailable", @"Shown when the Inspector has no active gamebox.");
+        alert.informativeText = NSLocalizedString(@"Select an open gamebox before opening its emulator settings.", @"Shown when the Inspector has no active gamebox.");
+        [alert runModal];
         return;
+    }
 
-    self.settingsWindowController = [[BXGameboxSettingsWindowController alloc] initWithGamebox:session.gamebox
+    self.settingsWindowController = [[BXGameboxSettingsWindowController alloc] initWithGamebox:gamebox
                                                                                         session:session];
-    [self.settingsWindowController showWindow:self];
+    // Explicitly load the programmatic window. This keeps the action reliable
+    // when the Inspector itself was loaded from a XIB and has no window nib.
+    if (!self.settingsWindowController.window)
+        [self.settingsWindowController loadWindow];
+    [self.settingsWindowController showWindow:nil];
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
     [self.settingsWindowController.window makeKeyAndOrderFront:self];
 }
 

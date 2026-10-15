@@ -1218,7 +1218,8 @@ final class BoxerIntegrationContractTests: XCTestCase {
             "reelmagic",
             "glshader",
             "integer_scaling",
-            "imfc"
+            "imfc",
+            "true"
         ] {
             XCTAssertTrue(implementation.contains(mapping), "Missing adapter mapping: \\(mapping)")
         }

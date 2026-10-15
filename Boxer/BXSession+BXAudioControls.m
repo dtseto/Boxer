@@ -9,6 +9,7 @@
 #import "BXBezelController.h"
 #import "BXBaseAppController+BXSupportFiles.h"
 #import "BXEmulator+BXAudio.h"
+#import "BXEmulatorCore.h"
 #import "BXMIDIDeviceMonitor.h"
 #import "NSError+ADBErrorHelpers.h"
 
@@ -171,24 +172,23 @@
     }
     
     //If a custom soundfont has been specified for the MIDI synth, load that now also.
-    NSString *soundfontPath = [[NSUserDefaults standardUserDefaults] objectForKey: @"MIDISoundFontPath"];
-    if (soundfontPath.length > 0)
+    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox: self.gamebox session: self];
+    NSString *soundfontName = core.soundFontForCurrentGamebox;
+    NSArray<NSURL *> *applicationSupportURLs = [[NSFileManager defaultManager] URLsForDirectory: NSApplicationSupportDirectory
+                                                                                         inDomains: NSUserDomainMask];
+    NSURL *soundfontURL = [applicationSupportURLs.firstObject URLByAppendingPathComponent: @"Boxer/SoundFonts"
+                                                                               isDirectory: YES];
+    NSString *soundfontPath = [soundfontURL URLByAppendingPathComponent: soundfontName].path;
+    NSError *loadError = nil;
+    BOOL loaded = soundfontName.length > 0 && [fallbackSynth loadSoundFontWithContentsOfURL: [NSURL fileURLWithPath: soundfontPath]
+                                                                                         error: &loadError];
+    if (loaded)
     {
-        NSError *loadError = nil;
-        BOOL loaded = [fallbackSynth loadSoundFontWithContentsOfURL: [NSURL fileURLWithPath: soundfontPath] error: &loadError];
-        
-        if (loaded)
-        {
-            NSLog(@"Successfully loaded soundfont: %@", soundfontPath);
-        }
-        else
-        {
-            NSLog(@"Error when loading soundfont: %@", loadError);
-        }
+        NSLog(@"Using General MIDI fallback SoundFont: %@", soundfontPath);
     }
     else
     {
-        NSLog(@"No soundfont specified, using default OS X soundfont.");
+        NSLog(@"Using General MIDI fallback with the default OS X soundfont. Error: %@", loadError);
     }
     
     return fallbackSynth;

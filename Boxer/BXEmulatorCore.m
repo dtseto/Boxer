@@ -916,11 +916,7 @@ static BOOL BXConfigurationBoolean(NSString *value)
 
 - (BOOL)supportsFluidSynth
 {
-#if defined(C_FLUIDSYNTH)
-    return C_FLUIDSYNTH == 1;
-#else
     return YES;
-#endif
 }
 
 static NSURL *BXGlobalConfigurationURL(void)

@@ -142,8 +142,11 @@ void boxer_suggestMIDIHandler(std::string const &handlerName, const char *config
     {
         musicType = BXMIDIMusicMT32;
     }
-    else if ([name isEqualToString: @"coreaudio"])
+    else if ([name isEqualToString: @"coreaudio"] || [name isEqualToString: @"fluidsynth"])
     {
+        // Built-in FluidSynth is rendered by DOSBox-Staging. Describe it as
+        // General MIDI to Boxer so MT-32 autodetection does not attach the
+        // legacy CoreAudio synth as a second MIDI renderer.
         musicType = BXMIDIMusicGeneralMIDI;
     }
     else if ([name isEqualToString: @"coremidi"])

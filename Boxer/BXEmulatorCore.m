@@ -1167,10 +1167,14 @@ static NSURL *BXSoundFontsDirectoryURL(void)
 
 - (void)setIntegerScalingEnabled:(BOOL)enabled
 {
-    [self setValue:enabled ? @"full" : nil
+    // Auto is the default for CRT-capable backends; explicitly persist off
+    // when the user disables the shared setting.
+    [self setValue:enabled ? nil : @"off"
                key:BXIntegerScalingKey
            section:BXRenderSection
-        defaultValue:@"auto"];
+           defaultValue:@"auto"];
+    [[NSNotificationCenter defaultCenter] postNotificationName:BXEmulatorCoreShaderConfigurationDidChangeNotification
+                                                        object:self.gamebox];
 }
 
 #pragma mark - Input

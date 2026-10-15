@@ -15,6 +15,7 @@
 #import "BXGamebox.h"
 
 #import "BXFrameRenderingView.h"
+#import "BXMetalRenderingView.h"
 #import "BXBezelController.h"
 #import "BXVideoFrame.h"
 #import "BXVideoHandler.h"
@@ -104,6 +105,16 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
     BXSession *session = (BXSession *)self.document;
     if (!session.gamebox)
         return;
+
+    if ([self.renderingView isKindOfClass:[BXMetalRenderingView class]])
+    {
+        BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:session.gamebox session:session];
+        BXMetalRenderingView *metalView = (BXMetalRenderingView *)self.renderingView;
+        metalView.integerScalingMode = core.currentShaderSystem == BXShaderSystemOpenEmu &&
+                                       core.integerScalingEnabledForCurrentGamebox
+            ? BXIntegerScalingModeAuto
+            : BXIntegerScalingModeOff;
+    }
 
     // DOSBox-Staging shader execution is disabled until its native shader
     // source can be executed by the Metal renderer. Always use Boxer/OpenEmu
@@ -986,13 +997,35 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
 	[self setProgramPanelShown: NO animate: YES];
 }
 
+- (IBAction) toggleIntegerScaling: (id)sender
+{
+    BXSession *session = (BXSession *)self.document;
+    if (!session.gamebox || ![self.renderingView isKindOfClass:[BXMetalRenderingView class]])
+        return;
+
+    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:session.gamebox session:session];
+    [core setIntegerScalingEnabled:!core.integerScalingEnabledForCurrentGamebox];
+}
+
 - (BOOL) validateMenuItem: (NSMenuItem *)theItem
 {	
     SEL theAction = theItem.action;
     BXSession *session = (BXSession *)self.document;
     BXDOSWindow *window = (BXDOSWindow *)self.window;
 
-	if (theAction == @selector(toggleRenderingStyle:))
+    if (theAction == @selector(toggleIntegerScaling:))
+    {
+        if (!session.gamebox || ![self.renderingView isKindOfClass:[BXMetalRenderingView class]])
+            return NO;
+
+        BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:session.gamebox session:session];
+        theItem.state = core.integerScalingEnabledForCurrentGamebox
+            ? NSControlStateValueOn
+            : NSControlStateValueOff;
+        return YES;
+    }
+
+		if (theAction == @selector(toggleRenderingStyle:))
 	{
 		BXRenderingStyle renderingStyle = (BXRenderingStyle)theItem.tag;
 			if (renderingStyle == self.renderingStyle &&

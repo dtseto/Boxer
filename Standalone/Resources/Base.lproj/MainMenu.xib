@@ -430,6 +430,12 @@
                                     </binding>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Integer Scaling" id="BXIntegerScalingMenuItem">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleIntegerScaling:" target="-1" id="BXIntegerScalingMenuItemAction"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Shader Properties…" id="whc-Iq-mgy">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>

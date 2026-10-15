@@ -561,6 +561,12 @@
                                     <binding destination="1841" name="value" keyPath="values.aspectCorrected" id="1852"/>
                                 </connections>
                             </menuItem>
+                            <menuItem title="Integer Scaling" id="BXIntegerScalingMenuItem">
+                                <modifierMask key="keyEquivalentModifierMask"/>
+                                <connections>
+                                    <action selector="toggleIntegerScaling:" target="-1" id="BXIntegerScalingMenuItemAction"/>
+                                </connections>
+                            </menuItem>
                             <menuItem title="Shader Properties…" id="Wks-tC-vJz">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>

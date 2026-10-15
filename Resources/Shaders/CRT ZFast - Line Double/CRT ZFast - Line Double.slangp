@@ -1,0 +1,15 @@
+shaders = 2
+
+shader0 = "../Line Double/shaders/vga-fake-double-scan.slang"
+filter_linear0 = false
+scale_type0 = viewport
+scale0 = 1.0
+
+shader1 = "../CRT ZFast/shaders/zfast_crt/zfast_crt_finemask.slang"
+filter_linear1 = true
+scale_type1 = viewport
+scale1 = 1.0
+
+parameters = "LOWLUMSCAN;HILUMSCAN"
+LOWLUMSCAN = 0.0
+HILUMSCAN = 0.0

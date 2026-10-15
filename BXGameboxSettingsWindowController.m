@@ -211,8 +211,11 @@ static NSInteger const BXVoodooProfileMaximumCycles = 200000;
     [presetRow addArrangedSubview:self.shaderPreset]; [stack addArrangedSubview:presetRow];
 
     self.integerScaling = [self checkbox:@"Integer scaling" action:@selector(integerScalingChanged:)];
-    self.integerScaling.enabled = NO;
-    self.integerScaling.toolTip = @"Available when DOSBox Staging shader support is enabled.";
+    self.integerScaling.enabled = self.core.supportsIntegerScaling;
+    self.integerScaling.state = self.core.integerScalingEnabledForCurrentGamebox
+        ? NSControlStateValueOn
+        : NSControlStateValueOff;
+    self.integerScaling.toolTip = @"Use integer scaling for the gamebox video output.";
     [stack addArrangedSubview:self.integerScaling];
     self.deinterlacing = [self checkbox:@"Deinterlacing" action:@selector(deinterlacingChanged:)];
     self.deinterlacing.enabled = NO;
@@ -485,7 +488,10 @@ static NSInteger const BXVoodooProfileMaximumCycles = 200000;
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"videoShader"];
     }
 }
-- (void)integerScalingChanged:(NSButton *)sender { (void)sender; }
+- (void)integerScalingChanged:(NSButton *)sender
+{
+    [self.core setIntegerScalingEnabled:sender.state == NSControlStateValueOn];
+}
 - (void)deinterlacingChanged:(NSButton *)sender { (void)sender; }
 - (void)mouseChanged:(NSPopUpButton *)sender { [self.core setMouseCount:sender.selectedTag]; }
 - (BXStagingVersion)selectedVersion { return self.versionPopup.selectedTag==BXVersion080?BXStagingVersion080:(self.versionPopup.selectedTag==BXVersion0822?BXStagingVersion0822:BXStagingVersion081); }

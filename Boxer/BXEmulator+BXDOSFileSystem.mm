@@ -179,9 +179,18 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
     }
 	
     NSNumber *isDirFlag;
-    BOOL checkedDir = [mountURL getResourceValue: &isDirFlag forKey: NSURLIsDirectoryKey error: NULL];
+	BOOL checkedDir = [mountURL getResourceValue: &isDirFlag forKey: NSURLIsDirectoryKey error: NULL];
 	BOOL isDir = checkedDir && isDirFlag.boolValue;
 	BOOL isImage = !isDir;
+
+	NSLog(@"BOXER:HD emulator-mount letter=%@ type=%ld isDir=%d isImage=%d shadow=%@ source=%@ mount=%@",
+	      drive.letter ?: @"(nil)",
+	      (long)drive.type,
+	      isDir,
+	      isImage,
+	      drive.shadowURL.path ?: @"(nil)",
+	      drive.sourceURL.path ?: @"(nil)",
+	      drive.mountPointURL.path ?: @"(nil)");
 
 	NSString *driveLetter = drive.letter;
 	NSString *driveLabel = drive.volumeLabel;
@@ -239,6 +248,8 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         switch (drive.type)
         {
             case BXDriveCDROM:
+				NSLog(@"BOXER:HD dosbox-create letter=%@ function=createDOSBoxCDROMImage",
+				      drive.letter ?: @"(nil)");
                 DOSBoxDrive = [BXEmulatorCore createDOSBoxCDROMImage:cMountPath
                                                            driveIndex:index
                                                             mediaByte:BXCDROMMediaID
@@ -261,6 +272,8 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
         switch (drive.type)
         {
             case BXDriveCDROM:
+				NSLog(@"BOXER:HD dosbox-create letter=%@ function=createDOSBoxCDROMDirectory",
+				      drive.letter ?: @"(nil)");
                 DOSBoxDrive = [BXEmulatorCore createDOSBoxCDROMDirectory:cMountPath
                                                                driveIndex:index
                                                                 useAudio:drive.usesCDAudio
@@ -273,6 +286,9 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
             if (drive.shadowURL) {
                 NSNumber *isDirFlag;
                 NSURL *shadowURL = drive.shadowURL;
+				NSLog(@"BOXER:HD dosbox-create letter=%@ function=createDOSBoxLocalDirectory shadow=YES path=%@",
+				      drive.letter ?: @"(nil)",
+				      shadowURL.path ?: @"(nil)");
                 BOOL checkedDir = [shadowURL getResourceValue: &isDirFlag forKey: NSURLIsDirectoryKey error: NULL];
                 BOOL isDir = checkedDir && isDirFlag.boolValue;
                 NSString *shadowPath = shadowURL.path;
@@ -287,6 +303,8 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                                                                  mediaByte:BXHardDiskMediaID
                                                                 errorCode:&mountErrorCode];
             } else {
+				NSLog(@"BOXER:HD dosbox-create letter=%@ function=createDOSBoxLocalDirectory shadow=NO",
+				      drive.letter ?: @"(nil)");
                 DOSBoxDrive = [BXEmulatorCore createDOSBoxLocalDirectory:cMountPath
                                                                shadowPath:NULL
                                                                 freeSpace:drive.freeSpace
@@ -308,6 +326,11 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                 NSAssert1(NO, @"Drive type cannot be mounted: %li", (long)drive.type);
         }
     }
+
+	NSLog(@"BOXER:HD emulator-mount-result letter=%@ created=%d errorCode=%d",
+	      drive.letter ?: @"(nil)",
+	      DOSBoxDrive != 0,
+	      mountErrorCode);
 
     if (!DOSBoxDrive && !mountError)
         mountError = [NSError errorWithDomain:BXDOSBoxMountErrorDomain

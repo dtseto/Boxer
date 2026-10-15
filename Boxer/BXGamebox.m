@@ -552,12 +552,17 @@ NSString * const BXGameboxErrorDomain = @"BXGameboxErrorDomain";
 
 - (NSArray *) bundledDrives
 {
+	NSLog(@"BOXER:HD bundledDrives-called gamebox=%@",
+	      self.bundleURL.path ?: @"(nil)");
+
     NSLog(@"[BXGamebox] === Building bundled drives list ===");
 
     NSMutableArray *bundledVolumes = [NSMutableArray arrayWithCapacity: 10];
     [bundledVolumes addObjectsFromArray: self.floppyVolumeURLs];
     [bundledVolumes addObjectsFromArray: self.hddVolumeURLs];
-    [bundledVolumes addObjectsFromArray: self.cdVolumeURLs];
+    NSArray *cdVolumeURLs = self.cdVolumeURLs;
+    NSLog(@"[BXGamebox] cdVolumeURLs raw: %@", cdVolumeURLs);
+    [bundledVolumes addObjectsFromArray: cdVolumeURLs];
 
     NSLog(@"[BXGamebox] Total bundled volume URLs found: %lu", (unsigned long)bundledVolumes.count);
 
@@ -572,6 +577,15 @@ NSString * const BXGameboxErrorDomain = @"BXGameboxErrorDomain";
               drive.letter ?: @"(none)",
               (long)drive.type,
               drive.volumeLabel ?: @"(none)");
+        NSNumber *mountPointIsDirectory = nil;
+        BOOL gotMountPointType = [drive.mountPointURL getResourceValue: &mountPointIsDirectory
+                                                                  forKey: NSURLIsDirectoryKey
+                                                                   error: NULL];
+        NSLog(@"[BXGamebox] drive.sourceURL: %@  drive.mountPointURL: %@  isCDROM: %d  mountPointIsDirectory: %@",
+              drive.sourceURL,
+              drive.mountPointURL,
+              drive.isCDROM,
+              gotMountPointType ? mountPointIsDirectory : @"(unknown)");
         [drives addObject: drive];
 
         if ([drive.letter isEqualToString: @"C"])

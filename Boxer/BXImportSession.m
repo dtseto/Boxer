@@ -1493,6 +1493,12 @@
 //Don't shadow any drives during importing, otherwise we'll never actually install stuff into the gamebox.
 - (BOOL) _shouldShadowDrive: (BXDrive *)drive
 {
+	NSLog(@"BOXER:HD import-shadow-policy letter=%@ readOnly=%d bundled=%d hasGamebox=%d result=NO",
+	      drive.letter ?: @"(nil)",
+	      drive.isReadOnly,
+	      drive ? [self driveIsBundled: drive] : NO,
+	      self.hasGamebox);
+
     return NO;
 }
 
@@ -1500,6 +1506,25 @@
 //the source path ahead of other drives.
 - (void) _mountDrivesForSession
 {
+	NSLog(@"BOXER:HD import-mount-path: BXGamebox.bundledDrives will not be called by this override");
+	NSLog(@"BOXER:HD import-mount-start gamebox=%@ source=%@ root=%@",
+	      self.gamebox ? @"YES" : @"NO",
+	      self.sourceURL.path ?: @"(nil)",
+	      self.rootDriveURL.path ?: @"(nil)");
+
+	for (BXDrive *queuedDrive in self.allDrives)
+	{
+		NSLog(@"BOXER:HD import-drive-list letter=%@ source=%@ mount=%@ type=%ld readOnly=%d shadow=%@ bundled=%d",
+		      queuedDrive.letter ?: @"(nil)",
+		      queuedDrive.sourceURL.path ?: @"(nil)",
+		      queuedDrive.mountPointURL.path ?: @"(nil)",
+		      (long)queuedDrive.type,
+		      queuedDrive.isReadOnly,
+		      queuedDrive.shadowURL.path ?: @"(nil)",
+		      [self driveIsBundled: queuedDrive]);
+	}
+
+	NSLog(@"BOXER:CUE stage=mount-start source=%@ root=%@", self.sourceURL.path, self.rootDriveURL.path);
 	//Determine what type of media this game expects to be installed from,
 	//and how much free space to allow for it
 	BXDriveType sourceDriveType = BXDriveAutodetect;
@@ -1524,6 +1549,15 @@
     destinationDrive.title = NSLocalizedString(@"Destination Drive",
                                                @"The display title for the gamebox’s C drive when importing a game.");
 	destinationDrive.freeSpace = freeSpace;
+	NSLog(@"BOXER:HD import-before-mount letter=%@ source=%@ mount=%@ type=%ld readOnly=%d shadow=%@ bundled=%d options=0x%lx",
+	      destinationDrive.letter ?: @"(nil)",
+	      destinationDrive.sourceURL.path ?: @"(nil)",
+	      destinationDrive.mountPointURL.path ?: @"(nil)",
+	      (long)destinationDrive.type,
+	      destinationDrive.isReadOnly,
+	      destinationDrive.shadowURL.path ?: @"(nil)",
+	      [self driveIsBundled: destinationDrive],
+	      (unsigned long)BXBundledDriveMountOptions);
     
 	[self mountDrive: destinationDrive
             ifExists: BXDriveReplace
@@ -1533,6 +1567,15 @@
 	//Then, create a drive of the appropriate type from the source files and mount away
 	BXDrive *sourceDrive = [BXDrive driveWithContentsOfURL: self.sourceURL letter: nil type: sourceDriveType];
 	[sourceDrive setTitle: NSLocalizedString(@"Source Drive", @"The display title for the source drive when importing.")];
+	NSLog(@"BOXER:HD import-before-source-mount letter=%@ source=%@ mount=%@ type=%ld readOnly=%d shadow=%@ bundled=%d options=0x%lx",
+	      sourceDrive.letter ?: @"(nil)",
+	      sourceDrive.sourceURL.path ?: @"(nil)",
+	      sourceDrive.mountPointURL.path ?: @"(nil)",
+	      (long)sourceDrive.type,
+	      sourceDrive.isReadOnly,
+	      sourceDrive.shadowURL.path ?: @"(nil)",
+	      [self driveIsBundled: sourceDrive],
+	      (unsigned long)BXImportSourceMountOptions);
     
     [self mountDrive: sourceDrive
             ifExists: BXDriveReplace

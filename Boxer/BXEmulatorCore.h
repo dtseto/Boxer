@@ -31,6 +31,14 @@ typedef NS_ENUM(uint8_t, BXAudioSampleFormat) {
 @class BXSession;
 @class BXConfigKey;
 
+/// The MIDI device exposed by the Boxer-facing emulator configuration API.
+typedef NS_ENUM(NSInteger, BXMIDIDevice) {
+    BXMIDIDeviceNone,
+    BXMIDIDeviceMT32,
+    BXMIDIDeviceFluidSynth,
+    BXMIDIDeviceSoundCanvas,
+};
+
 /// The CPU type exposed by the Boxer-facing emulator configuration API.
 typedef NS_ENUM(NSInteger, BXCPUType) {
     BXCPUTypeAuto,
@@ -53,6 +61,8 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
     BXStagingVersion0822,
 };
 
+FOUNDATION_EXPORT NSNotificationName const BXEmulatorCoreShaderConfigurationDidChangeNotification;
+
 /// The public boundary for Boxer emulator configuration and control.
 @interface BXEmulatorCore : NSObject
 
@@ -64,6 +74,7 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 + (void)setHerculesTintMode:(uint8_t)mode;
 + (void)setCGACompositeHueOffset:(double)offset;
 + (void)setCGAComponentMode:(uint8_t)mode;
++ (void)setDefaultSoundFontName:(NSString *)soundFontName;
 + (void)switchDOSBoxKeyboardLayout:(const char *)layout codepage:(int32_t)codepage;
 + (void)sendMouseMovedWithDeltaX:(float)deltaX
                            deltaY:(float)deltaY
@@ -191,7 +202,13 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 - (void)setCPUType:(BXCPUType)type;
 
 - (BOOL)supportsVoodoo;
+/// Whether the current emulator core supports the Voodoo-specific protected-mode speed profile.
+- (BOOL)supportsVoodooProfile;
 - (BOOL)voodooEnabledForCurrentGamebox;
+/// Whether the gamebox explicitly overrides the Voodoo protected-mode cycle default.
+- (BOOL)hasProtectedCPUCyclesOverrideForCurrentGamebox;
+- (NSUInteger)protectedCPUCyclesForCurrentGamebox;
+- (void)setProtectedCPUCycles:(NSUInteger)cycles;
 - (void)setVoodooEnabled:(BOOL)enabled;
 - (NSUInteger)voodooMemorySizeForCurrentGamebox;
 - (void)setVoodooMemorySize:(NSUInteger)megabytes;
@@ -203,6 +220,20 @@ typedef NS_ENUM(NSInteger, BXStagingVersion) {
 - (BOOL)supportsESSAudio;
 - (BOOL)essEnabledForCurrentGamebox;
 - (void)setESSEnabled:(BOOL)enabled;
+
+- (BXMIDIDevice)currentMIDIDevice;
+- (void)setMIDIDevice:(BXMIDIDevice)device;
+- (BOOL)supportsFluidSynth;
+- (NSArray<NSString *> *)availableSoundFonts;
+- (NSString *)defaultSoundFontName;
+- (NSString *)soundFontForCurrentGamebox;
+- (BOOL)hasSoundFontOverrideForCurrentGamebox;
+- (NSString *)soundFontOverrideForCurrentGamebox;
+- (void)setSoundFont:(NSString *)soundFontName;
+
+- (BOOL)supportsAdLibGold;
+- (BOOL)adLibGoldEnabledForCurrentGamebox;
+- (void)setAdLibGoldEnabled:(BOOL)enabled;
 
 - (BOOL)supportsDeinterlacing;
 - (BOOL)deinterlacingEnabledForCurrentGamebox;

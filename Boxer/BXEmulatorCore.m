@@ -15,6 +15,7 @@
 
 static NSString * const BXCPUSection = @"cpu";
 static NSString * const BXCPUTypeKey = @"cputype";
+static NSString * const BXProtectedCPUCyclesKey = @"cpu_cycles_protected";
 static NSString * const BXVoodooSection = @"voodoo";
 static NSString * const BXVoodooKey = @"voodoo";
 static NSString * const BXVoodooMemoryKey = @"voodoo_memsize";
@@ -22,12 +23,21 @@ static NSString * const BXReelMagicSection = @"reelmagic";
 static NSString * const BXReelMagicKey = @"reelmagic";
 static NSString * const BXSBlasterSection = @"sblaster";
 static NSString * const BXSBlasterTypeKey = @"sbtype";
+static NSString * const BXSBlasterOPLModeKey = @"oplmode";
+static NSString * const BXMIDISection = @"midi";
+static NSString * const BXMIDIDeviceKey = @"mididevice";
+static NSString * const BXFluidSynthSection = @"fluidsynth";
+static NSString * const BXFluidSynthSoundFontKey = @"soundfont";
+static NSString * const BXFluidSynthChorusKey = @"fsynth_chorus";
+static NSString * const BXFluidSynthReverbKey = @"fsynth_reverb";
 static NSString * const BXRenderSection = @"render";
 static NSString * const BXShaderKey = @"glshader";
 static NSString * const BXIntegerScalingKey = @"integer_scaling";
 static NSString * const BXIMFCSection = @"imfc";
-static NSString * const BXDefaultDOSBoxShaderPreset = @"crt-auto";
 static NSString * const BXIMFCKey = @"imfc";
+static NSString * const BXDefaultDOSBoxShaderPreset = @"crt-auto";
+
+NSNotificationName const BXEmulatorCoreShaderConfigurationDidChangeNotification = @"BXEmulatorCoreShaderConfigurationDidChangeNotification";
 
 static NSString *BXCPUTypeString(BXCPUType type)
 {
@@ -765,6 +775,7 @@ static BOOL BXConfigurationBoolean(NSString *value)
         [[BXConfigKey alloc] initWithSection:BXVoodooSection key:BXVoodooMemoryKey],
         [[BXConfigKey alloc] initWithSection:BXReelMagicSection key:BXReelMagicKey],
         [[BXConfigKey alloc] initWithSection:BXSBlasterSection key:BXSBlasterTypeKey],
+        [[BXConfigKey alloc] initWithSection:BXSBlasterSection key:BXSBlasterOPLModeKey],
         [[BXConfigKey alloc] initWithSection:BXRenderSection key:BXShaderKey],
         [[BXConfigKey alloc] initWithSection:BXRenderSection key:BXIntegerScalingKey],
         [[BXConfigKey alloc] initWithSection:BXIMFCSection key:BXIMFCKey],
@@ -799,6 +810,31 @@ static BOOL BXConfigurationBoolean(NSString *value)
 - (BOOL)supportsVoodoo
 {
     return YES;
+}
+
+- (BOOL)supportsVoodooProfile
+{
+    return self.supportsVoodoo;
+}
+
+- (BOOL)hasProtectedCPUCyclesOverrideForCurrentGamebox
+{
+    return [self valueForKey:BXProtectedCPUCyclesKey section:BXCPUSection defaultValue:nil].length > 0;
+}
+
+- (NSUInteger)protectedCPUCyclesForCurrentGamebox
+{
+    return (NSUInteger)[self valueForKey:BXProtectedCPUCyclesKey section:BXCPUSection defaultValue:@"0"].integerValue;
+}
+
+- (void)setProtectedCPUCycles:(NSUInteger)cycles
+{
+    if (cycles == 0)
+        return;
+    [self setValue:[NSString stringWithFormat:@"%lu", (unsigned long)cycles]
+               key:BXProtectedCPUCyclesKey
+           section:BXCPUSection
+        defaultValue:nil];
 }
 
 - (BOOL)voodooEnabledForCurrentGamebox
@@ -857,9 +893,149 @@ static BOOL BXConfigurationBoolean(NSString *value)
         defaultValue:@"off"];
 }
 
+- (BXMIDIDevice)currentMIDIDevice
+{
+    NSString *value = [[self valueForKey:BXMIDIDeviceKey section:BXMIDISection defaultValue:@"auto"] lowercaseString];
+    if ([value isEqualToString:@"none"])
+        return BXMIDIDeviceNone;
+    if ([value isEqualToString:@"mt32"])
+        return BXMIDIDeviceMT32;
+    if ([value isEqualToString:@"fluidsynth"])
+        return BXMIDIDeviceFluidSynth;
+    return BXMIDIDeviceNone;
+}
+
+- (void)setMIDIDevice:(BXMIDIDevice)device
+{
+    if (device > BXMIDIDeviceSoundCanvas)
+        return;
+    NSArray<NSString *> *values = @[@"none", @"mt32", @"fluidsynth", @"soundcanvas"];
+    NSString *value = values[(NSUInteger)device];
+    [self setValue:value key:BXMIDIDeviceKey section:BXMIDISection defaultValue:@"auto"];
+}
+
+- (BOOL)supportsFluidSynth
+{
+#if defined(C_FLUIDSYNTH)
+    return C_FLUIDSYNTH == 1;
+#else
+    return YES;
+#endif
+}
+
+static NSURL *BXGlobalConfigurationURL(void)
+{
+    NSArray *urls = [[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask];
+    NSURL *directory = [urls.firstObject URLByAppendingPathComponent:@"Boxer" isDirectory:YES];
+    return [directory URLByAppendingPathComponent:@"Preferences.conf"];
+}
+
+static NSURL *BXSoundFontsDirectoryURL(void)
+{
+    NSArray *urls = [[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory
+                                                            inDomains:NSUserDomainMask];
+    return [[urls.firstObject URLByAppendingPathComponent:@"Boxer" isDirectory:YES]
+            URLByAppendingPathComponent:@"SoundFonts" isDirectory:YES];
+}
+
+- (NSArray<NSString *> *)availableSoundFonts
+{
+    NSURL *directory = BXSoundFontsDirectoryURL();
+    [[NSFileManager defaultManager] createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:NULL];
+    NSURL *bundled = [[NSBundle mainBundle] URLForResource:@"GeneralUser GS" withExtension:@"sf2" subdirectory:@"SoundFonts"];
+    NSURL *bundledDestination = [directory URLByAppendingPathComponent:@"GeneralUser GS.sf2"];
+    if (bundled && ![[NSFileManager defaultManager] fileExistsAtPath:bundledDestination.path])
+        [[NSFileManager defaultManager] copyItemAtURL:bundled toURL:bundledDestination error:NULL];
+    NSArray *urls = [[NSFileManager defaultManager] contentsOfDirectoryAtURL:directory
+                                                    includingPropertiesForKeys:@[NSURLIsRegularFileKey]
+                                                                       options:NSDirectoryEnumerationSkipsHiddenFiles
+                                                                         error:NULL];
+    NSMutableArray *names = [NSMutableArray array];
+    for (NSURL *url in urls) {
+        NSNumber *regular = nil;
+        [url getResourceValue:&regular forKey:NSURLIsRegularFileKey error:NULL];
+        if (regular.boolValue && [url.pathExtension.lowercaseString isEqualToString:@"sf2"])
+            [names addObject:url.lastPathComponent];
+    }
+    return [names sortedArrayUsingSelector:@selector(localizedCaseInsensitiveCompare:)];
+}
+
+- (NSString *)defaultSoundFontName
+{
+    BXEmulatorConfiguration *globalConfiguration = [BXEmulatorConfiguration configurationWithContentsOfURL:BXGlobalConfigurationURL() error:NULL];
+    NSString *configured = [globalConfiguration valueForKey:BXFluidSynthSoundFontKey inSection:BXFluidSynthSection];
+    if (configured.length && [[self availableSoundFonts] containsObject:configured])
+        return configured;
+    NSString *bundled = [[NSBundle mainBundle] pathForResource:@"GeneralUser GS" ofType:@"sf2" inDirectory:@"SoundFonts"];
+    if (bundled.length)
+        return @"GeneralUser GS.sf2";
+    return self.availableSoundFonts.firstObject ?: @"GeneralUser GS.sf2";
+}
+
++ (void)setDefaultSoundFontName:(NSString *)soundFontName
+{
+    if (!soundFontName.length)
+        return;
+    NSURL *url = BXGlobalConfigurationURL();
+    [[NSFileManager defaultManager] createDirectoryAtURL:url.URLByDeletingLastPathComponent withIntermediateDirectories:YES attributes:nil error:NULL];
+    BXEmulatorConfiguration *configuration = [BXEmulatorConfiguration configurationWithContentsOfURL:url error:NULL] ?: [BXEmulatorConfiguration configuration];
+    [configuration setValue:soundFontName forKey:BXFluidSynthSoundFontKey inSection:BXFluidSynthSection];
+    [configuration writeToURL:url error:NULL];
+}
+
+- (NSString *)soundFontForCurrentGamebox
+{
+    NSString *configured = [self valueForKey:BXFluidSynthSoundFontKey section:BXFluidSynthSection defaultValue:nil];
+    return (configured.length && [[self availableSoundFonts] containsObject:configured]) ? configured : self.defaultSoundFontName;
+}
+
+- (BOOL)hasSoundFontOverrideForCurrentGamebox
+{
+    return [self soundFontOverrideForCurrentGamebox].length > 0;
+}
+
+- (NSString *)soundFontOverrideForCurrentGamebox
+{
+    return [self valueForKey:BXFluidSynthSoundFontKey section:BXFluidSynthSection defaultValue:nil];
+}
+
+- (void)setSoundFont:(NSString *)soundFontName
+{
+    if (!soundFontName.length)
+        return;
+    [self setValue:[soundFontName isEqualToString:self.defaultSoundFontName] ? nil : soundFontName
+               key:BXFluidSynthSoundFontKey section:BXFluidSynthSection defaultValue:self.defaultSoundFontName];
+}
+
 - (BOOL)supportsESSAudio
 {
     return YES;
+}
+
+- (BOOL)supportsAdLibGold
+{
+    return YES;
+}
+
+- (BOOL)adLibGoldEnabledForCurrentGamebox
+{
+    NSString *value = [self valueForKey:BXSBlasterOPLModeKey
+                                 section:BXSBlasterSection
+                            defaultValue:@"auto"];
+    return [value.lowercaseString isEqualToString:@"opl3gold"];
+}
+
+- (void)setAdLibGoldEnabled:(BOOL)enabled
+{
+    [self setValue:enabled ? @"opl3gold" : nil
+               key:BXSBlasterOPLModeKey
+           section:BXSBlasterSection
+        defaultValue:@"auto"];
+    if (enabled)
+        [self setValue:@"sb16"
+                   key:BXSBlasterTypeKey
+               section:BXSBlasterSection
+            defaultValue:@"sb16"];
 }
 
 - (BOOL)essEnabledForCurrentGamebox
@@ -909,7 +1085,7 @@ static BOOL BXConfigurationBoolean(NSString *value)
     [self setValue:enabled ? @"true" : nil
                key:BXIMFCKey
            section:BXIMFCSection
-        defaultValue:@"false"];
+      defaultValue:@"false"];
 }
 
 #pragma mark - Rendering
@@ -951,6 +1127,8 @@ static BOOL BXConfigurationBoolean(NSString *value)
                section:BXRenderSection
             defaultValue:@""];
     }
+    [[NSNotificationCenter defaultCenter] postNotificationName:BXEmulatorCoreShaderConfigurationDidChangeNotification
+                                                        object:self.gamebox];
 }
 
 - (NSArray<NSString *> *)availableDOSBoxShaderPresets
@@ -974,6 +1152,8 @@ static BOOL BXConfigurationBoolean(NSString *value)
                key:BXShaderKey
            section:BXRenderSection
         defaultValue:BXDefaultDOSBoxShaderPreset];
+    [[NSNotificationCenter defaultCenter] postNotificationName:BXEmulatorCoreShaderConfigurationDidChangeNotification
+                                                        object:self.gamebox];
 }
 
 - (BOOL)supportsIntegerScaling
@@ -1049,7 +1229,7 @@ static BOOL BXConfigurationBoolean(NSString *value)
         return NSLocalizedString(@"Shader system or preset", @"Gamebox sharing summary label.");
     if ([key.section isEqualToString:BXRenderSection] && [key.key isEqualToString:BXIntegerScalingKey])
         return NSLocalizedString(@"Integer scaling", @"Gamebox sharing summary label.");
-    if ([key.section isEqualToString:BXIMFCSection])
+    if ([key.section isEqualToString:BXIMFCSection] && [key.key isEqualToString:BXIMFCKey])
         return NSLocalizedString(@"IBM Music Feature Card", @"Gamebox sharing summary label.");
     if ([key.section isEqualToString:BXCPUSection] && [key.key isEqualToString:BXCPUTypeKey])
         return NSLocalizedString(@"CPU type", @"Gamebox sharing summary label.");

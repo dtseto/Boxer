@@ -15,6 +15,7 @@
 #import "BXDOSWindow.h"
 #import "BXCloseAlert.h"
 #import "BXGamebox.h"
+#import "BXEmulatorCore.h"
 #import "NSAlert+BXAlert.h"
 
 #import "BXDOSWindowController.h"
@@ -686,7 +687,11 @@
 - (NSString *) speedDescription
 {	
 	if (!self.isEmulating) return @"";
-    return [self.class descriptionForSpeed: self.CPUSpeed];
+    NSString *description = [self.class descriptionForSpeed: self.CPUSpeed];
+    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
+    if (core.supportsVoodooProfile && core.voodooEnabledForCurrentGamebox)
+        return [NSString stringWithFormat:@"Voodoo • %@", description];
+    return description;
 }
 
 - (NSString *) frameskipDescription

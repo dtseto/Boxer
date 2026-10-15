@@ -20,6 +20,7 @@
 #import "BXPrintStatusPanelController.h"
 #import "BXDocumentationPanelController.h"
 #import "BXEmulatorConfiguration.h"
+#import "BXEmulatorCore.h"
 #import "BXCloseAlert.h"
 
 #import "BXEmulator+BXDOSFileSystem.h"
@@ -1234,6 +1235,75 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
         [self close];
 }
 
+- (NSURL *) _voodooProfileConfigurationURL
+{
+    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
+    if (!core.supportsVoodooProfile || !core.voodooEnabledForCurrentGamebox)
+        return nil;
+
+    BXEmulatorConfiguration *gameboxConfiguration =
+        [BXEmulatorConfiguration configurationWithContentsOfURL:self.gamebox.configurationFileURL error:NULL];
+    NSString *protectedCycles = [gameboxConfiguration valueForKey:@"cpu_cycles_protected" inSection:@"cpu"];
+    NSString *dosRate = [gameboxConfiguration valueForKey:@"dos_rate" inSection:@"dosbox"];
+    if (protectedCycles.length > 0 && dosRate.length > 0)
+        return nil;
+
+    if (!self.temporaryFolderURL) {
+        NSURL *folder = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES]
+                         URLByAppendingPathComponent:[NSString stringWithFormat:@"Boxer-%@", NSUUID.UUID.UUIDString]
+                         isDirectory:YES];
+        if (![[NSFileManager defaultManager] createDirectoryAtURL:folder
+                                       withIntermediateDirectories:YES
+                                                        attributes:nil
+                                                             error:NULL])
+            return nil;
+        self.temporaryFolderURL = folder;
+    }
+
+    BXEmulatorConfiguration *profile = [BXEmulatorConfiguration configuration];
+    if (protectedCycles.length == 0)
+        [profile setValue:@"150000" forKey:@"cpu_cycles_protected" inSection:@"cpu"];
+    if (dosRate.length == 0)
+        [profile setValue:@"60" forKey:@"dos_rate" inSection:@"dosbox"];
+
+    NSURL *profileURL = [self.temporaryFolderURL URLByAppendingPathComponent:@"VoodooProfile.conf"];
+    return [profile writeToURL:profileURL error:NULL] ? profileURL : nil;
+}
+
+- (NSURL *)_fluidSynthProfileConfigurationURL
+{
+    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
+    if (!core.supportsFluidSynth || core.currentMIDIDevice != BXMIDIDeviceFluidSynth)
+        return nil;
+
+    BXEmulatorConfiguration *gameboxConfiguration =
+        [BXEmulatorConfiguration configurationWithContentsOfURL:self.gamebox.configurationFileURL error:NULL];
+    if (!gameboxConfiguration)
+        gameboxConfiguration = [BXEmulatorConfiguration configuration];
+
+    if (!self.temporaryFolderURL) {
+        NSURL *folder = [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"Boxer-%@", NSUUID.UUID.UUIDString]] isDirectory:YES];
+        if (![[NSFileManager defaultManager] createDirectoryAtURL:folder withIntermediateDirectories:YES attributes:nil error:NULL])
+            return nil;
+        self.temporaryFolderURL = folder;
+    }
+
+    BXEmulatorConfiguration *profile = [BXEmulatorConfiguration configuration];
+    [profile setValue:@"fluidsynth" forKey:@"mididevice" inSection:@"midi"];
+    NSString *soundFontName = core.soundFontForCurrentGamebox;
+    NSURL *soundFontURL = [[[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject
+        URLByAppendingPathComponent:@"Boxer/SoundFonts" isDirectory:YES];
+    if (soundFontName.length && ![gameboxConfiguration valueForKey:@"soundfont" inSection:@"fluidsynth"])
+        [profile setValue:[soundFontURL URLByAppendingPathComponent:soundFontName].path forKey:@"soundfont" inSection:@"fluidsynth"];
+    if (![gameboxConfiguration valueForKey:@"fsynth_chorus" inSection:@"fluidsynth"])
+        [profile setValue:@"auto" forKey:@"fsynth_chorus" inSection:@"fluidsynth"];
+    if (![gameboxConfiguration valueForKey:@"fsynth_reverb" inSection:@"fluidsynth"])
+        [profile setValue:@"auto" forKey:@"fsynth_reverb" inSection:@"fluidsynth"];
+
+    NSURL *profileURL = [self.temporaryFolderURL URLByAppendingPathComponent:@"FluidSynthProfile.conf"];
+    return [profile writeToURL:profileURL error:NULL] ? profileURL : nil;
+}
+
 - (NSArray *) configurationURLsForEmulator: (BXEmulator *)emulator
 {
     NSMutableArray *configURLs = [[NSMutableArray alloc] initWithCapacity: 4];
@@ -1245,6 +1315,11 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
                                            subdirectory: @"Configurations"];
     NSAssert(preflightConfURL != nil, @"Missing preflight configuration.");
     [configURLs addObject: preflightConfURL];
+
+    NSURL *globalConfigurationURL = [[[NSFileManager defaultManager] URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject
+        URLByAppendingPathComponent:@"Boxer/Preferences.conf"];
+    if ([globalConfigurationURL checkResourceIsReachableAndReturnError:NULL])
+        [configURLs addObject:globalConfigurationURL];
 
 	//If we don't have a previously-determined game profile already, detect the game profile
     //from our gamebox (or target URL, in the case of regular sessions).
@@ -1285,6 +1360,17 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
         [configURLs addObject: packageConfURL];
     
 	
+    //Apply Voodoo tuning only for settings the user has not overridden in the gamebox.
+    //This file is session-temporary and is never persisted into the package.
+    NSURL *voodooProfileURL = [self _voodooProfileConfigurationURL];
+    if (voodooProfileURL)
+        [configURLs addObject: voodooProfileURL];
+
+    //Apply FluidSynth runtime settings without persisting defaults into the gamebox.
+    NSURL *fluidSynthProfileURL = [self _fluidSynthProfileConfigurationURL];
+    if (fluidSynthProfileURL)
+        [configURLs addObject:fluidSynthProfileURL];
+
     //Last but not least, load Boxer's launch configuration.
     NSURL *launchURL = [appBundle URLForResource: @"Launch"
                                    withExtension: @"conf"
@@ -1444,7 +1530,27 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
         [self _processEventsUntilDate: nil];
 }
 
-- (void) emulatorWillStartRunLoop: (BXEmulator *)theEmulator {}
+- (void) emulatorWillStartRunLoop: (BXEmulator *)theEmulator
+{
+    if (self.didWarnAboutVoodooMaximumSpeed || !theEmulator.isAutoSpeed)
+        return;
+
+    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
+    if (!core.voodooEnabledForCurrentGamebox)
+        return;
+
+    self.didWarnAboutVoodooMaximumSpeed = YES;
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.alertStyle = NSAlertStyleWarning;
+        alert.messageText = NSLocalizedString(@"Voodoo is using maximum CPU speed", @"Warning shown when Voodoo is enabled with maximum CPU speed.");
+        alert.informativeText = NSLocalizedString(@"Maximum CPU speed can leave too little host CPU time for Voodoo rendering and audio. If you see stuttering or drop-outs, choose a fixed CPU speed instead.", @"Explanation shown when Voodoo is enabled with maximum CPU speed.");
+        [alert addButtonWithTitle:NSLocalizedString(@"OK", @"Dismiss button for the Voodoo maximum CPU speed warning.")];
+        [alert beginSheetModalForWindow:self.windowForSheet completionHandler:nil];
+    });
+}
+
 - (void) emulatorDidFinishRunLoop: (BXEmulator *)theEmulator {}
 
 
@@ -1852,6 +1958,34 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
     return YES;
 }
 
+- (void) _logEffectiveHardwareConfiguration
+{
+    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
+    NSArray *cpuNames = @[@"Auto", @"386", @"486", @"Pentium", @"Pentium MMX"];
+    BXCPUType cpuType = core.currentCPUType;
+    NSString *cpuName = (cpuType < cpuNames.count) ? cpuNames[cpuType] : @"Unknown";
+    NSString *voodoo = core.voodooEnabledForCurrentGamebox ? @"On" : @"Off";
+    NSString *reelMagic = core.reelMagicEnabledForCurrentGamebox ? @"On" : @"Off";
+    NSString *ess = core.essEnabledForCurrentGamebox ? @"On" : @"Off";
+    NSString *ibmMFC = core.ibmMFCEnabledForCurrentGamebox ? @"On" : @"Off";
+    NSString *voodooProfile = @"";
+    if (core.supportsVoodooProfile && core.voodooEnabledForCurrentGamebox) {
+        NSUInteger protectedCycles = core.hasProtectedCPUCyclesOverrideForCurrentGamebox
+            ? core.protectedCPUCyclesForCurrentGamebox : 150000;
+        voodooProfile = [NSString stringWithFormat:@" Voodoo profile: protected CPU cycles=%lu; DOS rate=60 Hz.",
+                         (unsigned long)protectedCycles];
+    }
+
+    NSLog(@"BOXER: Effective hardware — CPU: %@; Voodoo: %@ (%lu MB); ReelMagic: %@; ESS Enhanced FM: %@; IBM Music Feature Card: %@.%@",
+          cpuName,
+          voodoo,
+          (unsigned long)core.voodooMemorySizeForCurrentGamebox,
+          reelMagic,
+          ess,
+          ibmMFC,
+          voodooProfile);
+}
+
 - (void) _startEmulator
 {	
 	//Set the emulator's current working directory relative to whatever we're opening
@@ -1868,7 +2002,9 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 		}
 	}
 	
-	//Start up the emulator itself.
+        [self _logEffectiveHardwareConfiguration];
+
+        //Start up the emulator itself.
     if ([[NSUserDefaults standardUserDefaults] boolForKey: @"useMultithreadedEmulation"])
     {
         [self performSelectorInBackground: @selector(_startEmulatorInBackground) withObject: nil];
@@ -2187,6 +2323,11 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
                      options: BXBundledDriveMountOptions
                        error: &mountError];
             
+            if (mountError)
+            {
+                NSLog(@"[BXSession] Mount failed for %@: %@", drive, mountError);
+            }
+
             //TODO: deal with any mounting errors that occur. Since all this happens automatically
             //during startup, we can't really give errors straight to the user as they will seem cryptic.
         }
@@ -2254,14 +2395,24 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
                        options: BXTargetMountOptions
                          error: &mountError];
         
-        if (mountError)
-        {
-            [self presentError: mountError
+		if (mountError)
+		{
+			[self presentError: mountError
                 modalForWindow: self.windowForSheet
                       delegate: nil
             didPresentSelector: NULL
-                   contextInfo: NULL];
-        }
+			       contextInfo: NULL];
+		}
+	}
+
+	for (BXDrive *mountedDrive in self.mountedDrives)
+	{
+		NSLog(@"BOXER:HD mounted-drive letter=%@ source=%@ mount=%@ shadow=%@ type=%ld",
+		      mountedDrive.letter ?: @"(nil)",
+		      mountedDrive.sourceURL.path ?: @"(nil)",
+		      mountedDrive.mountPointURL.path ?: @"(nil)",
+		      mountedDrive.shadowURL.path ?: @"(nil)",
+		      (long)mountedDrive.type);
 	}
 }
 

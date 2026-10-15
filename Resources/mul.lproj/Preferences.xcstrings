@@ -808,6 +808,18 @@
         }
       }
     },
+    "297.title" : {
+      "comment" : "Class = \"NSMenuItem\"; title = \"[Manage SoundFonts…]\"; ObjectID = \"297\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "[Manage SoundFonts…]"
+          }
+        }
+      }
+    },
     "299.title" : {
       "comment" : "Class = \"NSMenuItem\"; title = \"[Add MT-32 ROMs…]\"; ObjectID = \"299\";",
       "extractionState" : "extracted_with_value",

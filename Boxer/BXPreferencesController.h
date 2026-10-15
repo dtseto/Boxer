@@ -90,6 +90,9 @@
 /// Show a standard OS X open panel for choosing MT-32 ROMs to install.
 - (IBAction) showMT32ROMFileChooser: (id)sender;
 
+/// Open the SoundFont manager.
+- (IBAction) showSoundFontManager: (id)sender;
+
 
 
 #pragma mark - Help

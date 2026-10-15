@@ -19,6 +19,7 @@
 #import "BXMIDIDeviceMonitor.h"
 #import "BXFilterGallery.h"
 #import "BXFrameRenderingView.h"
+#import "BXSoundFontManagerWindowController.h"
 
 #pragma mark -
 #pragma mark Implementation
@@ -550,6 +551,12 @@ enum {
 {
     //Was @"keyboard", but that was too general for the contents of the keyboard panel.
 	[(BXBaseAppController *)[NSApp delegate] showHelpAnchor: @"spaces-shortcuts"];
+}
+
+- (IBAction) showSoundFontManager: (id)sender
+{
+    (void)sender;
+    [[BXSoundFontManagerWindowController controller] showWindow:self];
 }
 
 - (IBAction) showAudioPreferencesHelp: (id)sender

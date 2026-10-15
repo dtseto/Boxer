@@ -18,6 +18,11 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)initWithWindow:(nullable NSWindow *)window NS_UNAVAILABLE;
 - (instancetype)initWithCoder:(NSCoder *)coder NS_UNAVAILABLE;
 
+/// Presents the same gamebox settings controls as an installer preflight sheet.
+/// The completion block is called with YES only after the user chooses Continue.
+- (void)beginInstallerPreflightSheetForWindow:(NSWindow *)parentWindow
+                            completionHandler:(void (^)(BOOL continueInstalling))completionHandler;
+
 @end
 
 NS_ASSUME_NONNULL_END

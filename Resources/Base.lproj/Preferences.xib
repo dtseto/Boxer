@@ -542,6 +542,12 @@ be enabled in the Universal Access preferences.</string>
                         <action selector="showMT32ROMFileChooser:" target="-2" id="302"/>
                     </connections>
                 </menuItem>
+                <menuItem title="[Manage SoundFonts…]" id="297">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="showSoundFontManager:" target="-2" id="305"/>
+                    </connections>
+                </menuItem>
                 <menuItem title="[Show ROMs in Finder]" id="296">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>

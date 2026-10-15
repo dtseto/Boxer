@@ -19,6 +19,9 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype)init NS_UNAVAILABLE;
 
 /// Returns the version-specific overrides currently present in the gamebox.
+/// Rewrites the current gamebox configuration immediately and reports any write error.
+- (BOOL)saveCurrentConfigurationWithError:(NSError * _Nullable * _Nullable)error;
+
 - (NSArray<BXConfigKey *> *)currentVersionSpecificOverrides;
 
 /// Returns only the newer overrides currently present in the gamebox.

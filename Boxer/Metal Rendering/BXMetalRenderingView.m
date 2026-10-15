@@ -13,6 +13,7 @@
 #import "BXMetalRenderingView+Private.h"
 #import "BXVideoFrame.h"
 #import "BXMetalLayer.h"
+#import "BXIntegerScaling.h"
 
 /// Only send 1 frame at once to the GPU.
 /// Since we aren't synced to the display, even one more
@@ -46,6 +47,7 @@
     NSRect _viewportRect;
     NSRect _targetViewportRect;
     BXRenderingStyle _renderingStyle;
+    BXIntegerScalingMode _integerScalingMode;
     NSString *_selectedShaderPresetPath;
 }
 
@@ -87,6 +89,7 @@
     // some reasonable default
     [_filterChain setSourceRect:CGRectMake(0, 0, 648, 480) aspect:CGSizeMake(4, 3)];
     self.renderingStyle = BXRenderingStyleNormal;
+    _integerScalingMode = BXIntegerScalingModeOff;
     
     self.wantsLayer = YES;
     
@@ -188,7 +191,38 @@
     }
     
     [self didChangeValueForKey:@"renderingStyle"];
+    [self updateIntegerScalingForFrame:self.currentFrame];
     
+}
+
+- (void)setIntegerScalingMode:(BXIntegerScalingMode)integerScalingMode
+{
+    if (_integerScalingMode == integerScalingMode) {
+        return;
+    }
+    _integerScalingMode = integerScalingMode;
+    [self updateIntegerScalingForFrame:self.currentFrame];
+}
+
+- (void)updateIntegerScalingForFrame:(BXVideoFrame *)frame
+{
+    if (frame == nil || self.integerScalingMode == BXIntegerScalingModeOff) {
+        [_filterChain resetOutputViewport];
+        return;
+    }
+
+    // Auto mode is intended for CRT presentation. Normal mode already uses
+    // nearest filtering and should retain its existing aspect-fit behavior.
+    if (self.integerScalingMode == BXIntegerScalingModeAuto &&
+        self.renderingStyle != BXRenderingStyleCRT) {
+        [_filterChain resetOutputViewport];
+        return;
+    }
+
+    BXIntegerScaleResult result = BXCalculateIntegerScale(frame.scaledSize,
+                                                            _videoLayer.drawableSize,
+                                                            self.integerScalingMode);
+    [_filterChain setOutputViewport:result.viewport];
 }
 
 - (void)updateWithFrame:(BXVideoFrame *)frame {
@@ -200,6 +234,7 @@
     
     CGRect sourceRect = CGRectMake(0, 0, frame.size.width, frame.size.height);
     [_filterChain setSourceRect:sourceRect aspect:frame.scaledSize];
+    [self updateIntegerScalingForFrame:frame];
     
     if (frame != _currentFrame) {
         if (NSIsEmptyRect(self.viewportRect)) {
@@ -284,6 +319,7 @@
     [_filterChain setDrawableSize:_videoLayer.drawableSize];
     if (self.currentFrame) {
         [self setViewportRect:[self viewportForFrame:self.currentFrame] animated:NO];
+        [self updateIntegerScalingForFrame:self.currentFrame];
     }
 }
 

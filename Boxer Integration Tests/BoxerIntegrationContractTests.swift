@@ -521,6 +521,24 @@ final class BoxerIntegrationContractTests: XCTestCase {
         try expectBlock("src/dos/drive_local.cpp", marker: "local-file-unavailable", contains: "void localFile::willBecomeUnavailable()")
     }
 
+    func testShadowHardDiskMountCreatesWritableOverlayRootBeforeDOSBox() throws {
+        let filesystem = try source(at: projectRoot.appendingPathComponent("Boxer/BXEmulator+BXDOSFileSystem.mm"))
+
+        XCTAssertTrue(filesystem.contains("fileExistsAtPath: shadowPath"))
+        XCTAssertTrue(filesystem.contains("createDirectoryAtPath: shadowPath"))
+        XCTAssertTrue(filesystem.contains("withIntermediateDirectories: YES"))
+        XCTAssertTrue(filesystem.contains("shadow-root-check"))
+        XCTAssertTrue(filesystem.contains("shadow-root-create"))
+        XCTAssertTrue(filesystem.contains("shadow-root-ready"))
+        XCTAssertTrue(filesystem.contains("[shadowPath hasSuffix: @\"/\"]"))
+        XCTAssertTrue(filesystem.contains("shadowPath:[shadowPath fileSystemRepresentation]"))
+
+        let overlay = try source(at: dosboxRoot.appendingPathComponent("src/dos/drive_overlay.cpp"))
+        XCTAssertTrue(overlay.contains("overlay_length > 0 &&"))
+        XCTAssertTrue(overlay.contains("Sync_leading_dirs(dir)"))
+        XCTAssertTrue(overlay.contains("overlay-mkdir-sync-leading"))
+    }
+
     func testSavedStartupProgramSupportsLegacyAbsoluteAndRelativePaths() throws {
         let session = try source(at: projectRoot.appendingPathComponent("Boxer/BXSession.m"))
         let startupSelection = try sourceRegion(

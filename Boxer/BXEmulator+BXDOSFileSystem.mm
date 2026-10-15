@@ -292,8 +292,52 @@ void MSCDEX_SetCDInterface(int intNr, int forceCD);
                 BOOL checkedDir = [shadowURL getResourceValue: &isDirFlag forKey: NSURLIsDirectoryKey error: NULL];
                 BOOL isDir = checkedDir && isDirFlag.boolValue;
                 NSString *shadowPath = shadowURL.path;
+                //The overlay drive requires a real writable root before it
+                //can materialize files and directories beneath it.
+                BOOL shadowExists = [NSFileManager.defaultManager fileExistsAtPath: shadowPath
+                                                                        isDirectory: &isDir];
+                NSLog(@"BOXER:HD shadow-root-check letter=%@ path=%@ exists=%d isDirectory=%d",
+                      drive.letter ?: @"(nil)",
+                      shadowPath ?: @"(nil)",
+                      shadowExists,
+                      isDir);
+                if (shadowExists && !isDir) {
+                    mountError = [NSError errorWithDomain: NSCocoaErrorDomain
+                                                       code: NSFileWriteUnknownError
+                                                   userInfo: @{NSFilePathErrorKey: shadowPath ?: @""}];
+                    NSLog(@"BOXER:HD shadow-root-invalid letter=%@ path=%@ errorDomain=%@ errorCode=%ld",
+                          drive.letter ?: @"(nil)",
+                          shadowPath ?: @"(nil)",
+                          mountError.domain,
+                          (long)mountError.code);
+                    break;
+                }
+                if (!shadowExists) {
+                    NSError *shadowCreateError = nil;
+                    BOOL shadowCreated = [NSFileManager.defaultManager createDirectoryAtPath: shadowPath
+                                                                     withIntermediateDirectories: YES
+                                                                                      attributes: nil
+                                                                                           error: &shadowCreateError];
+                    NSLog(@"BOXER:HD shadow-root-create letter=%@ path=%@ created=%d errorDomain=%@ errorCode=%ld error=%@",
+                          drive.letter ?: @"(nil)",
+                          shadowPath ?: @"(nil)",
+                          shadowCreated,
+                          shadowCreateError.domain ?: @"(nil)",
+                          (long)shadowCreateError.code,
+                          shadowCreateError.localizedDescription ?: @"(nil)");
+                    if (!shadowCreated) {
+                        mountError = shadowCreateError ?: [NSError errorWithDomain: NSCocoaErrorDomain
+                                                                                code: NSFileWriteUnknownError
+                                                                            userInfo: @{NSFilePathErrorKey: shadowPath ?: @""}];
+                        break;
+                    }
+                }
+                NSLog(@"BOXER:HD shadow-root-ready letter=%@ path=%@ trailingSlash=%d",
+                      drive.letter ?: @"(nil)",
+                      shadowPath ?: @"(nil)",
+                      [shadowPath hasSuffix: @"/"]);
                 //Ensure that folder paths have a trailing slash, otherwise DOSBox will get shirty
-                if (isDir && ![shadowPath hasSuffix: @"/"])
+                if (![shadowPath hasSuffix: @"/"])
                     shadowPath = [shadowPath stringByAppendingString: @"/"];
 
                 DOSBoxDrive = [BXEmulatorCore createDOSBoxLocalDirectory:cMountPath

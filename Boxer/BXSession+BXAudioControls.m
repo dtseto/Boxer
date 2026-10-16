@@ -19,7 +19,9 @@
 #import "BXExternalMT32.h"
 #import "Boxer-Swift.h"
 #import "RegexKitLite.h"
+#import <objc/runtime.h>
 
+static const void *BXGeneralMIDISynthAssociationKey = &BXGeneralMIDISynthAssociationKey;
 
 @implementation BXSession (BXAudioControls)
 
@@ -168,7 +170,13 @@
     }
     else
     {
-        fallbackSynth = [[BXMIDISynth alloc] initWithError: NULL];
+        fallbackSynth = objc_getAssociatedObject(self, BXGeneralMIDISynthAssociationKey);
+        if (!fallbackSynth)
+        {
+            fallbackSynth = [[BXMIDISynth alloc] initWithError: NULL];
+            if (fallbackSynth)
+                objc_setAssociatedObject(self, BXGeneralMIDISynthAssociationKey, fallbackSynth, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
     }
     
     //If a custom soundfont has been specified for the MIDI synth, load that now also.
@@ -179,12 +187,16 @@
     NSURL *soundfontURL = [applicationSupportURLs.firstObject URLByAppendingPathComponent: @"Boxer/SoundFonts"
                                                                                isDirectory: YES];
     NSString *soundfontPath = [soundfontURL URLByAppendingPathComponent: soundfontName].path;
+    NSURL *requestedSoundFontURL = soundfontName.length > 0 ? [NSURL fileURLWithPath: soundfontPath] : nil;
+    BOOL alreadyLoaded = requestedSoundFontURL && [fallbackSynth.soundFontURL isEqual: requestedSoundFontURL];
     NSError *loadError = nil;
-    BOOL loaded = soundfontName.length > 0 && [fallbackSynth loadSoundFontWithContentsOfURL: [NSURL fileURLWithPath: soundfontPath]
-                                                                                         error: &loadError];
+    BOOL loaded = alreadyLoaded || (requestedSoundFontURL && [fallbackSynth loadSoundFontWithContentsOfURL: requestedSoundFontURL
+                                                                                                     error: &loadError]);
     if (loaded)
     {
-        NSLog(@"Using General MIDI fallback SoundFont: %@", soundfontPath);
+        NSLog(@"Using General MIDI fallback SoundFont: %@ (%@)",
+              soundfontPath,
+              alreadyLoaded ? @"already loaded" : @"loaded");
     }
     else
     {

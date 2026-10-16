@@ -720,6 +720,11 @@ static BOOL _hasStartedEmulator = NO;
 {
     if (device != self.activeMIDIDevice)
     {
+        NSLog(@"BOXER:MIDI device-change old=%@ new=%@ requestedMusicType=%ld autodetectMT32=%@",
+              _activeMIDIDevice ? NSStringFromClass([_activeMIDIDevice class]) : @"(none)",
+              device ? NSStringFromClass([device class]) : @"(none)",
+              (long)[[self.requestedMIDIDeviceDescription objectForKey: BXMIDIMusicTypeKey] integerValue],
+              self.autodetectsMT32 ? @"YES" : @"NO");
         [_activeMIDIDevice release];
         _activeMIDIDevice = [device retain];
 

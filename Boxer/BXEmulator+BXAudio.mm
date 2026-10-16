@@ -298,6 +298,8 @@ NSString * const BXMIDIExternalDeviceNeedsMT32SysexDelaysKey = @"Needs MT-32 Sys
     //Clear the active MIDI device so that we can redetect it next time
     if (self.autodetectsMT32)
     {
+        NSLog(@"BOXER:MIDI reset-clearing-device current=%@ reason=MT32-autodetection-reset",
+              self.activeMIDIDevice ? NSStringFromClass([self.activeMIDIDevice class]) : @"(none)");
         self.activeMIDIDevice = nil;
     }
 }

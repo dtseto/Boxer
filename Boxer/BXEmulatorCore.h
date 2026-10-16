@@ -202,10 +202,8 @@ FOUNDATION_EXPORT NSNotificationName const BXEmulatorCoreShaderConfigurationDidC
 - (void)setCPUType:(BXCPUType)type;
 
 - (BOOL)supportsVoodoo;
-/// Whether the current emulator core supports the Voodoo-specific protected-mode speed profile.
-- (BOOL)supportsVoodooProfile;
 - (BOOL)voodooEnabledForCurrentGamebox;
-/// Whether the gamebox explicitly overrides the Voodoo protected-mode cycle default.
+/// Whether the gamebox explicitly overrides protected-mode CPU cycles.
 - (BOOL)hasProtectedCPUCyclesOverrideForCurrentGamebox;
 - (NSUInteger)protectedCPUCyclesForCurrentGamebox;
 - (void)setProtectedCPUCycles:(NSUInteger)cycles;

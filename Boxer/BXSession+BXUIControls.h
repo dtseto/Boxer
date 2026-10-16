@@ -67,6 +67,11 @@ typedef NS_ENUM(NSInteger, BXPlaybackMode) {
 /// it to maximum speed if set to the highest limit. Used by speed slider in CPU panel.
 @property (assign, nonatomic) NSInteger sliderSpeed;
 
+/// Optional protected-mode CPU speed. Zero means protected mode follows the default CPU speed.
+@property (assign, nonatomic) NSInteger protectedCPUCycles;
+@property (assign, nonatomic) NSInteger protectedCPUSliderSpeed;
+@property (readonly, nonatomic) NSString *protectedCPUSpeedDescription;
+
 /// Whether the CPU is in dynamic core mode
 @property (assign, nonatomic, getter=isDynamic) BOOL dynamic;
 

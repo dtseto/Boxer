@@ -16,6 +16,7 @@
 #import "BXCloseAlert.h"
 #import "BXGamebox.h"
 #import "BXEmulatorCore.h"
+#import "BXEmulatorConfiguration.h"
 #import "NSAlert+BXAlert.h"
 
 #import "BXDOSWindowController.h"
@@ -350,8 +351,6 @@
 
 - (void) setSliderSpeed: (NSInteger)speed
 {
-	//If we're at the maximum speed, bump it into auto-throttling mode
-	if (speed >= BXMaxSpeedThreshold) speed = BXAutoSpeed;
 	self.CPUSpeed = speed;
     
     [[BXBezelController controller] showCPUSpeedBezelForSpeed: speed];
@@ -359,10 +358,7 @@
 
 - (NSInteger) sliderSpeed
 {
-	//Report the max fixed speed if we're in auto-throttling mode,
-    //so that the knob will appear at the top end of the slider
-    //instead of the bottom
-	return (self.isAutoSpeed) ? BXMaxSpeedThreshold : self.CPUSpeed;
+	return (self.isAutoSpeed) ? 3000 : self.CPUSpeed;
 }
 
 //Snap fixed speed to even increments, unless the Option key is held down
@@ -380,6 +376,53 @@
 + (NSSet *) keyPathsForValuesAffectingSliderSpeed
 {
     return [NSSet setWithObjects: @"emulating", @"CPUSpeed", @"autoSpeed", @"dynamic", nil];
+}
+
+- (NSInteger) protectedCPUCycles
+{
+    NSNumber *pendingValue = [self.gameSettings objectForKey:@"protectedCPUCycles"];
+    if (pendingValue)
+        return pendingValue.integerValue;
+
+    BXEmulatorConfiguration *configuration =
+        [BXEmulatorConfiguration configurationWithContentsOfURL:self.gamebox.configurationFileURL error:NULL];
+    NSString *value = [configuration valueForKey:@"cpu_cycles_protected" inSection:@"cpu"];
+    if (!value.length || [value caseInsensitiveCompare:@"auto"] == NSOrderedSame)
+        return 0;
+    return MAX(0, value.integerValue);
+}
+
+- (void) setProtectedCPUCycles: (NSInteger)cycles
+{
+    cycles = MAX(0, cycles);
+    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
+    [core setProtectedCPUCycles:(NSUInteger)cycles];
+    [self.gameSettings setObject:@(cycles) forKey:@"protectedCPUCycles"];
+}
+
+- (NSInteger) protectedCPUSliderSpeed
+{
+    return self.protectedCPUCycles;
+}
+
+- (void) setProtectedCPUSliderSpeed: (NSInteger)cycles
+{
+    if (cycles > 0)
+        cycles = MAX(10000, MIN(300000, cycles));
+    self.protectedCPUCycles = cycles;
+}
+
+- (NSString *) protectedCPUSpeedDescription
+{
+    NSInteger cycles = self.protectedCPUCycles;
+    if (cycles == 0)
+        return NSLocalizedString(@"N/A — follows default", @"Protected-mode CPU speed when no separate override is configured.");
+    return [NSString stringWithFormat:NSLocalizedString(@"%ld cycles/ms", @"Protected-mode CPU speed description."), (long)cycles];
+}
+
++ (NSSet *) keyPathsForValuesAffectingProtectedCPUSpeedDescription
+{
+    return [NSSet setWithObject:@"protectedCPUCycles"];
 }
 
 
@@ -687,11 +730,7 @@
 - (NSString *) speedDescription
 {	
 	if (!self.isEmulating) return @"";
-    NSString *description = [self.class descriptionForSpeed: self.CPUSpeed];
-    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
-    if (core.supportsVoodooProfile && core.voodooEnabledForCurrentGamebox)
-        return [NSString stringWithFormat:@"Voodoo • %@", description];
-    return description;
+    return [self.class descriptionForSpeed: self.CPUSpeed];
 }
 
 - (NSString *) frameskipDescription

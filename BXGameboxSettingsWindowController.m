@@ -12,9 +12,7 @@ static NSInteger const BXOpenEmuShaders = 201;
 static NSInteger const BXVersion080 = 400;
 static NSInteger const BXVersion081 = 401;
 static NSInteger const BXVersion0822 = 402;
-static NSInteger const BXVoodooProfileDefaultCycles = 150000;
-static NSInteger const BXVoodooProfileMinimumCycles = 50000;
-static NSInteger const BXVoodooProfileMaximumCycles = 200000;
+static NSInteger const BXProtectedCPUCyclesMaximum = 300000;
 
 @interface BXGameboxSettingsDocumentView : NSView
 @end
@@ -138,8 +136,8 @@ static NSInteger const BXVoodooProfileMaximumCycles = 200000;
     self.cpuCyclesLabel.frame = NSMakeRect(0, 0, 180, 22);
     [cpuCyclesRow addArrangedSubview:self.cpuCyclesLabel];
     self.cpuCyclesSlider = [[NSSlider alloc] initWithFrame:NSMakeRect(0, 0, 260, 22)];
-    self.cpuCyclesSlider.minValue = BXVoodooProfileMinimumCycles;
-    self.cpuCyclesSlider.maxValue = BXVoodooProfileMaximumCycles;
+    self.cpuCyclesSlider.minValue = 0;
+    self.cpuCyclesSlider.maxValue = BXProtectedCPUCyclesMaximum;
     self.cpuCyclesSlider.target = self;
     self.cpuCyclesSlider.action = @selector(cpuCyclesChanged:);
     self.cpuCyclesSlider.continuous = NO;
@@ -427,16 +425,15 @@ static NSInteger const BXVoodooProfileMaximumCycles = 200000;
 
 - (void)refreshProtectedCPUCyclesControl
 {
-    BOOL voodooProfile = self.core.supportsVoodooProfile && self.core.voodooEnabledForCurrentGamebox;
     NSUInteger cycles = self.core.hasProtectedCPUCyclesOverrideForCurrentGamebox
         ? self.core.protectedCPUCyclesForCurrentGamebox
-        : (voodooProfile ? BXVoodooProfileDefaultCycles : BXVoodooProfileMinimumCycles);
-    cycles = MIN(MAX(cycles, BXVoodooProfileMinimumCycles), BXVoodooProfileMaximumCycles);
+        : 0;
+    cycles = MIN(cycles, BXProtectedCPUCyclesMaximum);
     self.cpuCyclesSlider.integerValue = cycles;
-    self.cpuCyclesLabel.stringValue = voodooProfile
-        ? (self.core.hasProtectedCPUCyclesOverrideForCurrentGamebox ? @"Voodoo CPU cycles override:" : @"Voodoo CPU cycles (default):")
-        : @"Protected CPU cycles override:";
-    self.cpuCyclesValue.stringValue = [NSString stringWithFormat:@"%lu", (unsigned long)cycles];
+    self.cpuCyclesLabel.stringValue = @"Protected-mode cycles:";
+    self.cpuCyclesValue.stringValue = cycles > 0
+        ? [NSString stringWithFormat:@"%lu", (unsigned long)cycles]
+        : @"N/A — follows default";
 }
 
 - (void)cpuCyclesChanged:(NSSlider *)sender
@@ -444,19 +441,11 @@ static NSInteger const BXVoodooProfileMaximumCycles = 200000;
     NSUInteger cycles = (NSUInteger)llround(sender.doubleValue);
     [self.core setProtectedCPUCycles:cycles];
     [self refreshProtectedCPUCyclesControl];
-    if (self.core.voodooEnabledForCurrentGamebox)
-        NSLog(@"BOXER: Voodoo profile changed — protected CPU cycles: %lu; DOS rate: 60 Hz.", (unsigned long)cycles);
 }
 
 - (void)voodooChanged:(NSButton *)sender
 {
     [self.core setVoodooEnabled:sender.state == NSControlStateValueOn];
-    [self refreshProtectedCPUCyclesControl];
-    if (self.core.voodooEnabledForCurrentGamebox)
-        NSLog(@"BOXER: Voodoo profile active — protected CPU cycles: %lu; DOS rate: 60 Hz.",
-              (unsigned long)(self.core.hasProtectedCPUCyclesOverrideForCurrentGamebox
-                              ? self.core.protectedCPUCyclesForCurrentGamebox
-                              : BXVoodooProfileDefaultCycles));
 }
 
 - (void)saveSettings:(id)sender

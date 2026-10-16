@@ -819,6 +819,7 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 		
 		//These are the settings we want to keep in the configuration file
 		NSNumber *CPUSpeed      = [self.gameSettings objectForKey: @"CPUSpeed"];
+        NSNumber *protectedCPUCycles = [self.gameSettings objectForKey: @"protectedCPUCycles"];
 		NSNumber *coreMode		= [self.gameSettings objectForKey: @"coreMode"];
 		NSNumber *strictGameportTiming = [self.gameSettings objectForKey: @"strictGameportTiming"];
 		
@@ -837,16 +838,20 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 		if (CPUSpeed)
 		{
             NSInteger speed = CPUSpeed.integerValue;
-            BOOL isAutoSpeed = (speed == BXAutoSpeed);
-			NSString *cyclesString = [BXEmulator configStringForFixedSpeed: speed
-																	isAuto: isAutoSpeed];
-			
-			[runtimeConf setValue: cyclesString forKey: @"cycles" inSection: @"cpu"];
+            if (speed != BXAutoSpeed)
+                [runtimeConf setValue:[NSString stringWithFormat:@"%ld", (long)speed]
+                               forKey:@"cpu_cycles"
+                            inSection:@"cpu"];
 		}
+        if (protectedCPUCycles.integerValue > 0)
+        {
+            NSString *value = [NSString stringWithFormat:@"%ld", (long)protectedCPUCycles.integerValue];
+            [runtimeConf setValue:value forKey:@"cpu_cycles_protected" inSection:@"cpu"];
+        }
 		
 		//Strip out these settings once we're done, so we won't preserve them in user defaults and won't re-record them
         //if they haven't changed by the next time the settings are synchronized.
-		NSArray *confSettings = [NSArray arrayWithObjects: @"CPUSpeed", @"coreMode", @"strictGameportTiming", nil];
+		NSArray *confSettings = [NSArray arrayWithObjects: @"CPUSpeed", @"protectedCPUCycles", @"coreMode", @"strictGameportTiming", nil];
 		[self.gameSettings removeObjectsForKeys: confSettings];
 
 		//Persist these gamebox-specific configuration into the gamebox's configuration file.
@@ -1235,41 +1240,6 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
         [self close];
 }
 
-- (NSURL *) _voodooProfileConfigurationURL
-{
-    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
-    if (!core.supportsVoodooProfile || !core.voodooEnabledForCurrentGamebox)
-        return nil;
-
-    BXEmulatorConfiguration *gameboxConfiguration =
-        [BXEmulatorConfiguration configurationWithContentsOfURL:self.gamebox.configurationFileURL error:NULL];
-    NSString *protectedCycles = [gameboxConfiguration valueForKey:@"cpu_cycles_protected" inSection:@"cpu"];
-    NSString *dosRate = [gameboxConfiguration valueForKey:@"dos_rate" inSection:@"dosbox"];
-    if (protectedCycles.length > 0 && dosRate.length > 0)
-        return nil;
-
-    if (!self.temporaryFolderURL) {
-        NSURL *folder = [[NSURL fileURLWithPath:NSTemporaryDirectory() isDirectory:YES]
-                         URLByAppendingPathComponent:[NSString stringWithFormat:@"Boxer-%@", NSUUID.UUID.UUIDString]
-                         isDirectory:YES];
-        if (![[NSFileManager defaultManager] createDirectoryAtURL:folder
-                                       withIntermediateDirectories:YES
-                                                        attributes:nil
-                                                             error:NULL])
-            return nil;
-        self.temporaryFolderURL = folder;
-    }
-
-    BXEmulatorConfiguration *profile = [BXEmulatorConfiguration configuration];
-    if (protectedCycles.length == 0)
-        [profile setValue:@"150000" forKey:@"cpu_cycles_protected" inSection:@"cpu"];
-    if (dosRate.length == 0)
-        [profile setValue:@"60" forKey:@"dos_rate" inSection:@"dosbox"];
-
-    NSURL *profileURL = [self.temporaryFolderURL URLByAppendingPathComponent:@"VoodooProfile.conf"];
-    return [profile writeToURL:profileURL error:NULL] ? profileURL : nil;
-}
-
 - (NSURL *)_fluidSynthProfileConfigurationURL
 {
     BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
@@ -1360,12 +1330,6 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
         [configURLs addObject: packageConfURL];
     
 	
-    //Apply Voodoo tuning only for settings the user has not overridden in the gamebox.
-    //This file is session-temporary and is never persisted into the package.
-    NSURL *voodooProfileURL = [self _voodooProfileConfigurationURL];
-    if (voodooProfileURL)
-        [configURLs addObject: voodooProfileURL];
-
     //Apply FluidSynth runtime settings without persisting defaults into the gamebox.
     NSURL *fluidSynthProfileURL = [self _fluidSynthProfileConfigurationURL];
     if (fluidSynthProfileURL)
@@ -1530,26 +1494,7 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
         [self _processEventsUntilDate: nil];
 }
 
-- (void) emulatorWillStartRunLoop: (BXEmulator *)theEmulator
-{
-    if (self.didWarnAboutVoodooMaximumSpeed || !theEmulator.isAutoSpeed)
-        return;
-
-    BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:self.gamebox session:self];
-    if (!core.voodooEnabledForCurrentGamebox)
-        return;
-
-    self.didWarnAboutVoodooMaximumSpeed = YES;
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSAlert *alert = [[NSAlert alloc] init];
-        alert.alertStyle = NSAlertStyleWarning;
-        alert.messageText = NSLocalizedString(@"Voodoo is using maximum CPU speed", @"Warning shown when Voodoo is enabled with maximum CPU speed.");
-        alert.informativeText = NSLocalizedString(@"Maximum CPU speed can leave too little host CPU time for Voodoo rendering and audio. If you see stuttering or drop-outs, choose a fixed CPU speed instead.", @"Explanation shown when Voodoo is enabled with maximum CPU speed.");
-        [alert addButtonWithTitle:NSLocalizedString(@"OK", @"Dismiss button for the Voodoo maximum CPU speed warning.")];
-        [alert beginSheetModalForWindow:self.windowForSheet completionHandler:nil];
-    });
-}
+- (void) emulatorWillStartRunLoop: (BXEmulator *)theEmulator {}
 
 - (void) emulatorDidFinishRunLoop: (BXEmulator *)theEmulator {}
 
@@ -1968,22 +1913,13 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
     NSString *reelMagic = core.reelMagicEnabledForCurrentGamebox ? @"On" : @"Off";
     NSString *ess = core.essEnabledForCurrentGamebox ? @"On" : @"Off";
     NSString *ibmMFC = core.ibmMFCEnabledForCurrentGamebox ? @"On" : @"Off";
-    NSString *voodooProfile = @"";
-    if (core.supportsVoodooProfile && core.voodooEnabledForCurrentGamebox) {
-        NSUInteger protectedCycles = core.hasProtectedCPUCyclesOverrideForCurrentGamebox
-            ? core.protectedCPUCyclesForCurrentGamebox : 150000;
-        voodooProfile = [NSString stringWithFormat:@" Voodoo profile: protected CPU cycles=%lu; DOS rate=60 Hz.",
-                         (unsigned long)protectedCycles];
-    }
-
-    NSLog(@"BOXER: Effective hardware — CPU: %@; Voodoo: %@ (%lu MB); ReelMagic: %@; ESS Enhanced FM: %@; IBM Music Feature Card: %@.%@",
+    NSLog(@"BOXER: Effective hardware — CPU: %@; Voodoo: %@ (%lu MB); ReelMagic: %@; ESS Enhanced FM: %@; IBM Music Feature Card: %@.",
           cpuName,
           voodoo,
           (unsigned long)core.voodooMemorySizeForCurrentGamebox,
           reelMagic,
           ess,
-          ibmMFC,
-          voodooProfile);
+          ibmMFC);
 }
 
 - (void) _startEmulator

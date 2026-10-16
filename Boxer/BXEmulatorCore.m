@@ -812,11 +812,6 @@ static BOOL BXConfigurationBoolean(NSString *value)
     return YES;
 }
 
-- (BOOL)supportsVoodooProfile
-{
-    return self.supportsVoodoo;
-}
-
 - (BOOL)hasProtectedCPUCyclesOverrideForCurrentGamebox
 {
     return [self valueForKey:BXProtectedCPUCyclesKey section:BXCPUSection defaultValue:nil].length > 0;
@@ -829,9 +824,8 @@ static BOOL BXConfigurationBoolean(NSString *value)
 
 - (void)setProtectedCPUCycles:(NSUInteger)cycles
 {
-    if (cycles == 0)
-        return;
-    [self setValue:[NSString stringWithFormat:@"%lu", (unsigned long)cycles]
+    NSString *value = cycles > 0 ? [NSString stringWithFormat:@"%lu", (unsigned long)cycles] : nil;
+    [self setValue:value
                key:BXProtectedCPUCyclesKey
            section:BXCPUSection
         defaultValue:nil];

@@ -186,7 +186,7 @@ to the DOS prompt instead.</string>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                             <subviews>
                                                 <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2225">
-                                                    <rect key="frame" x="20" y="139" width="256" height="28"/>
+                                                    <rect key="frame" x="20" y="79" width="256" height="28"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="left" id="2226">
                                                         <font key="font" metaFont="smallSystem"/>
@@ -208,14 +208,14 @@ sound or animation are stuttering.</string>
                                                     </connections>
                                                 </button>
                                                 <box autoresizesSubviews="NO" fixedFrame="YES" boxType="custom" borderType="line" title="Box" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="2030">
-                                                    <rect key="frame" x="-1" y="234" width="298" height="86"/>
+                                                    <rect key="frame" x="-1" y="177" width="298" height="70"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <view key="contentView" id="Y99-kE-dZv">
-                                                        <rect key="frame" x="1" y="1" width="296" height="84"/>
+                                                        <rect key="frame" x="1" y="1" width="296" height="68"/>
                                                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                         <subviews>
                                                             <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2032">
-                                                                <rect key="frame" x="20" y="49" width="256" height="18"/>
+                                                                <rect key="frame" x="20" y="39" width="256" height="18"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <buttonCell key="cell" type="check" title="Optimize for newer games" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="2033">
                                                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -228,7 +228,7 @@ sound or animation are stuttering.</string>
                                                                 </connections>
                                                             </button>
                                                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2031">
-                                                                <rect key="frame" x="20" y="15" width="256" height="28"/>
+                                                                <rect key="frame" x="20" y="7" width="256" height="28"/>
                                                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                                 <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="left" title="Turn off optimized emulation if the game crashes or behaves unreliably." id="2034">
                                                                     <font key="font" metaFont="smallSystem"/>
@@ -242,7 +242,7 @@ sound or animation are stuttering.</string>
                                                     <color key="fillColor" white="0.0" alpha="0.050000000000000003" colorSpace="calibratedWhite"/>
                                                 </box>
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2038">
-                                                    <rect key="frame" x="20" y="201" width="126" height="17"/>
+                                                    <rect key="frame" x="20" y="145" width="126" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Frame rate:" id="2039">
                                                         <font key="font" metaFont="systemBold"/>
@@ -251,7 +251,7 @@ sound or animation are stuttering.</string>
                                                     </textFieldCell>
                                                 </textField>
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2040">
-                                                    <rect key="frame" x="150" y="201" width="126" height="14"/>
+                                                    <rect key="frame" x="150" y="145" width="126" height="14"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="[Current framerate]" id="2041">
                                                         <font key="font" metaFont="smallSystem"/>
@@ -263,16 +263,16 @@ sound or animation are stuttering.</string>
                                                     </connections>
                                                 </textField>
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2084">
-                                                    <rect key="frame" x="20" y="378" width="87" height="17"/>
+                                                    <rect key="frame" x="20" y="378" width="125" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="CPU speed:" id="2087">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Default CPU cycles:" id="2087">
                                                         <font key="font" metaFont="systemBold"/>
                                                         <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                     </textFieldCell>
                                                 </textField>
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2085">
-                                                    <rect key="frame" x="109" y="378" width="167" height="14"/>
+                                                    <rect key="frame" x="145" y="378" width="131" height="14"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingHead" sendsActionOnEndEditing="YES" alignment="right" title="[Current CPU speed]" id="2086">
                                                         <font key="font" metaFont="smallSystem"/>
@@ -284,7 +284,7 @@ sound or animation are stuttering.</string>
                                                     </connections>
                                                 </textField>
                                                 <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2044">
-                                                    <rect key="frame" x="20" y="174" width="256" height="18"/>
+                                                    <rect key="frame" x="20" y="118" width="256" height="18"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <sliderCell key="cell" controlSize="small" continuous="YES" state="on" alignment="left" minValue="-9" tickMarkPosition="above" numberOfTickMarks="10" allowsTickMarkValuesOnly="YES" sliderType="linear" id="2045">
                                                         <connections>
@@ -301,6 +301,52 @@ sound or animation are stuttering.</string>
                                                         <outlet property="nextKeyView" destination="1466" id="2054"/>
                                                     </connections>
                                                 </slider>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="protected-cpu-label">
+                                                    <rect key="frame" x="20" y="310" width="150" height="17"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Protected-mode cycles:" id="protected-cpu-label-cell">
+                                                        <font key="font" metaFont="systemBold"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="protected-cpu-value">
+                                                    <rect key="frame" x="168" y="310" width="108" height="14"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="small" lineBreakMode="truncatingHead" sendsActionOnEndEditing="YES" alignment="right" title="N/A — follows default" id="protected-cpu-value-cell">
+                                                        <font key="font" metaFont="smallSystem"/>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                    <connections>
+                                                        <binding destination="56" name="value" keyPath="selection.protectedCPUSpeedDescription" id="protected-cpu-description-binding"/>
+                                                    </connections>
+                                                </textField>
+                                                <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="protected-cpu-slider">
+                                                    <rect key="frame" x="20" y="284" width="256" height="18"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <sliderCell key="cell" controlSize="small" continuous="YES" alignment="left" minValue="0.0" maxValue="300000" sliderType="linear" id="protected-cpu-slider-cell"/>
+                                                    <connections>
+                                                        <binding destination="56" name="enabled" keyPath="selection.emulating" id="protected-cpu-enabled-binding"/>
+                                                        <binding destination="56" name="value" keyPath="selection.protectedCPUSliderSpeed" id="protected-cpu-value-binding">
+                                                            <dictionary key="options">
+                                                                <bool key="NSValidatesImmediately" value="YES"/>
+                                                            </dictionary>
+                                                        </binding>
+                                                        <outlet property="nextKeyView" destination="2032" id="protected-cpu-next-key-view"/>
+                                                    </connections>
+                                                </slider>
+                                                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="protected-cpu-help">
+                                                    <rect key="frame" x="20" y="252" width="256" height="28"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" controlSize="small" sendsActionOnEndEditing="YES" alignment="left" id="protected-cpu-help-cell">
+                                                        <font key="font" metaFont="smallSystem"/>
+                                                        <string key="title">For DOS/4GW, Voodoo, and similar programs.
+N/A follows the default CPU cycles above.</string>
+                                                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
                                                 <slider verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2057">
                                                     <rect key="frame" x="20" y="352" width="256" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>

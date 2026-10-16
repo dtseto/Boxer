@@ -1502,30 +1502,30 @@
       }
     },
     "2087.title" : {
-      "comment" : "Class = \"NSTextFieldCell\"; title = \"CPU speed:\"; ObjectID = \"2087\";",
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Default CPU cycles:\"; ObjectID = \"2087\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "CPU speed:"
+            "value" : "Default CPU cycles:"
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Velocidad de CPU:"
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Processeur :"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Velocidade da CPU:"
           }
         }
@@ -2523,6 +2523,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Box"
+          }
+        }
+      }
+    },
+    "protected-cpu-help-cell.title" : {
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"For DOS/4GW, Voodoo, and similar programs.\\nN/A follows the default CPU cycles above.\"; ObjectID = \"protected-cpu-help-cell\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "For DOS/4GW, Voodoo, and similar programs.\nN/A follows the default CPU cycles above."
+          }
+        }
+      }
+    },
+    "protected-cpu-label-cell.title" : {
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"Protected-mode cycles:\"; ObjectID = \"protected-cpu-label-cell\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Protected-mode cycles:"
+          }
+        }
+      }
+    },
+    "protected-cpu-value-cell.title" : {
+      "comment" : "Class = \"NSTextFieldCell\"; title = \"N/A — follows default\"; ObjectID = \"protected-cpu-value-cell\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "N/A — follows default"
           }
         }
       }

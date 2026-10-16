@@ -46,7 +46,6 @@ static NSInteger const BXProtectedCPUCyclesMaximum = 300000;
 @property(nonatomic,strong) NSButton *ibmMFC;
 @property(nonatomic,strong) NSPopUpButton *shaderSystem;
 @property(nonatomic,strong) NSPopUpButton *shaderPreset;
-@property(nonatomic,strong) NSButton *integerScaling;
 @property(nonatomic,strong) NSButton *deinterlacing;
 @property(nonatomic,strong) NSPopUpButton *versionPopup;
 @property(nonatomic,strong) NSTextField *status;
@@ -208,13 +207,6 @@ static NSInteger const BXProtectedCPUCyclesMaximum = 300000;
     self.shaderPreset.target = self; self.shaderPreset.action = @selector(shaderPresetChanged:);
     [presetRow addArrangedSubview:self.shaderPreset]; [stack addArrangedSubview:presetRow];
 
-    self.integerScaling = [self checkbox:@"Integer scaling" action:@selector(integerScalingChanged:)];
-    self.integerScaling.enabled = self.core.supportsIntegerScaling;
-    self.integerScaling.state = self.core.integerScalingEnabledForCurrentGamebox
-        ? NSControlStateValueOn
-        : NSControlStateValueOff;
-    self.integerScaling.toolTip = @"Use integer scaling for the gamebox video output.";
-    [stack addArrangedSubview:self.integerScaling];
     self.deinterlacing = [self checkbox:@"Deinterlacing" action:@selector(deinterlacingChanged:)];
     self.deinterlacing.enabled = NO;
     self.deinterlacing.toolTip = @"Available when DOSBox Staging shader support is enabled.";
@@ -365,7 +357,6 @@ static NSInteger const BXProtectedCPUCyclesMaximum = 300000;
         }
     }
     self.shaderPreset.enabled = YES;
-    self.integerScaling.hidden = NO;
     self.deinterlacing.hidden = NO;
 }
 - (NSArray *)openEmuShaderPaths {
@@ -476,10 +467,6 @@ static NSInteger const BXProtectedCPUCyclesMaximum = 300000;
         [[NSUserDefaults standardUserDefaults] setObject:path forKey:@"shaderPresetPath"];
         [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"videoShader"];
     }
-}
-- (void)integerScalingChanged:(NSButton *)sender
-{
-    [self.core setIntegerScalingEnabled:sender.state == NSControlStateValueOn];
 }
 - (void)deinterlacingChanged:(NSButton *)sender { (void)sender; }
 - (void)mouseChanged:(NSPopUpButton *)sender { [self.core setMouseCount:sender.selectedTag]; }

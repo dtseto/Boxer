@@ -1923,7 +1923,46 @@ NSString * const BXGameImportedNotificationType     = @"BXGameImported";
 }
 
 - (void) _startEmulator
-{	
+{
+	if (!self.didCheckLegacyCPUCycles && self.hasGamebox)
+	{
+		self.didCheckLegacyCPUCycles = YES;
+		NSURL *configurationURL = self.gamebox.configurationFileURL;
+		BXEmulatorConfiguration *configuration =
+			[BXEmulatorConfiguration configurationWithContentsOfURL:configurationURL error:NULL];
+		NSString *legacyCycles = [configuration valueForKey:@"cycles" inSection:@"cpu"];
+		if (legacyCycles.length > 0)
+		{
+			NSAlert *alert = [[NSAlert alloc] init];
+			alert.alertStyle = NSAlertStyleWarning;
+			alert.messageText = NSLocalizedString(@"This game uses an old CPU cycles setting", @"Legacy DOSBox CPU cycles warning title.");
+			alert.informativeText = NSLocalizedString(@"The [cpu] cycles setting is deprecated and can override Boxer's CPU sliders. Remove it so this game uses the new cpu_cycles controls. If the old value is a number and cpu_cycles is not already set, Boxer will preserve that number.", @"Legacy DOSBox CPU cycles warning explanation.");
+			[alert addButtonWithTitle:NSLocalizedString(@"Remove and Migrate", @"Button that removes a deprecated CPU cycles setting and preserves a numeric value.")];
+			[alert addButtonWithTitle:NSLocalizedString(@"Keep for Now", @"Button that leaves a deprecated CPU cycles setting unchanged.")];
+			[alert beginSheetModalForWindow:self.windowForSheet completionHandler:^(NSModalResponse returnCode) {
+				if (returnCode == NSAlertFirstButtonReturn)
+				{
+					NSString *modernCycles = [configuration valueForKey:@"cpu_cycles" inSection:@"cpu"];
+					NSScanner *scanner = [NSScanner scannerWithString:legacyCycles];
+					NSInteger numericCycles = 0;
+					BOOL isPositiveInteger = [scanner scanInteger:&numericCycles] && scanner.isAtEnd && numericCycles > 0;
+					if (!modernCycles.length && isPositiveInteger)
+						[configuration setValue:[NSString stringWithFormat:@"%ld", (long)numericCycles]
+										 forKey:@"cpu_cycles"
+									  inSection:@"cpu"];
+					[configuration removeValueForKey:@"cycles" inSection:@"cpu"];
+					if ([configuration writeToURL:configurationURL error:NULL])
+						NSLog(@"BOXER: Removed deprecated [cpu] cycles setting from %@.", configurationURL.path);
+					else
+						NSLog(@"BOXER: Could not migrate deprecated [cpu] cycles setting in %@.", configurationURL.path);
+				}
+				//Allow AppKit to finish dismissing the sheet before DOSBox occupies the run loop.
+				[self performSelector:@selector(_startEmulator) withObject:nil afterDelay:0.0];
+			}];
+			return;
+		}
+	}
+
 	//Set the emulator's current working directory relative to whatever we're opening
 	if (self.fileURL)
 	{

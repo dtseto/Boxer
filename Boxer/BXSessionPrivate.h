@@ -63,10 +63,8 @@ extern ADBUserNotificationType const BXGameImportedNotificationType NS_SWIFT_NAM
 @property (readwrite, nonatomic, assign, getter=isSuspended)	BOOL suspended;
 @property (readwrite, nonatomic, assign, getter=isAutoPaused)	BOOL autoPaused;
 @property (readwrite, nonatomic, assign, getter=isInterrupted)	BOOL interrupted;
-
-/// Prevents repeating the Voodoo/max-cycles performance warning during one session.
-@property (assign, nonatomic) BOOL didWarnAboutVoodooMaximumSpeed;
-
+/// Prevents showing the legacy CPU cycles migration warning more than once per launch.
+@property (assign, nonatomic) BOOL didCheckLegacyCPUCycles;
 
 #pragma mark - Protected methods
 

@@ -117,6 +117,8 @@
 		0F66915D303CA7520010580F /* YM7128B_emu.c in Sources */ = {isa = PBXBuildFile; fileRef = 0F669157303CA7520010580F /* YM7128B_emu.c */; };
 		0F66918C303CA7930010580F /* opus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F66918B303CA7930010580F /* opus.cpp */; };
 		0F66918D303CA7930010580F /* opus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0F66918B303CA7930010580F /* opus.cpp */; };
+		0F87CCAB308089F200A3B731 /* BXIntegerScaling.m in Sources */ = {isa = PBXBuildFile; fileRef = 0F87CCAA308089F200A3B731 /* BXIntegerScaling.m */; };
+		0F87CCAC308089F200A3B731 /* BXIntegerScaling.m in Sources */ = {isa = PBXBuildFile; fileRef = 0F87CCAA308089F200A3B731 /* BXIntegerScaling.m */; };
 		0FB9597B3054521500B88A1D /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 0FB959793054521500B88A1D /* README.md */; };
 		0FB959923054581900B88A1D /* program_more_output.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB959903054581900B88A1D /* program_more_output.cpp */; };
 		0FB959933054581900B88A1D /* program_more.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0FB9598F3054581900B88A1D /* program_more.cpp */; };
@@ -349,12 +351,14 @@
 		611F4881F29EA49C0FB96AB4 /* BXGameboxSettingsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D94A307C505800070538 /* BXGameboxSettingsWindowController.m */; };
 		6258376279EA13A9F509CAC7 /* mouseif_ps2_bios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1EB324438C1209036A6740 /* mouseif_ps2_bios.cpp */; };
 		634CDC0DB58DBBC7109A08DF /* voodoo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 14E847CA73FD6AA9345B6698 /* voodoo.cpp */; };
+		63D53CCC55659834DCB48A40 /* libintl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 240A9FFD9047B113EF846564 /* libintl.a */; };
 		6858C4D6697DC94515BD6D59 /* mouseif_ps2_bios.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6D1EB324438C1209036A6740 /* mouseif_ps2_bios.cpp */; };
 		6C0620F493D19451D6C2FC7A /* dos_locale.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F0C5ACB4B9589C9E8FE0AF47 /* dos_locale.cpp */; };
 		6ECF0FC0459047D3A694F9E5 /* intel8255.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4B31C9C42B066DEE409533C0 /* intel8255.cpp */; };
 		702E2B039C9041085D204D58 /* image_decoder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4BA650E0F8BE56CC2B130715 /* image_decoder.cpp */; };
 		703B08FB9FB562647FA0C657 /* program_tree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7665A6AE3EBEBEE49A83AF2 /* program_tree.cpp */; };
 		70D16941BA7AE8609BE54560 /* program_mixer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F7647EBB75852C4A9D160AEC /* program_mixer.cpp */; };
+		7864F7F5C3AB2377E3B0285F /* libfluidsynth.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A6FBC90F99608E6F6B516567 /* libfluidsynth.a */; };
 		7A1B2C3D4E5F60718293A4BB /* libDOSBoxStaging.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4BA /* libDOSBoxStaging.a */; };
 		7A1B2C3D4E5F60718293A4C2 /* DOSBox-Staging/contrib/resources/freedos-keyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7A1B2C3D4E5F60718293A4C1 /* DOSBox-Staging/contrib/resources/freedos-keyboard */; };
 		849EFA1BAF3FE6EB71880EC1 /* sdlmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77211A12B38C4400072AE8 /* sdlmain.cpp */; };
@@ -1014,7 +1018,10 @@
 		A4950F77972A30ABFFFE1A9A /* sdlmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 9F77211A12B38C4400072AE8 /* sdlmain.cpp */; };
 		A65029F40170118DEE4A2D78 /* imfc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BDA757B7DBA76543CBFBF750 /* imfc.cpp */; };
 		A941177A06DD104E6819A30D /* shader_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D819F51A6FB029532E3944E8 /* shader_manager.cpp */; };
+		A9FF149F83863800C08E0576 /* libpcre2-8.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D651D0B6D9C819F03E59E035 /* libpcre2-8.a */; };
 		AE8A31A9514BDCA7FD2584DD /* intel8042.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0C3D895313FB4F1053AE0F08 /* intel8042.cpp */; };
+		AED1C69199059B6A85A06076 /* libglib-2.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 577222E4E38FFE75C9294017 /* libglib-2.0.a */; };
+		B4E4745DC7E9E96E2DD427B9 /* midi_fluidsynth.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 55EA6D7E25D7A23400945236 /* midi_fluidsynth.cpp */; };
 		B7743743B4E720EE4E0345A1 /* png_writer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E2D469D4703C910ABCFA211C /* png_writer.cpp */; };
 		B7900B3E13E47D9E00B37913 /* BXPrecisionProControllerProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = B7900B3D13E47D9E00B37913 /* BXPrecisionProControllerProfile.m */; };
 		BB8D9BE0DE01B6D193AB5E32 /* mouse_common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A3A9783EAC4E0CBB5C541FB /* mouse_common.cpp */; };
@@ -1050,6 +1057,7 @@
 		F9BAA4248272F616F0D416F1 /* vmware.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D2247615FDAC3B33B30D7F40 /* vmware.cpp */; };
 		FB42CFF4C61F0F8835F059B1 /* mouse_manymouse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3F24968BC88CA7CFCB98E1FD /* mouse_manymouse.cpp */; };
 		FBB228F0DDA5A0555EF2A5D1 /* mmx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 788E78BA3B478826AB629D75 /* mmx.cpp */; };
+		FE36B581FCF031D1628166EF /* libgthread-2.0.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98690B9C9F4CF13524FE9748 /* libgthread-2.0.a */; };
 		FEE564939820F5D696DE4B19 /* program_mode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 56F10EAEC374787CC3781245 /* program_mode.cpp */; };
 /* End PBXBuildFile section */
 
@@ -1337,6 +1345,8 @@
 		0F669156303CA7520010580F /* YM7128B_emu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = YM7128B_emu.h; sourceTree = "<group>"; };
 		0F669157303CA7520010580F /* YM7128B_emu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = YM7128B_emu.c; sourceTree = "<group>"; };
 		0F66918B303CA7930010580F /* opus.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = opus.cpp; sourceTree = "<group>"; };
+		0F87CCA9308089F200A3B731 /* BXIntegerScaling.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BXIntegerScaling.h; sourceTree = "<group>"; };
+		0F87CCAA308089F200A3B731 /* BXIntegerScaling.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BXIntegerScaling.m; sourceTree = "<group>"; };
 		0FB959793054521500B88A1D /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		0FB9598F3054581900B88A1D /* program_more.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = program_more.cpp; sourceTree = "<group>"; };
 		0FB959903054581900B88A1D /* program_more_output.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = program_more_output.cpp; sourceTree = "<group>"; };
@@ -1386,6 +1396,7 @@
 		2031DA2CB415A23F676AA54D /* BXEmulatorCore.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = BXEmulatorCore.h; sourceTree = "<group>"; };
 		231269A9727FF103E471D343 /* mouse.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouse.cpp; sourceTree = "<group>"; };
 		23450C1565373F4D3C011F5C /* BXConfigKey.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = BXConfigKey.m; sourceTree = "<group>"; };
+		240A9FFD9047B113EF846564 /* libintl.a */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = archive.ar; path = libintl.a; sourceTree = "<group>"; };
 		279E7863C8A3E2659C4EE4FB /* titlebar.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = titlebar.cpp; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -1603,6 +1614,7 @@
 		55F643FE25F41E18009E1800 /* rwqueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rwqueue.h; sourceTree = "<group>"; };
 		56F10EAEC374787CC3781245 /* program_mode.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = program_mode.cpp; sourceTree = "<group>"; };
 		572428A605E574D1B624ED61 /* capture_audio.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = capture_audio.cpp; sourceTree = "<group>"; };
+		577222E4E38FFE75C9294017 /* libglib-2.0.a */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = archive.ar; path = "libglib-2.0.a"; sourceTree = "<group>"; };
 		5F93BE5CD2589EC80D632CBF /* keyboard_scancodes.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard_scancodes.cpp; sourceTree = "<group>"; };
 		6D1EB324438C1209036A6740 /* mouseif_ps2_bios.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouseif_ps2_bios.cpp; sourceTree = "<group>"; };
 		7432A8442FB387A56A498A92 /* mouse_config.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = mouse_config.h; sourceTree = "<group>"; };
@@ -1619,6 +1631,7 @@
 		8F97935324C1359A0054F84D /* BGThemeManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BGThemeManager.h; path = "Other Sources/BGHUDAppKit/BGThemeManager.h"; sourceTree = SOURCE_ROOT; };
 		9163306C61021CB2F841DF15 /* file_reader.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = file_reader.cpp; sourceTree = "<group>"; };
 		95E4E82A2ACC5D29C11A2ADB /* image_capturer.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = image_capturer.cpp; sourceTree = "<group>"; };
+		98690B9C9F4CF13524FE9748 /* libgthread-2.0.a */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = archive.ar; path = "libgthread-2.0.a"; sourceTree = "<group>"; };
 		98C94860F7E71EEC4B55D4F3 /* capture_midi.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = capture_midi.cpp; sourceTree = "<group>"; };
 		98D3379CD93528A1C9E77BC6 /* keyboard.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = keyboard.cpp; sourceTree = "<group>"; };
 		9AF7DF9320528C3EB47C920A /* mouse_interfaces.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = mouse_interfaces.h; sourceTree = "<group>"; };
@@ -2331,8 +2344,10 @@
 		9FFF97931232B718009B5EE5 /* ADBMultiPanelWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ADBMultiPanelWindowController.h; sourceTree = "<group>"; };
 		9FFF97941232B718009B5EE5 /* ADBMultiPanelWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ADBMultiPanelWindowController.m; sourceTree = "<group>"; };
 		A3DB0C12BB1FC278980C0901 /* program_setver.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = program_setver.cpp; sourceTree = "<group>"; };
+		A6FBC90F99608E6F6B516567 /* libfluidsynth.a */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = archive.ar; path = libfluidsynth.a; sourceTree = "<group>"; };
 		A88AA0E145B66112D78F3D39 /* image_scaler.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = image_scaler.cpp; sourceTree = "<group>"; };
 		AAE4D44F2EA1365BF1DB4A14 /* opl_capture.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = opl_capture.cpp; sourceTree = "<group>"; };
+		B17AFF155A7A70EC4274141F /* fluidsynth.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = fluidsynth.h; sourceTree = "<group>"; };
 		B2044A4ACBDC152AA45C66F4 /* mouse_common.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = mouse_common.h; sourceTree = "<group>"; };
 		B3DA3E00BDBB40CC2CEFEAF9 /* mouseif_dos_driver.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = mouseif_dos_driver.cpp; sourceTree = "<group>"; };
 		B7900B3D13E47D9E00B37913 /* BXPrecisionProControllerProfile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BXPrecisionProControllerProfile.m; sourceTree = "<group>"; };
@@ -2345,6 +2360,7 @@
 		CC3B2D6F59F34F5FE7355A82 /* command_line.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = command_line.cpp; sourceTree = "<group>"; };
 		CE5B1606A6D6240A26C8EA1F /* esfm.c */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.c; path = esfm.c; sourceTree = "<group>"; };
 		D2247615FDAC3B33B30D7F40 /* vmware.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = vmware.cpp; sourceTree = "<group>"; };
+		D651D0B6D9C819F03E59E035 /* libpcre2-8.a */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = archive.ar; path = "libpcre2-8.a"; sourceTree = "<group>"; };
 		D819F51A6FB029532E3944E8 /* shader_manager.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = shader_manager.cpp; sourceTree = "<group>"; };
 		DB37BEFEF14F456A6FB4883E /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		DEA07786B0A3B2C9D91C1F32 /* capture_video.cpp */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.cpp.cpp; path = capture_video.cpp; sourceTree = "<group>"; };
@@ -2410,6 +2426,11 @@
 				9FBAA8F4134AFABD0092BF95 /* DiskArbitration.framework in Frameworks */,
 				55998D3725F6EF7900581095 /* libpcap.tbd in Frameworks */,
 				05E6BA7024B9FC2E00BAAD2D /* OpenEmuShaders.framework in Frameworks */,
+				7864F7F5C3AB2377E3B0285F /* libfluidsynth.a in Frameworks */,
+				FE36B581FCF031D1628166EF /* libgthread-2.0.a in Frameworks */,
+				AED1C69199059B6A85A06076 /* libglib-2.0.a in Frameworks */,
+				A9FF149F83863800C08E0576 /* libpcre2-8.a in Frameworks */,
+				63D53CCC55659834DCB48A40 /* libintl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2482,6 +2503,8 @@
 				05E6BA5824B972C900BAAD2D /* BXMetalRenderingView.m */,
 				05E6BA7224BA26FD00BAAD2D /* BXMetalRenderingView+BXImageCapture.h */,
 				05E6BA7324BA26FD00BAAD2D /* BXMetalRenderingView+BXImageCapture.m */,
+				0F87CCA9308089F200A3B731 /* BXIntegerScaling.h */,
+				0F87CCAA308089F200A3B731 /* BXIntegerScaling.m */,
 			);
 			path = "Metal Rendering";
 			sourceTree = "<group>";
@@ -2841,6 +2864,7 @@
 				0FE5D945307C502500070538 /* BXGameboxSettingsWindowController.h */,
 				0FE5D948307C505700070538 /* BXGameboxConfigurationEditor.m */,
 				0FE5D94A307C505800070538 /* BXGameboxSettingsWindowController.m */,
+				88E799E6E4D96235A2350571 /* FluidSynth */,
 			);
 			name = Boxer;
 			sourceTree = "<group>";
@@ -3065,6 +3089,16 @@
 			path = resample;
 			sourceTree = "<group>";
 		};
+		88E799E6E4D96235A2350571 /* FluidSynth */ = {
+			isa = PBXGroup;
+			children = (
+				989D8986439E04B3F743076D /* include */,
+				C8B9FC2DB075D67B250DD16B /* lib */,
+			);
+			name = FluidSynth;
+			path = Vendor/FluidSynth;
+			sourceTree = "<group>";
+		};
 		8989D2F240EA818F25CADC78 /* input */ = {
 			isa = PBXGroup;
 			children = (
@@ -3089,6 +3123,14 @@
 				026D873FFD9EA9C2F6A498BF /* mouseif_virtual_machines.cpp */,
 			);
 			path = input;
+			sourceTree = "<group>";
+		};
+		989D8986439E04B3F743076D /* include */ = {
+			isa = PBXGroup;
+			children = (
+				B17AFF155A7A70EC4274141F /* fluidsynth.h */,
+			);
+			path = include;
 			sourceTree = "<group>";
 		};
 		9F010D1616CEC7C800B9CE0A /* Windows */ = {
@@ -4468,6 +4510,18 @@
 			path = "Other Sources";
 			sourceTree = "<group>";
 		};
+		C8B9FC2DB075D67B250DD16B /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				A6FBC90F99608E6F6B516567 /* libfluidsynth.a */,
+				98690B9C9F4CF13524FE9748 /* libgthread-2.0.a */,
+				577222E4E38FFE75C9294017 /* libglib-2.0.a */,
+				D651D0B6D9C819F03E59E035 /* libpcre2-8.a */,
+				240A9FFD9047B113EF846564 /* libintl.a */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -5123,6 +5177,7 @@
 				0D19479A217F52E5123EDE1E /* esfm_registers.c in Sources */,
 				EBCC954068F54C8CFBF908EE /* shell_history.cpp in Sources */,
 				964A48C2E4C421D6D28CEDAC /* sdl_mapper.cpp in Sources */,
+				B4E4745DC7E9E96E2DD427B9 /* midi_fluidsynth.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -5264,6 +5319,7 @@
 				9F61F78313EC2D5100505436 /* ADBImageAwareFileScan.m in Sources */,
 				9F3E57A513F694B40070A14D /* BXEmulatorErrors.mm in Sources */,
 				9FB642A313FEB71D00385DD3 /* ADBISOImage.m in Sources */,
+				0F87CCAB308089F200A3B731 /* BXIntegerScaling.m in Sources */,
 				9FB642A413FEB71D00385DD3 /* ADBBinCueImage.m in Sources */,
 				9F740BDE142A24A400BA66B4 /* RegexKitLite.m in Sources */,
 				9F34BE40142B700100A69FAF /* BXCoalfaceAudio.mm in Sources */,
@@ -5525,6 +5581,7 @@
 				0F6685EA303C91E90010580F /* opl.cpp in Sources */,
 				0F6685EC303C91E90010580F /* lpt_dac.cpp in Sources */,
 				0F6685ED303C91E90010580F /* compressor.cpp in Sources */,
+				0F87CCAC308089F200A3B731 /* BXIntegerScaling.m in Sources */,
 				0F6685EE303C91E90010580F /* pcspeaker_discrete.cpp in Sources */,
 				5557480A208FA8040045E635 /* saa1099.cpp in Sources */,
 				9F2D306E15B8233800FAE848 /* vga_paradise.cpp in Sources */,
@@ -6254,6 +6311,7 @@
 					C_SRECORD,
 					HAVE_CXX11,
 					"$(inherited)",
+					"C_FLUIDSYNTH=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -6273,6 +6331,7 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/mverb",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/tal-chorus",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/manymouse",
+					"$(SRCROOT)/Vendor/FluidSynth/include",
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 12;
@@ -6303,6 +6362,7 @@
 					C_SRECORD,
 					HAVE_CXX11,
 					"$(inherited)",
+					"C_FLUIDSYNTH=1",
 				);
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -6322,6 +6382,7 @@
 					"$(SRCROOT)/DOSBox-Staging/src/libs/mverb",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/tal-chorus",
 					"$(SRCROOT)/DOSBox-Staging/src/libs/manymouse",
+					"$(SRCROOT)/Vendor/FluidSynth/include",
 				);
 				MACH_O_TYPE = staticlib;
 				MACOSX_DEPLOYMENT_TARGET = 12;
@@ -6696,6 +6757,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Vendor/OpusUniversal/lib\"",
+					"$(SRCROOT)/Vendor/FluidSynth/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12;
 				MARKETING_VERSION = 4.5b4;
@@ -6705,6 +6767,10 @@
 					"-lopusfile",
 					"-lopus",
 					"-logg",
+					"-liconv",
+					"-lm",
+					"-framework",
+					CoreFoundation,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.dtseto.boxer;
 				PRODUCT_NAME = Boxer;
@@ -6773,6 +6839,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/Vendor/OpusUniversal/lib\"",
+					"$(SRCROOT)/Vendor/FluidSynth/lib",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 12;
 				MARKETING_VERSION = 4.5b4;
@@ -6782,6 +6849,10 @@
 					"-lopusfile",
 					"-lopus",
 					"-logg",
+					"-liconv",
+					"-lm",
+					"-framework",
+					CoreFoundation,
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.dtseto.boxer;
 				PRODUCT_NAME = Boxer;

@@ -14,6 +14,7 @@
 #import "BXVideoFrame.h"
 #import "BXMetalLayer.h"
 #import "BXIntegerScaling.h"
+#import "../BXVerificationInstrumentation.h"
 
 /// Only send 1 frame at once to the GPU.
 /// Since we aren't synced to the display, even one more
@@ -33,8 +34,6 @@
 @implementation BXMetalRenderingView {
     CAMetalLayer    *_videoLayer;
     OEFilterChain   *_filterChain;
-    id<MTLTexture>  _texture;
-    
     dispatch_semaphore_t    _inflightSemaphore;
     NSInteger               _skippedFrames;
     id<MTLDevice>           _device;
@@ -226,37 +225,49 @@
 }
 
 - (void)updateWithFrame:(BXVideoFrame *)frame {
-    if (frame == nil) {
+	NSAssert([NSThread isMainThread], @"Metal frame uploads must run on the main thread");
+	uint64_t updateStart = BXVerificationNow();
+	if (frame == nil) {
         _currentFrame = nil;
-        _texture      = nil;
         return;
     }
-    
+
+    BXVideoFrame *previousFrame = _currentFrame;
+    if (previousFrame != nil && previousFrame != frame &&
+        [previousFrame presentationState] == BXVideoFramePresentationStatePresenting) {
+        [previousFrame finishUncommittedPresentation];
+    }
+    _currentFrame = frame;
+
     CGRect sourceRect = CGRectMake(0, 0, frame.size.width, frame.size.height);
     [_filterChain setSourceRect:sourceRect aspect:frame.scaledSize];
     [self updateIntegerScalingForFrame:frame];
     
-    if (frame != _currentFrame) {
+	BOOL textureSizeChanged = (frame.texture == nil ||
+	                           frame.texture.width != frame.size.width ||
+	                           frame.texture.height != frame.size.height ||
+	                           frame.texture.pixelFormat != MTLPixelFormatBGRA8Unorm);
+	if (textureSizeChanged) {
         if (NSIsEmptyRect(self.viewportRect)) {
             NSRect viewportRect = [self viewportForFrame:frame];
             [self setViewportRect:viewportRect animated:NO];
         }
         
-        // new buffer
-        _currentFrame = frame;
+        // Create or replace the texture owned by this frame slot.
         MTLTextureDescriptor *td =
         [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
                                                            width:frame.size.width
                                                           height:frame.size.height
                                                        mipmapped:NO];
-        _texture = [_device newTextureWithDescriptor:td];
-        [_filterChain setSourceTexture:_texture];
-    }
-    
-    [_texture replaceRegion:MTLRegionMake2D(0, 0, sourceRect.size.width, sourceRect.size.height)
+			frame.texture = [_device newTextureWithDescriptor:td];
+			BXVerificationCount(BXVerificationCounterTextureCreation);
+	}
+	uint64_t replaceStart = BXVerificationNow();
+		[frame.texture replaceRegion:MTLRegionMake2D(0, 0, sourceRect.size.width, sourceRect.size.height)
                 mipmapLevel:0
-                  withBytes:frame.bytes
+                withBytes:frame.bytes
                 bytesPerRow:frame.pitch];
+	BXVerificationSample(BXVerificationMetricReplaceRegion, replaceStart, BXVerificationNow());
     
     // If the frame changes size or aspect ratio, and we're responsible for the viewport ourselves,
     // then smoothly animate the transition to the new size.
@@ -264,47 +275,81 @@
     {
         [self setViewportRect:[self viewportForFrame:frame] animated:YES];
     }
+	[self setNeedsDisplay:YES];
+	BXVerificationSample(BXVerificationMetricUpdateWithFrame, updateStart, BXVerificationNow());
 }
 
 - (void)drawRect:(NSRect)dirtyRect {
-    if (_texture == nil) {
+    BXVideoFrame *frame = _currentFrame;
+    if (frame == nil || frame.texture == nil) {
+        return;
+    }
+
+    // AppKit may issue another draw for a frame that has already been submitted.
+    // Such a frame is owned by the GPU until its completion handler runs; do not
+    // wait, acquire another drawable, or submit a second command buffer for it.
+    if ([frame presentationState] != BXVideoFramePresentationStatePresenting) {
         return;
     }
     
     @autoreleasepool {
         if (dispatch_semaphore_wait(_inflightSemaphore, DISPATCH_TIME_NOW) != 0) {
             _skippedFrames++;
-        } else {
-            id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
-            commandBuffer.label = @"offscreen";
-            [commandBuffer enqueue];
-            [_filterChain renderOffscreenPassesWithCommandBuffer:commandBuffer];
-            [commandBuffer commit];
-            
-            id<CAMetalDrawable> drawable = _videoLayer.nextDrawable;
-            if (drawable != nil) {
-                MTLRenderPassDescriptor *rpd = [MTLRenderPassDescriptor new];
+            BXVerificationCount(BXVerificationCounterFrameDroppedSemaphore);
+            BXVideoFrame *droppedFrame = frame;
+            if (![droppedFrame finishUncommittedPresentation] &&
+                [droppedFrame presentationState] == BXVideoFramePresentationStateCommitted) {
+                BXVerificationCount(BXVerificationCounterSemaphoreDropOnCommittedFrame);
+            }
+	        } else {
+			uint64_t drawableStart = BXVerificationNow();
+	            id<CAMetalDrawable> drawable = _videoLayer.nextDrawable;
+			BXVerificationSample(BXVerificationMetricNextDrawable, drawableStart, BXVerificationNow());
+	            if (drawable != nil) {
+				uint64_t encodeStart = BXVerificationNow();
+				[_filterChain setSourceTexture:frame.texture];
+	            id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
+	            commandBuffer.label = @"video frame";
+	            [_filterChain renderOffscreenPassesWithCommandBuffer:commandBuffer];
+	            BXVerificationSample(BXVerificationMetricCommandEncode, encodeStart, BXVerificationNow());
+
+	                MTLRenderPassDescriptor *rpd = [MTLRenderPassDescriptor new];
                 rpd.colorAttachments[0].clearColor = _clearColor;
                 // TODO: Use MTLLoadActionDontCare
                 // We can use MTLLoadActionDontCare when source texture
                 // is same aspect ratio as drawable (i.e. windowed)
-                rpd.colorAttachments[0].loadAction = MTLLoadActionClear;
-                rpd.colorAttachments[0].texture    = drawable.texture;
-                commandBuffer = [_commandQueue commandBuffer];
-                commandBuffer.label = @"final";
-                id<MTLRenderCommandEncoder> rce = [commandBuffer renderCommandEncoderWithDescriptor:rpd];
+	                rpd.colorAttachments[0].loadAction = MTLLoadActionClear;
+	                rpd.colorAttachments[0].texture    = drawable.texture;
+	                id<MTLRenderCommandEncoder> rce = [commandBuffer renderCommandEncoderWithDescriptor:rpd];
                 [_filterChain renderFinalPassWithCommandEncoder:rce];
                 [rce endEncoding];
                 
+                BXVideoFrame *presentedFrame = frame;
                 __block dispatch_semaphore_t inflight = _inflightSemaphore;
+                __block uint64_t commitTime = 0;
                 [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> _) {
+                    NSAssert(presentedFrame != nil, @"A committed command buffer must capture a frame");
                     dispatch_semaphore_signal(inflight);
+                    if ([presentedFrame presentationState] == BXVideoFramePresentationStateFree)
+                        BXVerificationCount(BXVerificationCounterPrematureCommittedFree);
+                    [presentedFrame finishCommittedPresentation];
+                    BXVerificationCount(BXVerificationCounterGPUCompletion);
+                    BXVerificationSample(BXVerificationMetricGPUCompletion, commitTime, BXVerificationNow());
                 }];
                 
                 [commandBuffer presentDrawable:drawable];
-                [commandBuffer commit];
+                uint64_t commitStart = BXVerificationNow();
+                commitTime = commitStart;
+					if (![presentedFrame markCommitted]) {
+						dispatch_semaphore_signal(self->_inflightSemaphore);
+						return;
+					}
+					[commandBuffer commit];
+				BXVerificationSample(BXVerificationMetricCommandBufferCommit, commitStart, BXVerificationNow());
             } else {
                 dispatch_semaphore_signal(self->_inflightSemaphore);
+                BXVerificationCount(BXVerificationCounterFrameDroppedNoDrawable);
+                [frame finishUncommittedPresentation];
             }
         }
     }

@@ -82,6 +82,18 @@ typedef NS_ENUM(uint8_t, BXCGACompositeMode) {
 {
 	__unsafe_unretained BXEmulator *_emulator;
 	BXVideoFrame *_currentFrame;
+	BXVideoFrame *_producerFrame;
+	NSSize _frameCapacity;
+	NSSize _preparedOutputSize;
+	NSSize _preparedScale;
+	NSSize _preparedBaseResolution;
+	BOOL _preparedTextMode;
+	NSSize _pendingOutputSize;
+	NSSize _pendingScale;
+	void *_pendingCallbackValue;
+	BOOL _hasPendingOutputConfiguration;
+	_Atomic(BXVideoFrame *) _latestFrame;
+	_Atomic(bool) _presentationScheduled;
 	
 	NSInteger _currentVideoMode;
 	BXFilterType _filterType;
@@ -161,5 +173,8 @@ typedef NS_ENUM(uint8_t, BXCGACompositeMode) {
 
 - (BOOL) startFrameWithBuffer: (void **)frameBuffer pitch: (int *)pitch;
 - (void) finishFrameWithChanges: (const uint16_t *)dirtyBlocks;
+
+/// Publishes the newest completed frame to the main-thread presentation queue.
+- (void) _presentLatestFrame;
 
 @end

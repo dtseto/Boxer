@@ -8,6 +8,7 @@
 
 #import "BXVideoFrame.h"
 #import "ADBGeometry.h"
+#import "../BXVerificationInstrumentation.h"
 
 const CGFloat BX4by3AspectRatio = (CGFloat)320.0 / (CGFloat)240.0;
 
@@ -24,6 +25,7 @@ const CGFloat BX4by3AspectRatio = (CGFloat)320.0 / (CGFloat)240.0;
 @synthesize numDirtyRegions = _numDirtyRegions;
 @synthesize containsText = _containsText;
 @synthesize timestamp = _timestamp;
+@synthesize texture = _texture;
 
 
 + (NSSize) scalingFactorForSize: (NSSize)frameSize toAspectRatio: (CGFloat)aspectRatio
@@ -56,17 +58,38 @@ const CGFloat BX4by3AspectRatio = (CGFloat)320.0 / (CGFloat)240.0;
 
 - (id) initWithSize: (NSSize)targetSize depth: (NSUInteger)depth
 {
+	return [self initWithCapacitySize: targetSize logicalSize: targetSize depth: depth];
+}
+
+- (instancetype) initWithCapacitySize: (NSSize)capacitySize
+					logicalSize: (NSSize)logicalSize
+						 depth: (NSUInteger)depth
+{
 	if ((self = [super init]))
 	{
-		_size			= targetSize;
-		_baseResolution	= targetSize;
+		_size			= logicalSize;
+		_baseResolution	= logicalSize;
 		_bytesPerPixel	= depth;
 		_intendedScale	= NSMakeSize(1.0f, 1.0f);
+		_numPendingDirtyRegions = 0;
+		atomic_init(&_presentationState, 0);
 		
-		NSUInteger requiredLength = _size.width * _size.height * _bytesPerPixel;
+		NSUInteger requiredLength = capacitySize.width * capacitySize.height * _bytesPerPixel;
 		_frameData = [[NSMutableData alloc] initWithLength: requiredLength];
 	}
 	return self;
+}
+
+- (BOOL) configureForLogicalSize: (NSSize)logicalSize
+{
+	NSUInteger requiredLength = logicalSize.width * logicalSize.height * self.bytesPerPixel;
+	if (requiredLength > self.frameData.length)
+		return NO;
+
+	_size = logicalSize;
+	_baseResolution = logicalSize;
+	_intendedScale = NSMakeSize(1.0f, 1.0f);
+	return YES;
 }
 
 - (NSUInteger) pitch
@@ -131,6 +154,112 @@ const CGFloat BX4by3AspectRatio = (CGFloat)320.0 / (CGFloat)240.0;
     _dirtyRegions[nextIndex] = range;
     
     self.numDirtyRegions = nextIndex + 1;
+}
+
+- (void) captureDirtyBlocks: (const uint16_t *)dirtyBlocks
+{
+	_numPendingDirtyRegions = 0;
+	if (!dirtyBlocks)
+		return;
+
+	NSUInteger currentOffset = 0;
+	NSUInteger maxOffset = self.size.height;
+	for (NSUInteger entryIndex = 0;
+		 entryIndex < MAX_DIRTY_REGIONS && currentOffset < maxOffset;
+		 entryIndex++)
+	{
+		NSUInteger regionLength = dirtyBlocks[entryIndex];
+		// The first zero is a valid zero-length clean prefix. Subsequent zeroes
+		// terminate Staging's alternating clean/dirty list.
+		if (entryIndex > 0 && regionLength == 0)
+			break;
+
+		NSUInteger remaining = maxOffset - currentOffset;
+		NSUInteger clippedLength = MIN(regionLength, remaining);
+		BOOL isDirtyBlock = (entryIndex % 2 != 0);
+		if (isDirtyBlock && clippedLength > 0 &&
+			_numPendingDirtyRegions < MAX_DIRTY_REGIONS)
+			_pendingDirtyRegions[_numPendingDirtyRegions++] = NSMakeRange(currentOffset, clippedLength);
+		currentOffset += clippedLength;
+		if (clippedLength != regionLength)
+			break;
+	}
+}
+
+- (void) applyPendingDirtyRegions
+{
+	[self clearDirtyRegions];
+	for (NSUInteger i = 0; i < _numPendingDirtyRegions; i++)
+		[self setNeedsDisplayInRegion: _pendingDirtyRegions[i]];
+	_numPendingDirtyRegions = 0;
+}
+
+- (BOOL) tryBeginRendering
+{
+	int expected = BXVideoFramePresentationStateFree;
+	return atomic_compare_exchange_strong_explicit(&_presentationState, &expected, BXVideoFramePresentationStateRendering,
+									memory_order_acquire, memory_order_relaxed);
+}
+
+- (BOOL) publishForPresentation
+{
+	int expected = BXVideoFramePresentationStateRendering;
+	return atomic_compare_exchange_strong_explicit(&_presentationState, &expected, BXVideoFramePresentationStateReady,
+									memory_order_release, memory_order_relaxed);
+}
+
+- (BOOL) tryBeginPresentation
+{
+	int expected = BXVideoFramePresentationStateReady;
+	return atomic_compare_exchange_strong_explicit(&_presentationState, &expected, BXVideoFramePresentationStatePresenting,
+									memory_order_acquire, memory_order_relaxed);
+}
+
+- (BOOL) discardIfReady
+{
+	int expected = BXVideoFramePresentationStateReady;
+	return atomic_compare_exchange_strong_explicit(&_presentationState, &expected, BXVideoFramePresentationStateFree,
+									memory_order_acq_rel, memory_order_relaxed);
+}
+
+- (BOOL) markCommitted
+{
+	int expected = BXVideoFramePresentationStatePresenting;
+	BOOL committed = atomic_compare_exchange_strong_explicit(&_presentationState, &expected, BXVideoFramePresentationStateCommitted,
+											memory_order_acq_rel, memory_order_relaxed);
+	if (!committed)
+		BXVerificationCount(BXVerificationCounterCommittedTransitionFailure);
+	return committed;
+}
+
+- (BOOL) finishUncommittedPresentation
+{
+    int expected = BXVideoFramePresentationStatePresenting;
+    return atomic_compare_exchange_strong_explicit(&_presentationState, &expected, BXVideoFramePresentationStateFree,
+											memory_order_release, memory_order_relaxed);
+}
+
+- (BOOL) finishCommittedPresentation
+{
+	int state = atomic_load_explicit(&_presentationState, memory_order_acquire);
+	NSAssert(state == BXVideoFramePresentationStateCommitted,
+			@"finishCommittedPresentation requires a COMMITTED frame, got state %d", state);
+	int expected = BXVideoFramePresentationStateCommitted;
+	BOOL finished = atomic_compare_exchange_strong_explicit(&_presentationState, &expected, BXVideoFramePresentationStateFree,
+											memory_order_release, memory_order_relaxed);
+	if (!finished)
+		BXVerificationCount(BXVerificationCounterCommittedCompletionTransitionFailure);
+	return finished;
+}
+
+- (BOOL) isFree
+{
+	return atomic_load_explicit(&_presentationState, memory_order_acquire) == BXVideoFramePresentationStateFree;
+}
+
+- (int) presentationState
+{
+	return atomic_load_explicit(&_presentationState, memory_order_acquire);
 }
 
 - (void) clearDirtyRegions

@@ -495,12 +495,20 @@ Bitu boxer_idealOutputMode(Bitu flags)
 bool boxer_startFrame(uint8_t * &frameBuffer, int & pitch)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
+	if (!emulator)
+	{
+		frameBuffer = NULL;
+		pitch = 0;
+		return false;
+	}
 	return [[emulator videoHandler] startFrameWithBuffer: (void **)&frameBuffer pitch: &pitch];
 }
 
 void boxer_finishFrame(const uint16_t *dirtyBlocks)
 {
 	BXEmulator *emulator = [BXEmulator currentEmulator];
+	if (!emulator)
+		return;
 	[[emulator videoHandler] finishFrameWithChanges: dirtyBlocks];	
 }
 

@@ -7,6 +7,8 @@
 
 
 #import <Foundation/Foundation.h>
+#import <Metal/Metal.h>
+#include <stdatomic.h>
 
 /// The standard 4:3 aspect ratio of old displays
 extern const CGFloat BX4by3AspectRatio; 
@@ -17,6 +19,14 @@ extern const CGFloat BX4by3AspectRatio;
 /// The maximum number of regions that can be flagged as dirty.
 /// This is set to the maximum vertical resolution expected from a DOS game.
 #define MAX_DIRTY_REGIONS 1024
+
+typedef NS_ENUM(int, BXVideoFramePresentationState) {
+    BXVideoFramePresentationStateFree = 0,
+    BXVideoFramePresentationStateRendering = 1,
+    BXVideoFramePresentationStateReady = 2,
+    BXVideoFramePresentationStatePresenting = 3,
+    BXVideoFramePresentationStateCommitted = 4
+};
 
 /// @brief BXVideoFrame is a renderer-agnostic framebuffer for DOSBox to draw frames into.
 ///
@@ -34,7 +44,22 @@ extern const CGFloat BX4by3AspectRatio;
     NSRange _dirtyRegions[MAX_DIRTY_REGIONS];
     NSUInteger _numDirtyRegions;
     
-    NSTimeInterval _timestamp;
+	NSTimeInterval _timestamp;
+
+	/// Presentation ownership is managed with C11 atomics so the producer,
+	/// main thread, and Metal completion handler can exchange this frame
+	/// without a lock.
+	_Atomic(int) _presentationState;
+
+	/// The source texture owned by this frame slot. It is reused only when the
+	/// slot is free and its dimensions and format still match.
+	id<MTLTexture> _texture;
+
+	/// Dirty regions captured from Staging before its dirtyBlocks pointer
+	/// becomes invalid. They are applied to the public dirty-region list on
+	/// the main thread before presentation.
+	NSRange _pendingDirtyRegions[MAX_DIRTY_REGIONS];
+	NSUInteger _numPendingDirtyRegions;
 }
 
 #pragma mark -
@@ -86,6 +111,8 @@ extern const CGFloat BX4by3AspectRatio;
 /// and reset to 0 by clearDirtyRegions. See the dirty region functions below.
 @property (readonly, assign) NSUInteger numDirtyRegions;
 
+@property (nonatomic, strong) id<MTLTexture> texture;
+
 
 #pragma mark -
 #pragma mark Class helpers
@@ -99,6 +126,15 @@ extern const CGFloat BX4by3AspectRatio;
 
 + (instancetype) frameWithSize: (NSSize)targetSize depth: (NSUInteger)depth;
 - (instancetype) initWithSize: (NSSize)targetSize depth: (NSUInteger)depth;
+
+/// Creates a frame with a preallocated pixel capacity and an initial logical size.
+- (instancetype) initWithCapacitySize: (NSSize)capacitySize
+					logicalSize: (NSSize)logicalSize
+						 depth: (NSUInteger)depth;
+
+/// Changes the logical framebuffer size without reallocating, provided it fits
+/// within the capacity used at initialization.
+- (BOOL) configureForLogicalSize: (NSSize)logicalSize;
 
 
 #pragma mark -
@@ -119,5 +155,22 @@ extern const CGFloat BX4by3AspectRatio;
 - (void) clearDirtyRegions;
 
 - (NSRange) dirtyRegionAtIndex: (NSUInteger)region;
+
+/// Captures Staging's transient dirty-block array synchronously.
+- (void) captureDirtyBlocks: (const uint16_t *)dirtyBlocks;
+
+/// Rebuilds the public dirty-region list on the main thread.
+- (void) applyPendingDirtyRegions;
+
+/// Lock-free frame ownership transitions used by the adapter.
+- (BOOL) tryBeginRendering;
+- (BOOL) publishForPresentation;
+- (BOOL) tryBeginPresentation;
+- (BOOL) markCommitted;
+- (BOOL) discardIfReady;
+- (BOOL) finishUncommittedPresentation;
+- (BOOL) finishCommittedPresentation;
+- (BOOL) isFree;
+- (int) presentationState;
 
 @end

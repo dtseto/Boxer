@@ -880,3 +880,16 @@ Examples:
 "PROGRAM_MOUNT_STATUS_DRIVE" = "Drive";
 "PROGRAM_MOUNT_STATUS_TYPE" = "Type";
 "PROGRAM_MOUNT_STATUS_LABEL" = "Label";
+
+"TITLEBAR_CYCLES_MS" = "cycles/ms";
+"TITLEBAR_CYCLES_THROTTLED" = "throttled";
+"TITLEBAR_MUTED" = "Muted";
+"TITLEBAR_PAUSED" = "Paused";
+"TITLEBAR_HINT_CAPTURED" = "Mouse captured";
+"TITLEBAR_HINT_CAPTURED_HOTKEY" = "Mouse captured (press %s to release)";
+"TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE" = "Mouse captured (press %s + middle button to release)";
+"TITLEBAR_HINT_RELEASED_HOTKEY" = "Press %s to capture mouse";
+"TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE" = "Press %s + middle button to capture mouse";
+"TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON" = "Press any mouse button to capture";
+"TITLEBAR_HINT_SEAMLESS_HOTKEY" = "Press %s for seamless mouse capture";
+"TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE" = "Press %s + middle button for seamless mouse capture";

@@ -110,8 +110,10 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
     {
         BXEmulatorCore *core = [[BXEmulatorCore alloc] initWithGamebox:session.gamebox session:session];
         BXMetalRenderingView *metalView = (BXMetalRenderingView *)self.renderingView;
-        metalView.integerScalingMode = core.currentShaderSystem == BXShaderSystemOpenEmu &&
-                                       core.integerScalingEnabledForCurrentGamebox
+        // Boxer presents through Metal regardless of the DOSBox glshader
+        // setting. That setting describes DOSBox's native OpenGL shader path,
+        // which is not executed by BXMetalRenderingView.
+        metalView.integerScalingMode = core.integerScalingEnabledForCurrentGamebox
             ? BXIntegerScalingModeAuto
             : BXIntegerScalingModeOff;
     }

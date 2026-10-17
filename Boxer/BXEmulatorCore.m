@@ -35,7 +35,7 @@ static NSString * const BXShaderKey = @"glshader";
 static NSString * const BXIntegerScalingKey = @"integer_scaling";
 static NSString * const BXIMFCSection = @"imfc";
 static NSString * const BXIMFCKey = @"imfc";
-static NSString * const BXDefaultDOSBoxShaderPreset = @"crt-auto";
+static NSString * const BXDefaultDOSBoxShaderPreset = @"nearest";
 
 NSNotificationName const BXEmulatorCoreShaderConfigurationDidChangeNotification = @"BXEmulatorCoreShaderConfigurationDidChangeNotification";
 
@@ -1123,7 +1123,7 @@ static NSURL *BXSoundFontsDirectoryURL(void)
 
 - (NSArray<NSString *> *)availableDOSBoxShaderPresets
 {
-    return @[@"crt-auto", @"crt-auto-machine", @"crt-auto-arcade", @"sharp", @"custom"];
+    return @[@"nearest", @"crt-auto", @"crt-auto-machine", @"crt-auto-arcade", @"sharp", @"custom"];
 }
 
 - (NSString *)currentDOSBoxShaderPreset

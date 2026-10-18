@@ -48,6 +48,9 @@
     BXRenderingStyle _renderingStyle;
     BXIntegerScalingMode _integerScalingMode;
     NSString *_selectedShaderPresetPath;
+    // BOXER-FORK: cache the last integer-scaling viewport to skip identical updates.
+    MTLViewport _cachedIntegerScalingViewport;
+    BOOL _cachedIntegerScalingViewportValid;
 }
 
 @synthesize currentFrame=_currentFrame;
@@ -206,6 +209,8 @@
 - (void)updateIntegerScalingForFrame:(BXVideoFrame *)frame
 {
     if (frame == nil || self.integerScalingMode == BXIntegerScalingModeOff) {
+        // BOXER-FORK: reset the deduplication cache with the output viewport.
+        _cachedIntegerScalingViewportValid = NO;
         [_filterChain resetOutputViewport];
         return;
     }
@@ -214,6 +219,8 @@
     // nearest filtering and should retain its existing aspect-fit behavior.
     if (self.integerScalingMode == BXIntegerScalingModeAuto &&
         self.renderingStyle != BXRenderingStyleCRT) {
+        // BOXER-FORK: reset the deduplication cache with the output viewport.
+        _cachedIntegerScalingViewportValid = NO;
         [_filterChain resetOutputViewport];
         return;
     }
@@ -221,7 +228,18 @@
     BXIntegerScaleResult result = BXCalculateIntegerScale(frame.scaledSize,
                                                             _videoLayer.drawableSize,
                                                             self.integerScalingMode);
+    if (_cachedIntegerScalingViewportValid &&
+        _cachedIntegerScalingViewport.originX == result.viewport.originX &&
+        _cachedIntegerScalingViewport.originY == result.viewport.originY &&
+        _cachedIntegerScalingViewport.width == result.viewport.width &&
+        _cachedIntegerScalingViewport.height == result.viewport.height) {
+        return;
+    }
+
     [_filterChain setOutputViewport:result.viewport];
+    // BOXER-FORK: remember the exact viewport passed to the filter chain.
+    _cachedIntegerScalingViewport = result.viewport;
+    _cachedIntegerScalingViewportValid = YES;
 }
 
 - (void)updateWithFrame:(BXVideoFrame *)frame {

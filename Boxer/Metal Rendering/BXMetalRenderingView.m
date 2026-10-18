@@ -172,24 +172,36 @@
 
 - (void)setRenderingStyle:(BXRenderingStyle)renderingStyle {
     [self willChangeValueForKey:@"renderingStyle"];
+
+    // BOXER-FORK: restore the prior style when the requested shader load fails.
+    BXRenderingStyle previousRenderingStyle = _renderingStyle;
+    BOOL shaderLoaded = NO;
     
     _renderingStyle = renderingStyle;
     
     switch (renderingStyle) {
     case BXRenderingStyleNormal: {
-        [self loadShaderPresetAtPath:@"Pixellate/Pixellate.slangp"];
+        shaderLoaded = [self loadShaderPresetAtPath:@"Pixellate/Pixellate.slangp"];
         break;
     }
         
     case BXRenderingStyleCRT: {
-        [self loadShaderPresetAtPath:@"CRT Geom/CRT Geom.slangp"];
+        shaderLoaded = [self loadShaderPresetAtPath:@"CRT Geom/CRT Geom.slangp"];
         break;
     }
         
     case BXRenderingStyleSmoothed: {
-        [self loadShaderPresetAtPath:@"Smooth/Smooth.slangp"];
+        shaderLoaded = [self loadShaderPresetAtPath:@"Smooth/Smooth.slangp"];
         break;
     }
+    }
+
+    if (!shaderLoaded) {
+        // BOXER-FORK: surface shader load failure and restore the active style.
+        NSLog(@"[BoxerShaderDiag] shader load failed for rendering style %ld; restoring previous style %ld",
+              (long)renderingStyle, (long)previousRenderingStyle);
+        _renderingStyle = previousRenderingStyle;
+        NSAssert(NO, @"shader load failed for style %ld", (long)renderingStyle);
     }
     
     [self didChangeValueForKey:@"renderingStyle"];

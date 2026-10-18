@@ -276,7 +276,9 @@
 	BOOL textureSizeChanged = (frame.texture == nil ||
 	                           frame.texture.width != frame.size.width ||
 	                           frame.texture.height != frame.size.height ||
-	                           frame.texture.pixelFormat != MTLPixelFormatBGRA8Unorm);
+	                           frame.texture.pixelFormat != MTLPixelFormatBGRA8Unorm ||
+                           (frame.texture.usage & (MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget)) !=
+                               (MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget));
 	if (textureSizeChanged) {
         if (NSIsEmptyRect(self.viewportRect)) {
             NSRect viewportRect = [self viewportForFrame:frame];
@@ -289,6 +291,9 @@
                                                            width:frame.size.width
                                                           height:frame.size.height
                                                        mipmapped:NO];
+        // The frame texture is sampled by OpenEmuShaders and may be used as a
+        // render target by a future filter-chain path.
+        td.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
 			frame.texture = [_device newTextureWithDescriptor:td];
 			BXVerificationCount(BXVerificationCounterTextureCreation);
 	}

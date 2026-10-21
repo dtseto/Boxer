@@ -34,6 +34,7 @@
 @implementation BXMetalRenderingView {
     CAMetalLayer    *_videoLayer;
     OEFilterChain   *_filterChain;
+    NSArray<NSString *> *_availableShaderPresetPathsCache;
     dispatch_semaphore_t    _inflightSemaphore;
     NSInteger               _skippedFrames;
     id<MTLDevice>           _device;
@@ -108,6 +109,11 @@
 
 - (NSArray<NSString *> *)availableShaderPresetPaths
 {
+    if (_availableShaderPresetPathsCache != nil)
+    {
+        return _availableShaderPresetPathsCache;
+    }
+
     NSURL *shadersURL = [NSBundle.mainBundle.resourceURL URLByAppendingPathComponent:@"Shaders" isDirectory:YES];
     NSDirectoryEnumerator<NSURL *> *enumerator = [[NSFileManager defaultManager]
         enumeratorAtURL:shadersURL
@@ -117,7 +123,8 @@
 
     if (enumerator == nil)
     {
-        return @[];
+        _availableShaderPresetPathsCache = @[];
+        return _availableShaderPresetPathsCache;
     }
 
     NSMutableArray<NSString *> *presetPaths = [NSMutableArray array];
@@ -127,6 +134,14 @@
         [presetURL getResourceValue:&isRegularFile forKey:NSURLIsRegularFileKey error:nil];
         if (!isRegularFile.boolValue || ![presetURL.pathExtension.lowercaseString isEqualToString:@"slangp"])
         {
+            continue;
+        }
+
+        NSError *validationError = nil;
+        SlangShader *validatedShader = [[SlangShader alloc] initFromURL:presetURL error:&validationError];
+        if (validatedShader == nil)
+        {
+            NSLog(@"Skipping invalid shader preset at %@: %@", presetURL.path, validationError.localizedDescription);
             continue;
         }
 
@@ -141,7 +156,8 @@
     [presetPaths sortUsingComparator:^NSComparisonResult(NSString *first, NSString *second) {
         return [first.lastPathComponent localizedStandardCompare:second.lastPathComponent];
     }];
-    return presetPaths;
+    _availableShaderPresetPathsCache = [presetPaths copy];
+    return _availableShaderPresetPathsCache;
 }
 
 - (NSString *)selectedShaderPresetPath
@@ -151,17 +167,53 @@
 
 - (BOOL)loadShaderPresetAtPath:(NSString *)presetPath
 {
-    if (presetPath.length == 0 || ![self.availableShaderPresetPaths containsObject:presetPath])
+    return [self loadShaderPresetAtPath:presetPath error:nil];
+}
+
+- (BOOL)loadShaderPresetAtPath:(NSString *)presetPath error:(NSError **)loadError
+{
+    if (loadError != NULL)
     {
+        *loadError = nil;
+    }
+
+    if (presetPath.length == 0 || [presetPath isAbsolutePath] ||
+        [presetPath.pathExtension.lowercaseString isEqualToString:@"slangp"] == NO)
+    {
+        if (loadError != NULL)
+        {
+            *loadError = [NSError errorWithDomain:@"BXShaderPresetErrorDomain"
+                                             code:1
+                                         userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"The selected shader preset is unavailable or invalid.", nil)}];
+        }
         return NO;
     }
 
     NSURL *shadersURL = [NSBundle.mainBundle.resourceURL URLByAppendingPathComponent:@"Shaders" isDirectory:YES];
     NSURL *presetURL = [shadersURL URLByAppendingPathComponent:presetPath];
+    NSString *shadersPath = shadersURL.URLByStandardizingPath.path;
+    NSString *presetFilePath = presetURL.URLByStandardizingPath.path;
+    if (![presetFilePath hasPrefix:[shadersPath stringByAppendingString:@"/"]] ||
+        ![[NSFileManager defaultManager] fileExistsAtPath:presetFilePath])
+    {
+        if (loadError != NULL)
+        {
+            *loadError = [NSError errorWithDomain:@"BXShaderPresetErrorDomain"
+                                             code:1
+                                         userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"The selected shader preset is unavailable or invalid.", nil)}];
+        }
+        return NO;
+    }
+
     NSError *error = nil;
+    NSLog(@"[BoxerShaderDiag] loading shader preset at %@", presetPath);
     if (![_filterChain setShaderFromURL:presetURL error:&error])
     {
         NSLog(@"Could not load shader preset at %@: %@", presetPath, error.localizedDescription);
+        if (loadError != NULL)
+        {
+            *loadError = error;
+        }
         return NO;
     }
 

@@ -44,7 +44,10 @@ typedef NS_ENUM(NSInteger, BXRenderingStyle) {
 
 /// Loads a shader preset discovered in availableShaderPresetPaths.
 /// Returns NO without changing the current shader if the preset cannot be found or loaded.
-- (BOOL)loadShaderPresetAtPath:(NSString *)presetPath;
+- (BOOL)loadShaderPresetAtPath:(NSString * _Nonnull)presetPath;
+
+/// Loads a preset and returns its parsing or compilation error when loading fails.
+- (BOOL)loadShaderPresetAtPath:(NSString * _Nonnull)presetPath error:(NSError * _Nullable * _Nullable)error;
 
 /// Whether this rendering view can render in the specified style.
 - (BOOL) supportsRenderingStyle: (BXRenderingStyle)style;

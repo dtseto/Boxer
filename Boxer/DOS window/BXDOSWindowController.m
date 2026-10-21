@@ -523,9 +523,19 @@ NSString * const BXDOSWindowFullscreenSizeFormat = @"Fullscreen size for %@";
         return;
     }
 
-    if ([self.renderingView loadShaderPresetAtPath:presetPath])
+    NSError *error = nil;
+    if ([self.renderingView loadShaderPresetAtPath:presetPath error:&error])
     {
         [[NSUserDefaults standardUserDefaults] setObject:presetPath forKey:@"shaderPresetPath"];
+    }
+    else
+    {
+        NSAlert *alert = [[NSAlert alloc] init];
+        alert.alertStyle = NSAlertStyleWarning;
+        alert.messageText = NSLocalizedString(@"Could Not Load Shader", nil);
+        alert.informativeText = error.localizedDescription ?: NSLocalizedString(@"The selected shader preset could not be loaded.", nil);
+        [alert addButtonWithTitle:NSLocalizedString(@"OK", nil)];
+        [alert beginSheetModalForWindow:self.window completionHandler:nil];
     }
 }
 

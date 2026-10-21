@@ -14,6 +14,8 @@
 #import "BXAudioSource.h"
 #import "BXDrive.h"
 
+#include <vector>
+
 static uintptr_t BXMIDIChannel;
 typedef unsigned int Bitu;
 // Legacy contract markers retained while the channel is represented by an opaque handle:

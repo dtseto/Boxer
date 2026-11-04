@@ -8,6 +8,7 @@
 #import "BXEmulatorPrivate.h"
 #import "NSObject+ADBPerformExtensions.h"
 #import "BXEmulatorCore.h"
+#import "BXCoalface.h"
 
 #import <SDL2/SDL.h>
 
@@ -924,12 +925,16 @@ static BOOL _hasStartedEmulator = NO;
     {
         *contextInfo = [[NSAutoreleasePool alloc] init];
     }
+	boxer_audioTimingBeginPhase(BXAdapterTimingDelegate);
 	[self.delegate emulatorWillStartRunLoop: self];
+	boxer_audioTimingEndPhase(BXAdapterTimingDelegate);
 }
 
 - (void) _runLoopDidFinishWithContextInfo: (void *)contextInfo
 {
+	boxer_audioTimingBeginPhase(BXAdapterTimingDelegate);
 	[self.delegate emulatorDidFinishRunLoop: self];
+	boxer_audioTimingEndPhase(BXAdapterTimingDelegate);
     
     _lastRunLoopTime = [NSDate timeIntervalSinceReferenceDate];
     

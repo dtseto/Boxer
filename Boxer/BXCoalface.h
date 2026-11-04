@@ -151,6 +151,35 @@ FILE *boxer_openCaptureFile(const char *typeDescription, const char *fileExtensi
 	bool boxer_runLoopShouldContinue();
 	bool boxer_processEvents();
     bool boxer_MaybeProcessEvents();
+
+    typedef enum {
+        BXAdapterTimingEvents = 0,
+        BXAdapterTimingVideoHandoff,
+        BXAdapterTimingDelegate
+    } BXAdapterTimingPhase;
+    void boxer_audioTimingBeginLoop();
+    void boxer_audioTimingEndLoop();
+    void boxer_audioTimingBeginPhase(BXAdapterTimingPhase phase);
+    void boxer_audioTimingEndPhase(BXAdapterTimingPhase phase);
+    void boxer_audioTimingMachineCallWillStart();
+    void boxer_audioTimingMachineCallDidFinish();
+    void boxer_audioTimingReportSleep(uint64_t requestedMicroseconds,
+                                      uint64_t actualMicroseconds);
+    void boxer_audioTimingReportInternalLoop(uint64_t totalMicroseconds,
+                                             uint64_t picMicroseconds,
+                                             uint64_t cpuMicroseconds,
+                                             uint64_t timerMicroseconds,
+                                             uint64_t eventsMicroseconds,
+                                             int64_t cpuCycles,
+                                             int64_t cpuCycleLeft,
+                                             int64_t cpuCycleMax,
+                                             bool cpuAutoAdjust,
+                                             int64_t cpuPercentUsed,
+                                             uint8_t cpuCoreMode,
+                                             int64_t ticksRemain,
+                                             int64_t ticksScheduled,
+                                             int64_t ticksDone);
+    void boxer_audioTimingLogThreadInfoOnce();
     
 #pragma mark - Input
     

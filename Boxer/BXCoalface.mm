@@ -31,6 +31,13 @@
 #import "src/hardware/parport/printer_charmaps.h"
 #import "ADBFilesystem.h"
 
+#include <chrono>
+#include <atomic>
+#include <pthread.h>
+#include <sched.h>
+#include <sys/qos.h>
+#include <thread>
+
 #if (C_DYNAMIC_X86)
 void CPU_Core_Dyn_X86_Cache_Init(bool enable_cache);
 void CPU_Core_Dyn_X86_SetFPUMode(bool dh_fpu);
@@ -145,6 +152,11 @@ static uint8_t boxer_cpuControlCoreMode(void)
     return UINT8_MAX;
 }
 
+extern "C" uint8_t boxer_cpuCurrentCoreMode(void)
+{
+    return boxer_cpuControlCoreMode();
+}
+
 static bool boxer_cpuControlSetCoreMode(uint8_t mode)
 {
     switch (mode)
@@ -243,8 +255,11 @@ const BXDOSBoxCPUControlBridgeCallbacks *boxer_registeredDOSBoxCPUControlBridge(
 /// core runloop gives us time.
 bool boxer_processEvents()
 {
+	boxer_audioTimingBeginPhase(BXAdapterTimingEvents);
 	[[BXEmulator currentEmulator] _processEvents];
-	return !shutdown_requested && boxer_runLoopShouldContinue();
+	const bool result = !shutdown_requested && boxer_runLoopShouldContinue();
+	boxer_audioTimingEndPhase(BXAdapterTimingEvents);
+	return result;
 }
 
 /*
@@ -266,6 +281,328 @@ bool boxer_processEvents()
 //! video-frame is displayed. This is kept up-to-date when the video mode is set.
 //! A sane starting value is used, which is based on a 60-Hz monitor.
 auto frame_period = std::chrono::nanoseconds(1'000'000'000 / 60);
+static thread_local std::chrono::steady_clock::time_point boxer_loop_started_at;
+
+namespace {
+
+constexpr uint32_t BXAdapterTimingHistogramBuckets = 1001;
+constexpr uint64_t BXAdapterTimingSlowIterationUs = 20000;
+
+struct BXAdapterTimingWindow {
+	uint64_t count = 0;
+	uint64_t sum = 0;
+	uint64_t minimum = UINT64_MAX;
+	uint64_t maximum = 0;
+	uint32_t histogram[BXAdapterTimingHistogramBuckets] = {};
+};
+
+static thread_local BXAdapterTimingWindow boxer_timing_windows[5];
+static thread_local std::chrono::steady_clock::time_point boxer_phase_started[3];
+static thread_local uint64_t boxer_phase_totals[3] = {};
+static thread_local std::chrono::steady_clock::time_point boxer_timing_window_started;
+static thread_local bool boxer_timing_loop_active = false;
+static thread_local uint64_t boxer_last_slow_log = 0;
+static thread_local std::chrono::steady_clock::time_point boxer_machine_call_started_at;
+static thread_local bool boxer_machine_call_active = false;
+static thread_local std::chrono::steady_clock::time_point boxer_last_machine_call_finished_at;
+static thread_local uint64_t boxer_last_machine_entry_log_ticks = 0;
+static thread_local uint64_t boxer_machine_call_count = 0;
+static thread_local uint64_t boxer_machine_call_total_us = 0;
+// The first completed machine call may include process-start accounting. Begin
+// the reported duty window after that startup sample has been discarded.
+static thread_local bool boxer_machine_duty_window_started = false;
+static thread_local uint64_t boxer_last_machine_summary_ticks = 0;
+static std::atomic<bool> boxer_thread_info_logged = false;
+static std::atomic<uint64_t> boxer_last_sleep_log_ticks = 0;
+
+static const char *boxer_qosName(const qos_class_t qos)
+{
+	switch (qos) {
+	case QOS_CLASS_USER_INTERACTIVE: return "USER_INTERACTIVE";
+	case QOS_CLASS_USER_INITIATED: return "USER_INITIATED";
+	case QOS_CLASS_DEFAULT: return "DEFAULT";
+	case QOS_CLASS_UTILITY: return "UTILITY";
+	case QOS_CLASS_BACKGROUND: return "BACKGROUND";
+	default: return "UNSPECIFIED";
+	}
+}
+
+static uint64_t boxer_timingMicroseconds(const std::chrono::steady_clock::duration duration)
+{
+	return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(duration).count());
+}
+
+static void boxer_recordTiming(BXAdapterTimingWindow &window, const uint64_t microseconds)
+{
+	window.count++;
+	window.sum += microseconds;
+	window.minimum = std::min(window.minimum, microseconds);
+	window.maximum = std::max(window.maximum, microseconds);
+	window.histogram[std::min<uint64_t>(microseconds, BXAdapterTimingHistogramBuckets - 1)]++;
+}
+
+static uint64_t boxer_timingPercentile(const BXAdapterTimingWindow &window, const double percentile)
+{
+	if (!window.count)
+		return 0;
+	const uint64_t target = static_cast<uint64_t>((window.count - 1) * percentile);
+	uint64_t seen = 0;
+	for (uint32_t bucket = 0; bucket < BXAdapterTimingHistogramBuckets; bucket++) {
+		seen += window.histogram[bucket];
+		if (seen > target)
+			return bucket;
+	}
+	return window.maximum;
+}
+
+static void boxer_reportTimingWindow(void)
+{
+	static const char *names[] = {"total", "events", "video", "delegate", "residual"};
+	for (NSUInteger index = 0; index < 5; index++) {
+		const BXAdapterTimingWindow &window = boxer_timing_windows[index];
+		if (!window.count)
+			continue;
+		LOG_MSG("BOXER:AUDIO timing phase=%s count=%llu min=%llu median=%llu p95=%llu max=%llu avg=%llu us thread=%zu",
+		        names[index],
+		        static_cast<unsigned long long>(window.count),
+		        static_cast<unsigned long long>(window.minimum),
+		        static_cast<unsigned long long>(boxer_timingPercentile(window, 0.50)),
+		        static_cast<unsigned long long>(boxer_timingPercentile(window, 0.95)),
+		        static_cast<unsigned long long>(window.maximum),
+		        static_cast<unsigned long long>(window.sum / window.count),
+		        std::hash<std::thread::id>{}(std::this_thread::get_id()));
+	}
+	for (BXAdapterTimingWindow &window : boxer_timing_windows)
+		window = BXAdapterTimingWindow{};
+}
+
+}
+
+void boxer_audioTimingBeginLoop()
+{
+	boxer_audioTimingLogThreadInfoOnce();
+	boxer_loop_started_at = std::chrono::steady_clock::now();
+	memset(boxer_phase_totals, 0, sizeof(boxer_phase_totals));
+	boxer_timing_loop_active = true;
+	if (boxer_timing_window_started == std::chrono::steady_clock::time_point{})
+		boxer_timing_window_started = boxer_loop_started_at;
+}
+
+void boxer_audioTimingEndLoop()
+{
+	if (!boxer_timing_loop_active)
+		return;
+	const auto now = std::chrono::steady_clock::now();
+	const uint64_t total_us = boxer_timingMicroseconds(now - boxer_loop_started_at);
+	uint64_t accounted_us = 0;
+	for (uint64_t duration : boxer_phase_totals)
+		accounted_us += duration;
+	const uint64_t residual_us = total_us > accounted_us ? total_us - accounted_us : 0;
+	boxer_recordTiming(boxer_timing_windows[0], total_us);
+	boxer_recordTiming(boxer_timing_windows[3], boxer_phase_totals[BXAdapterTimingDelegate]);
+	boxer_recordTiming(boxer_timing_windows[2], boxer_phase_totals[BXAdapterTimingVideoHandoff]);
+	boxer_recordTiming(boxer_timing_windows[1], boxer_phase_totals[BXAdapterTimingEvents]);
+	boxer_recordTiming(boxer_timing_windows[4], residual_us);
+	const uint64_t now_ticks = now.time_since_epoch().count();
+	const uint64_t slow_log_interval = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(100)).count();
+	if (total_us >= BXAdapterTimingSlowIterationUs &&
+	    (boxer_last_slow_log == 0 || now_ticks - boxer_last_slow_log >= slow_log_interval)) {
+		const bool first_in_burst = boxer_last_slow_log == 0 || now_ticks - boxer_last_slow_log >= 250000000ULL;
+		boxer_last_slow_log = now_ticks;
+		LOG_MSG("BOXER:AUDIO slow-loop total=%llu events=%llu video=%llu delegate=%llu residual=%llu us thread=%zu%s",
+		        static_cast<unsigned long long>(total_us),
+		        static_cast<unsigned long long>(boxer_phase_totals[BXAdapterTimingEvents]),
+		        static_cast<unsigned long long>(boxer_phase_totals[BXAdapterTimingVideoHandoff]),
+		        static_cast<unsigned long long>(boxer_phase_totals[BXAdapterTimingDelegate]),
+		        static_cast<unsigned long long>(residual_us),
+		        std::hash<std::thread::id>{}(std::this_thread::get_id()),
+		        first_in_burst ? " first-in-burst" : "");
+	}
+	boxer_timing_loop_active = false;
+	if (now - boxer_timing_window_started >= std::chrono::seconds(1)) {
+		boxer_reportTimingWindow();
+		boxer_timing_window_started = now;
+	}
+}
+
+void boxer_audioTimingLogThreadInfoOnce()
+{
+	bool expected = false;
+	if (!boxer_thread_info_logged.compare_exchange_strong(expected, true))
+		return;
+
+	char thread_name[64] = {};
+	pthread_getname_np(pthread_self(), thread_name, sizeof(thread_name));
+	int policy = 0;
+	struct sched_param scheduling = {};
+	pthread_getschedparam(pthread_self(), &policy, &scheduling);
+	const qos_class_t qos = qos_class_self();
+
+	LOG_MSG("BOXER:AUDIO thread-info pthread=%llu name=%s qos=%s "
+	        "policy=%d sched-priority=%d",
+	        static_cast<unsigned long long>(pthread_mach_thread_np(pthread_self())),
+	        thread_name[0] ? thread_name : "(unnamed)",
+	        boxer_qosName(qos),
+	        policy,
+	        scheduling.sched_priority);
+}
+
+void boxer_audioTimingMachineCallWillStart()
+{
+	boxer_audioTimingLogThreadInfoOnce();
+	const auto now = std::chrono::steady_clock::now();
+	if (boxer_last_machine_call_finished_at != std::chrono::steady_clock::time_point{}) {
+		const uint64_t gap_us = boxer_timingMicroseconds(now - boxer_last_machine_call_finished_at);
+		const uint64_t now_ticks = now.time_since_epoch().count();
+		const uint64_t log_interval =
+		        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(100)).count();
+		if (gap_us > 5000 &&
+		    (boxer_last_machine_entry_log_ticks == 0 ||
+		     now_ticks - boxer_last_machine_entry_log_ticks >= log_interval)) {
+			boxer_last_machine_entry_log_ticks = now_ticks;
+			LOG_MSG("BOXER:AUDIO machine-entry gap=%llu us "
+			        "caller_wait_before_next_entry=%llu us thread=%zu",
+			        static_cast<unsigned long long>(gap_us),
+			        static_cast<unsigned long long>(gap_us),
+			        std::hash<std::thread::id>{}(std::this_thread::get_id()));
+		}
+	}
+	boxer_machine_call_started_at = now;
+	boxer_machine_call_active = true;
+}
+
+void boxer_audioTimingMachineCallDidFinish()
+{
+	if (!boxer_machine_call_active)
+		return;
+
+	const auto now = std::chrono::steady_clock::now();
+	const uint64_t duration_us = boxer_timingMicroseconds(now - boxer_machine_call_started_at);
+	boxer_machine_call_count++;
+	boxer_machine_call_total_us += duration_us;
+	static thread_local uint64_t last_log_ticks = 0;
+	const uint64_t now_ticks = now.time_since_epoch().count();
+	const uint64_t log_interval =
+	        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(100)).count();
+	if (duration_us >= BXAdapterTimingSlowIterationUs &&
+	    (last_log_ticks == 0 || now_ticks - last_log_ticks >= log_interval)) {
+		last_log_ticks = now_ticks;
+		LOG_MSG("BOXER:AUDIO machine-call body=%llu us thread=%zu",
+		        static_cast<unsigned long long>(duration_us),
+		        std::hash<std::thread::id>{}(std::this_thread::get_id()));
+	}
+	const uint64_t summary_interval =
+	        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
+	if (!boxer_machine_duty_window_started) {
+		// Do not present process-start accounting as the first steady-state sample.
+		boxer_machine_duty_window_started = true;
+		boxer_machine_call_count = 0;
+		boxer_machine_call_total_us = 0;
+		boxer_last_machine_summary_ticks = now_ticks;
+	} else if (now_ticks - boxer_last_machine_summary_ticks >= summary_interval) {
+		boxer_last_machine_summary_ticks = now_ticks;
+		LOG_MSG("BOXER:AUDIO machine-duty calls=%llu inside=%llu us thread=%zu",
+		        static_cast<unsigned long long>(boxer_machine_call_count),
+		        static_cast<unsigned long long>(boxer_machine_call_total_us),
+		        std::hash<std::thread::id>{}(std::this_thread::get_id()));
+		boxer_machine_call_count = 0;
+		boxer_machine_call_total_us = 0;
+	}
+	boxer_last_machine_call_finished_at = now;
+	boxer_machine_call_active = false;
+}
+
+void boxer_audioTimingReportSleep(const uint64_t requestedMicroseconds,
+                                  const uint64_t actualMicroseconds)
+{
+	if (actualMicroseconds <= requestedMicroseconds + 1000)
+		return;
+
+	const auto now = std::chrono::steady_clock::now();
+	const uint64_t now_ticks = now.time_since_epoch().count();
+	const uint64_t log_interval =
+	        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(100)).count();
+	uint64_t expected_ticks = boxer_last_sleep_log_ticks.load();
+	if (expected_ticks != 0 && now_ticks - expected_ticks < log_interval)
+		return;
+	if (!boxer_last_sleep_log_ticks.compare_exchange_strong(expected_ticks, now_ticks))
+		return;
+
+	LOG_MSG("BOXER:AUDIO timing-sleep requested=%llu actual=%llu us thread=%zu",
+	        static_cast<unsigned long long>(requestedMicroseconds),
+	        static_cast<unsigned long long>(actualMicroseconds),
+	        std::hash<std::thread::id>{}(std::this_thread::get_id()));
+}
+
+void boxer_audioTimingReportInternalLoop(const uint64_t totalMicroseconds,
+                                         const uint64_t picMicroseconds,
+                                         const uint64_t cpuMicroseconds,
+                                         const uint64_t timerMicroseconds,
+                                         const uint64_t eventsMicroseconds,
+                                         const int64_t cpuCycles,
+                                         const int64_t cpuCycleLeft,
+                                         const int64_t cpuCycleMax,
+                                         const bool cpuAutoAdjust,
+                                         const int64_t cpuPercentUsed,
+                                         const uint8_t cpuCoreMode,
+                                         const int64_t ticksRemain,
+                                         const int64_t ticksScheduled,
+                                         const int64_t ticksDone)
+{
+	if (totalMicroseconds < BXAdapterTimingSlowIterationUs)
+		return;
+
+	static thread_local uint64_t last_log_ticks = 0;
+	const auto now = std::chrono::steady_clock::now();
+	const uint64_t now_ticks = now.time_since_epoch().count();
+	const uint64_t log_interval =
+	        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds(100)).count();
+	if (last_log_ticks != 0 && now_ticks - last_log_ticks < log_interval)
+		return;
+	last_log_ticks = now_ticks;
+
+	const char *core_name = "unknown";
+	switch (cpuCoreMode) {
+	case 0: core_name = "normal"; break;
+	case 1: core_name = "dynamic"; break;
+	case 2: core_name = "simple"; break;
+	case 3: core_name = "full"; break;
+	default: break;
+	}
+
+	LOG_MSG("BOXER:AUDIO internal-loop total=%llu pic=%llu cpu=%llu timer=%llu "
+	        "events=%llu cpu-cycles=%lld cpu-cycle-left=%lld cpu-cycle-max=%lld "
+	        "cpu-auto-adjust=%s cpu-percent-used=%lld cpu-core=%s "
+	        "ticks-remain=%lld ticks-scheduled=%lld ticks-done=%lld thread=%zu",
+	        static_cast<unsigned long long>(totalMicroseconds),
+	        static_cast<unsigned long long>(picMicroseconds),
+	        static_cast<unsigned long long>(cpuMicroseconds),
+	        static_cast<unsigned long long>(timerMicroseconds),
+	        static_cast<unsigned long long>(eventsMicroseconds),
+	        static_cast<long long>(cpuCycles),
+	        static_cast<long long>(cpuCycleLeft),
+	        static_cast<long long>(cpuCycleMax),
+	        cpuAutoAdjust ? "true" : "false",
+	        static_cast<long long>(cpuPercentUsed),
+	        core_name,
+	        static_cast<long long>(ticksRemain),
+	        static_cast<long long>(ticksScheduled),
+	        static_cast<long long>(ticksDone),
+	        std::hash<std::thread::id>{}(std::this_thread::get_id()));
+}
+
+void boxer_audioTimingBeginPhase(const BXAdapterTimingPhase phase)
+{
+	if (boxer_timing_loop_active && phase >= BXAdapterTimingEvents && phase <= BXAdapterTimingDelegate)
+		boxer_phase_started[phase] = std::chrono::steady_clock::now();
+}
+
+void boxer_audioTimingEndPhase(const BXAdapterTimingPhase phase)
+{
+	if (boxer_timing_loop_active && phase >= BXAdapterTimingEvents && phase <= BXAdapterTimingDelegate)
+		boxer_phase_totals[phase] += boxer_timingMicroseconds(std::chrono::steady_clock::now() - boxer_phase_started[phase]);
+}
+
 bool boxer_MaybeProcessEvents()
 {
     // Process SDL's event queue at 200 Hz
@@ -301,12 +638,29 @@ bool boxer_MaybeProcessEvents()
 /// Called at the start and end of every iteration of DOSBOX_RunMachine.
 void boxer_runLoopWillStartWithContextInfo(void **contextInfo)
 {
+	// DOSBox-Staging's timer/PIC callbacks, including GUS production, are
+	// driven by this emulation thread. Keep timing diagnostics at the Boxer
+	// adapter boundary so the Staging sources remain upstream-compatible.
+	boxer_audioTimingBeginLoop();
+	const auto callback_started_at = std::chrono::steady_clock::now();
 	[[BXEmulator currentEmulator] _runLoopWillStartWithContextInfo: contextInfo];
+	const uint64_t callback_us = boxer_timingMicroseconds(std::chrono::steady_clock::now() - callback_started_at);
+	if (callback_us >= BXAdapterTimingSlowIterationUs)
+		LOG_MSG("BOXER:AUDIO callback-phase=will-start duration=%llu us thread=%zu",
+		        static_cast<unsigned long long>(callback_us),
+		        std::hash<std::thread::id>{}(std::this_thread::get_id()));
 }
 
 void boxer_runLoopDidFinishWithContextInfo(void *contextInfo)
 {
+	const auto callback_started_at = std::chrono::steady_clock::now();
 	[[BXEmulator currentEmulator] _runLoopDidFinishWithContextInfo: contextInfo];
+	const uint64_t callback_us = boxer_timingMicroseconds(std::chrono::steady_clock::now() - callback_started_at);
+	if (callback_us >= BXAdapterTimingSlowIterationUs)
+		LOG_MSG("BOXER:AUDIO callback-phase=did-finish duration=%llu us thread=%zu",
+		        static_cast<unsigned long long>(callback_us),
+		        std::hash<std::thread::id>{}(std::this_thread::get_id()));
+	boxer_audioTimingEndLoop();
 }
 
 /// This is called at the start of DOSBox_NormalLoop, and

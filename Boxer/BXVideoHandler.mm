@@ -13,6 +13,7 @@
 #import "ADBGeometry.h"
 #import "BXFilterDefinitions.h"
 #import "BXVerificationInstrumentation.h"
+#import "BXCoalface.h"
 #include <cstring>
 
 #if defined(BOXER_VERIFICATION_INSTRUMENTATION)
@@ -406,6 +407,20 @@ void BXVerificationRecordSlotOccupancy(NSUInteger freeCount,
 #pragma mark -
 #pragma mark Really genuinely private functions
 
+// Diagnostic escape hatch for isolating emulation-thread stalls caused by the
+// host video handoff. Normal presentation remains enabled unless this
+// environment variable is explicitly set to a non-zero value.
+static BOOL BXVideoPresentationDisabledForDiagnostic(void)
+{
+    static int disabled = -1;
+    if (disabled < 0)
+    {
+        const char *value = getenv("BOXER_DISABLE_VIDEO_FRAME_HANDOFF");
+        disabled = (value && value[0] != '\0' && strcmp(value, "0") != 0) ? 1 : 0;
+    }
+    return disabled != 0;
+}
+
 @interface BXVideoHandler ()
 
 - (const BXFilterDefinition *) _paramsForFilterType: (BXFilterType)filterType;
@@ -726,12 +741,14 @@ void BXVerificationRecordSlotOccupancy(NSUInteger freeCount,
 
 - (void) finishFrameWithChanges: (const uint16_t *)dirtyBlocks
 {
+	boxer_audioTimingBeginPhase(BXAdapterTimingVideoHandoff);
 	uint64_t totalStart = BXVerificationNow();
 	BXVideoFrame *frame = _producerFrame;
 	if (!_frameInProgress || !frame)
 	{
 		BXVerificationCount(BXVerificationCounterFinishFrameFailure);
 		BXVerificationSample(BXVerificationMetricFinishFrame, totalStart, BXVerificationNow());
+		boxer_audioTimingEndPhase(BXAdapterTimingVideoHandoff);
 		return;
 	}
 
@@ -746,11 +763,23 @@ void BXVerificationRecordSlotOccupancy(NSUInteger freeCount,
 	_frameInProgress = NO;
 	_producerFrame = nil;
 
+	if (BXVideoPresentationDisabledForDiagnostic())
+	{
+		// Complete the frame state transition so the producer slot can be reused,
+		// but do not publish or schedule host presentation. This is intentionally
+		// diagnostic-only and is enabled through BOXER_DISABLE_VIDEO_FRAME_HANDOFF.
+		if ([frame publishForPresentation])
+			[frame discardIfReady];
+		boxer_audioTimingEndPhase(BXAdapterTimingVideoHandoff);
+		return;
+	}
+
 	uint64_t publishStart = BXVerificationNow();
 		if (![frame publishForPresentation])
 	{
 		BXVerificationCount(BXVerificationCounterFinishFrameFailure);
 		BXVerificationSample(BXVerificationMetricFinishFrame, totalStart, BXVerificationNow());
+		boxer_audioTimingEndPhase(BXAdapterTimingVideoHandoff);
 			return;
 		}
 	BXVideoFrame *oldFrame = atomic_exchange_explicit(&_latestFrame, frame,
@@ -793,6 +822,7 @@ void BXVerificationRecordSlotOccupancy(NSUInteger freeCount,
 								 textMode: textMode])
 			_hasPendingOutputConfiguration = NO;
 	}
+	boxer_audioTimingEndPhase(BXAdapterTimingVideoHandoff);
 }
 
 - (BOOL) _applyOutputConfiguration: (NSSize)outputSize

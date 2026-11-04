@@ -61,6 +61,13 @@
             ReferencedContainer = "container:Boxer.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "BOXER_DISABLE_VIDEO_FRAME_HANDOFF"
+            value = "0"
+            isEnabled = "NO">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

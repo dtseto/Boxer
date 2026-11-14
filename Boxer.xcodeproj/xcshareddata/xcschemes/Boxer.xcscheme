@@ -17,6 +17,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "8D1107260486CEB800E47090"
                BuildableName = "Boxer.app"
+               BlueprintName = "Boxer"
                ReferencedContainer = "container:Boxer.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -36,6 +37,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "0FFCA17F30329C6C0076F2F5"
                BuildableName = "Boxer Integration Tests.xctest"
+               BlueprintName = "Boxer Integration Tests"
                ReferencedContainer = "container:Boxer.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -58,6 +60,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
             BuildableName = "Boxer.app"
+            BlueprintName = "Boxer"
             ReferencedContainer = "container:Boxer.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -81,6 +84,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "8D1107260486CEB800E47090"
             BuildableName = "Boxer.app"
+            BlueprintName = "Boxer"
             ReferencedContainer = "container:Boxer.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
